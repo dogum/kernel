@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KERNEL — a Python notebook in a single HTML file</title>
+<meta name="description" content="KERNEL is a complete Python notebook that runs entirely in your browser from one self-contained HTML file — Pyodide under the hood, no install, no server, your data never leaves the page. Plus a Claude skill for authoring notebooks and an agentic build in progress."/>
+<meta property="og:title" content="KERNEL — a Python notebook in a single HTML file"/>
+<meta property="og:description" content="A complete Python notebook in one HTML file. Runs in the browser via Pyodide. No install, no server, nothing leaves your machine."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F2; --surface:#F8FAFB; --surface-2:#E9EDEF;
+  --ink:#16181A; --ink-2:#555B61; --ink-3:#838A90;
+  --line:#D3D9DD; --line-2:#C2C9CE;
+  --accent:#B45309; --accent-2:#8F4207; --accent-ghost:rgba(180,83,9,.10);
+  --sheet-line:rgba(22,24,26,.05);
+  --disp:'Archivo','Public Sans',sans-serif;
+  --sans:'Public Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0C0C0A; --surface:#121210; --surface-2:#1A1A17;
+    --ink:#EAE8E1; --ink-2:#A9A69B; --ink-3:#6E747A;
+    --line:#232320; --line-2:#2E2E28;
+    --accent:#E8A33B; --accent-2:#F2B95C; --accent-ghost:rgba(232,163,59,.10);
+    --sheet-line:rgba(234,232,225,.045);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0; background:var(--paper); color:var(--ink)}
+body{font:16px/1.6 var(--sans); -webkit-font-smoothing:antialiased}
+a{color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent); transition:border-color .12s,color .12s}
+a:hover{border-bottom-color:var(--accent)}
+code{font:.9em var(--mono); background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:1px 5px}
+.wrap{max-width:1000px; margin:0 auto; padding:0 1.5rem}
+
+/* top bar */
+.bar{border-bottom:1px solid var(--line); font:12px var(--mono); color:var(--ink-3)}
+.bar .wrap{display:flex; justify-content:space-between; align-items:center; gap:.6em; flex-wrap:wrap; padding:.85rem 1.5rem}
+.bar .name{color:var(--ink); letter-spacing:.18em; font-weight:600}
+.bar a{color:var(--ink-2); border-bottom-color:var(--line)}
+.bar a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+
+/* hero */
+header.hero{position:relative; padding:5.5rem 0 4rem; border-bottom:1px solid var(--line); overflow:hidden}
+header.hero::before{content:""; position:absolute; inset:0; z-index:0;
+  background-image:linear-gradient(var(--sheet-line) 1px,transparent 1px),linear-gradient(90deg,var(--sheet-line) 1px,transparent 1px);
+  background-size:28px 28px; mask-image:linear-gradient(180deg,#000 30%,transparent)}
+header.hero .wrap{position:relative; z-index:1}
+.eyebrow{font:600 11px var(--mono); text-transform:uppercase; letter-spacing:.22em; color:var(--accent); margin:0 0 1.4em}
+header.hero h1{font:700 clamp(2.3rem,6vmin,3.4rem)/1.06 var(--disp); letter-spacing:-.02em; margin:0 0 .5em; max-width:16ch}
+header.hero h1 em{font-style:normal; color:var(--accent)}
+.lead{font-size:1.12rem; color:var(--ink-2); max-width:40em; margin:0 0 .8em}
+.lead em{font-style:normal; color:var(--ink)}
+.note{font:13px/1.5 var(--mono); color:var(--ink-3); max-width:42em; margin:1.4em 0 0}
+.actions{margin-top:2.2em; display:flex; gap:.6em; flex-wrap:wrap; align-items:center}
+.actions a{display:inline-flex; align-items:center; gap:.5em; padding:.7em 1.2em; border-radius:6px; font:600 14px var(--sans); border-bottom:none; white-space:nowrap}
+.actions .primary{background:var(--accent); color:var(--paper); border:1px solid var(--accent)}
+.actions .primary:hover{filter:brightness(1.06)}
+.actions .secondary{background:transparent; color:var(--ink); border:1px solid var(--line-2); font-family:var(--mono); font-weight:500; font-size:13px}
+.actions .secondary:hover{border-color:var(--accent); color:var(--accent)}
+
+/* sections */
+section{padding:3.5rem 0}
+section+section{padding-top:0}
+.shead{display:flex; align-items:baseline; gap:1em; margin:0 0 1.4rem; padding-bottom:.5rem; border-bottom:1px solid var(--line)}
+.shead h2{font:700 1.4rem var(--disp); letter-spacing:-.01em; margin:0}
+.shead .tag{font:600 11px var(--mono); text-transform:uppercase; letter-spacing:.14em; color:var(--ink-3)}
+p.intro{color:var(--ink-2); max-width:44em; margin:0 0 1.6rem}
+
+/* launch cards */
+.cards{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:680px){.cards{grid-template-columns:1fr}}
+.card{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:1.4rem 1.5rem; display:flex; flex-direction:column}
+.card h3{font:700 1.15rem var(--disp); margin:0 0 .2em; display:flex; align-items:center; gap:.6em}
+.card .chip{font:600 9.5px var(--mono); text-transform:uppercase; letter-spacing:.12em; padding:2px 7px; border-radius:20px; border:1px solid var(--line-2); color:var(--ink-3)}
+.card .chip.live{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 40%,var(--line-2)); background:var(--accent-ghost)}
+.card p{color:var(--ink-2); font-size:14.5px; margin:.4em 0 1.2em; flex:1}
+.card .go{align-self:flex-start; padding:.6em 1.05em; border-radius:6px; border-bottom:none; font:600 13.5px var(--sans)}
+.card .go.primary{background:var(--accent); color:var(--paper); border:1px solid var(--accent)}
+.card .go.primary:hover{filter:brightness(1.06)}
+.card .go.ghost{background:transparent; color:var(--ink); border:1px solid var(--line-2); font-family:var(--mono); font-size:12.5px}
+.card .go.ghost:hover{border-color:var(--accent); color:var(--accent)}
+.card .keynote{font:11.5px/1.5 var(--mono); color:var(--ink-3); margin:.9em 0 0}
+
+/* feature list */
+.feats{display:grid; grid-template-columns:1fr 1fr; gap:.1rem 2.4rem; margin:0; padding:0; list-style:none}
+@media (max-width:680px){.feats{grid-template-columns:1fr}}
+.feats li{padding:.7rem 0; border-bottom:1px solid var(--line); display:flex; gap:.8em; align-items:baseline}
+.feats .k{font:600 12px var(--mono); color:var(--accent); flex:0 0 8.5em; text-transform:uppercase; letter-spacing:.04em}
+.feats .v{color:var(--ink-2); font-size:14px}
+
+/* install */
+pre{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:.9rem 1.1rem; overflow-x:auto; font:13px/1.6 var(--mono); color:var(--ink)}
+ol.steps{color:var(--ink-2); max-width:44em; padding-left:1.2em}
+ol.steps li{margin:.4em 0}
+
+footer{border-top:1px solid var(--line); padding:2.2rem 0 3rem; color:var(--ink-3); font:13px var(--mono)}
+footer a{color:var(--ink-2); border-bottom-color:var(--line)}
+footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="wrap">
+  <span class="name">KERNEL</span>
+  <span><a href="https://github.com/dogum/kernel">github.com/dogum/kernel</a> · Apache-2.0</span>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Open source · Single file · Runs in your browser</p>
+  <h1>A Python notebook that lives in <em>one HTML file</em>.</h1>
+  <p class="lead">KERNEL is a complete notebook — cells, real Python, plots, DataFrames, a variable inspector, data mounting, <code>.ipynb</code> round-trip — built on <em>Pyodide</em> and packed into a single self-contained <code>.html</code>. No install, no build step, no server.</p>
+  <p class="lead">Open the file and you have a kernel. <em>Nothing leaves your machine</em> — the Python runs in your tab, your data stays in the page.</p>
+  <div class="actions">
+    <a class="primary" href="kernel.html">Launch KERNEL →</a>
+    <a class="primary" href="kernel-agent.html">Launch the Agent →</a>
+    <a class="secondary" href="https://github.com/dogum/kernel">View source</a>
+  </div>
+  <p class="note">Pyodide downloads ~10&nbsp;MB of WebAssembly on first run (cached after). Desktop browser recommended.</p>
+</div></header>
+
+<section><div class="wrap">
+  <div class="shead"><h2>Two ways to use it</h2><span class="tag">notebook · agent</span></div>
+  <div class="cards">
+    <div class="card">
+      <h3>KERNEL <span class="chip live">Live</span></h3>
+      <p>The notebook itself. Write Python and markdown, run cells in execution order, get plots, interactive Plotly, rendered DataFrames, KaTeX math and Mermaid diagrams. Mount CSVs and files, inspect every variable, export to <code>.ipynb</code> — all client-side.</p>
+      <a class="go primary" href="kernel.html">Launch KERNEL →</a>
+      <p class="keynote">No account, no key, nothing to configure.</p>
+    </div>
+    <div class="card">
+      <h3>KERNEL Agent <span class="chip live">Live</span></h3>
+      <p>A natural-language, human-in-the-loop analyst that builds the notebook for you — writing cells, running them, and <em>seeing</em> the results (text and figures) to iterate. Bring your own Anthropic API key; it's stored in your browser and sent only to Anthropic.</p>
+      <a class="go primary" href="kernel-agent.html">Launch the Agent →</a>
+      <p class="keynote">Bring your own key · stored locally · <a href="https://github.com/dogum/kernel/blob/main/AGENT-SPEC.md">read the spec</a></p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="shead"><h2>What's in the box</h2><span class="tag">capabilities</span></div>
+  <ul class="feats">
+    <li><span class="k">Real Python</span><span class="v">Pyodide / CPython 3.x with numpy, pandas, matplotlib, scipy, scikit-learn, sympy, statsmodels and more.</span></li>
+    <li><span class="k">Ordered output</span><span class="v">stdout, figures, rich displays and results stream back in true execution order.</span></li>
+    <li><span class="k">Rich markdown</span><span class="v">GFM tables, fenced code, KaTeX math (<code>$…$</code>) and Mermaid diagrams.</span></li>
+    <li><span class="k">Display helpers</span><span class="v"><code>display</code>, <code>display_html</code>, <code>display_plotly</code> for interactive output.</span></li>
+    <li><span class="k">Data workspace</span><span class="v">drop in CSV / JSON / files, preview them, insert a read snippet in a click.</span></li>
+    <li><span class="k">Variable inspector</span><span class="v">live namespace with types, sizes, and click-to-expand detail (head, dtypes, stats).</span></li>
+    <li><span class="k">Composable panels</span><span class="v">notebooks, data, variables and split outputs dock, resize, and collapse to a calm center.</span></li>
+    <li><span class="k">Portable</span><span class="v">round-trips to <code>.ipynb</code>, exports to <code>.py</code>, persists locally — one file you can host anywhere.</span></li>
+  </ul>
+</div></section>
+
+<section><div class="wrap">
+  <div class="shead"><h2>The kernel-notebooks skill</h2><span class="tag">for Claude</span></div>
+  <p class="intro">A Claude skill that teaches the model to author exceptional notebooks for this runtime — well-structured, narrated analyses that use exactly the capabilities KERNEL has and none it doesn't. It's also the system prompt behind the agentic build: how to run the loop, read text and image outputs back, and explore with a human in the loop.</p>
+  <ol class="steps">
+    <li><strong>Claude.ai:</strong> download <a href="https://github.com/dogum/kernel/raw/main/kernel-notebooks.skill"><code>kernel-notebooks.skill</code></a>, then Settings → Capabilities → Skills → upload.</li>
+    <li><strong>Claude Code:</strong> copy the <code>skill/</code> folder into your skills directory:</li>
+  </ol>
+  <pre>git clone https://github.com/dogum/kernel.git
+cp -r kernel/skill ~/.claude/skills/kernel-notebooks</pre>
+</div></section>
+
+<footer><div class="wrap">
+  <span>KERNEL · Apache-2.0 · a single-file Python notebook</span>
+  <span><a href="https://github.com/dogum/kernel">source</a> · <a href="kernel.html">launch</a></span>
+</div></footer>
+
+</body>
+</html>
