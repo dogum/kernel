@@ -403,3 +403,28 @@ Built and shipped, Phases A–E complete. Deltas from this spec as written:
   agent panel is its own left dock; conversations persist (and travel in the file);
   default model is Sonnet-class with Opus one click away; `add_cells` stays separate
   from running.
+
+## 18. Mobile / PWA variant (KERNEL·M)
+
+A phone-friendly build ships as `docs/kernel-agent-mobile.html` — the same agent, made
+responsive and progressive without touching the desktop layout. Everything below is
+additive and gated to a `max-width:760px` media query:
+
+- **Single-column workspace.** The four docked columns collapse; the notebook is full
+  width and the Agent / Files / Variables panels become **bottom sheets** (drag-handle to
+  dismiss, backdrop to close), driven by a bottom navigation bar. One sheet open at a
+  time. The Agent deliberately stays a sheet *over* the live notebook so you can still
+  watch it author cells.
+- **Touch + viewport.** Larger tap targets, a horizontally scrollable toolbar, a 16px
+  editor font to defeat iOS focus-zoom, and `dvh` + safe-area insets for the bar and dock.
+- **Installable PWA.** A blob web-app manifest, generated icons (192 / 512 / maskable +
+  apple-touch), `display: standalone`, theme-color synced to the in-app theme, and an
+  install affordance (Android `beforeinstallprompt`; iOS Add-to-Home hint).
+- **Offline.** `kernel-agent-sw.js` caches the app shell (network-first) and the Pyodide /
+  CDN assets (cache-first) so it loads offline after the first online run; the Anthropic
+  API is never cached. The service worker only registers over https.
+
+Implementation note: the mobile UI controller is injected *inside* the app's main IIFE so
+it can drive the existing panel state (`ui` / `applyUI`), while the PWA layer is a separate
+standalone script. The build is produced from `kernel-agent.html` by a small assembler, so
+the variant tracks the agent automatically.

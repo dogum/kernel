@@ -7,25 +7,25 @@
 <title>KERNEL·A — the agentic notebook, in a single file</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#EDF0F2; --sheet-line:rgba(22,26,29,.05);
-  --surface:#F8FAFB; --surface-2:#E7EBED; --surface-3:#E4E9EC;
-  --ink:#16181A; --ink-2:#555B61; --ink-3:#838A90; --ink-4:#A9B0B6;
-  --line:#D3D9DD; --line-2:#B9C1C7;
-  --accent:#B45309; --accent-2:#8F4207; --on-accent:#FFFDF8; --accent-weak:#F7EAD5; --accent-ghost:rgba(180,83,9,.10);
+  --paper:#E9E7E0; --sheet-line:rgba(26,27,24,.05);
+  --surface:#FBFAF6; --surface-2:#E7EBED; --surface-3:#E4E9EC;
+  --ink:#1A1B18; --ink-2:#55574E; --ink-3:#83857B; --ink-4:#A9AB9F;
+  --line:#D3D9DD; --line-2:#C9C6BA;
+  --accent:#4A33D6; --accent-2:#3A28B0; --on-accent:#FFFDF8; --accent-weak:#DCD5F7; --accent-ghost:rgba(74,51,214,.10);
   --err:#AE4530; --err-weak:#F5E2DB; --err-line:#E5C2B6;
-  --busy:#A35E0C; --ok:#44734E;
-  --t-kw:#6B4E85; --t-str:#44734E; --t-num:#9C4F18; --t-com:#838A90; --t-bif:#B45309; --t-dec:#2F6E73;
+  --busy:#2A0CA3; --ok:#44734E;
+  --t-kw:#6B4E85; --t-str:#44734E; --t-num:#32189C; --t-com:#83857B; --t-bif:#4A33D6; --t-dec:#2F6E73;
   --r:4px; --r-sm:3px;
   --code-fs:13.5px; --code-lh:1.62; --code-pad-y:13px; --code-pad-x:15px;
   --gutter-w:54px;
-  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
-  --sans:'Public Sans',-apple-system,BlinkMacSystemFont,sans-serif;
-  --disp:'Archivo','Public Sans',sans-serif;
+  --mono:'Space Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;
+  --disp:'Space Grotesk','Hanken Grotesk',sans-serif;
   --shadow:0 1px 2px rgba(20,22,40,.06),0 2px 8px rgba(20,22,40,.05);
-  --shadow-sel:0 0 0 1px rgba(180,83,9,.45);
+  --shadow-sel:0 0 0 1px rgba(74,51,214,.45);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -531,8 +531,8 @@ body.resizing{cursor:col-resize; user-select:none}
 </style>
 <style id="dna-suite">
 /* ── USEFUL TOOLS · suite DNA (light default · dark via html[data-theme="dark"] · Alt+T) ── */
-:root{--dna-page:#EDF0F2;--dna-panel:#F8FAFB;--dna-ink:#16181A;--dna-mid:#838A90;--dna-line:rgba(22,26,29,.18);--dna-gmaj:rgba(22,26,29,.05);--dna-gmin:rgba(22,26,29,.028);--dna-accent:#B45309;--dna-accent-line:rgba(180,83,9,.45);--dna-sel:rgba(180,83,9,.25);--dna-thumb:#C5CBD0;--dna-thumb-h:#9AA1A8}
-html[data-theme="dark"]{--dna-page:#0C0C0A;--dna-panel:#121210;--dna-ink:#EAE8E1;--dna-mid:#6E747A;--dna-line:rgba(234,232,225,.17);--dna-gmaj:rgba(234,232,225,.030);--dna-gmin:rgba(234,232,225,.016);--dna-accent:#E8A33B;--dna-accent-line:rgba(232,163,59,.40);--dna-sel:rgba(232,163,59,.30);--dna-thumb:#33312C;--dna-thumb-h:#4C4A43}
+:root{--dna-page:#E9E7E0;--dna-panel:#FBFAF6;--dna-ink:#1A1B18;--dna-mid:#83857B;--dna-line:rgba(26,27,24,.18);--dna-gmaj:rgba(26,27,24,.05);--dna-gmin:rgba(26,27,24,.028);--dna-accent:#4A33D6;--dna-accent-line:rgba(74,51,214,.45);--dna-sel:rgba(74,51,214,.25);--dna-thumb:#C4C3B7;--dna-thumb-h:#ABA89C}
+html[data-theme="dark"]{--dna-page:#0E0F0D;--dna-panel:#1C1C15;--dna-ink:#E8E6DE;--dna-mid:#6E6F65;--dna-line:rgba(232,230,222,.17);--dna-gmaj:rgba(232,230,222,.030);--dna-gmin:rgba(232,230,222,.016);--dna-accent:#7B68FF;--dna-accent-line:rgba(123,104,255,.40);--dna-sel:rgba(123,104,255,.30);--dna-thumb:#33312C;--dna-thumb-h:#4A4B43}
 html{color-scheme:light;scrollbar-color:var(--dna-thumb) var(--dna-page)}
 html[data-theme="dark"]{color-scheme:dark}
 #dna-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--dna-gmaj) 1px,transparent 1px),linear-gradient(90deg,var(--dna-gmaj) 1px,transparent 1px),linear-gradient(var(--dna-gmin) 1px,transparent 1px),linear-gradient(90deg,var(--dna-gmin) 1px,transparent 1px);background-size:140px 140px,140px 140px,28px 28px,28px 28px}
@@ -542,13 +542,13 @@ html[data-theme="dark"]{color-scheme:dark}
 ::-webkit-scrollbar-thumb{background:var(--dna-thumb);border:2px solid var(--dna-page)}
 ::-webkit-scrollbar-thumb:hover{background:var(--dna-thumb-h)}
 /* ── suite dock — persistent navigation ── */
-#dna-dock{position:fixed;right:14px;bottom:14px;z-index:2147483000;display:flex;align-items:stretch;font:500 10px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.08em;background:var(--dna-panel);border:1px solid var(--dna-line);border-radius:2px;opacity:.85;transition:opacity 160ms cubic-bezier(.25,.6,.25,1)}
+#dna-dock{position:fixed;right:14px;bottom:14px;z-index:2147483000;display:flex;align-items:stretch;font:500 10px/1 'Space Mono',ui-monospace,monospace;letter-spacing:.08em;background:var(--dna-panel);border:1px solid var(--dna-line);border-radius:2px;opacity:.85;transition:opacity 160ms cubic-bezier(.25,.6,.25,1)}
 #dna-dock:hover,#dna-dock:focus-within{opacity:1}
 #dna-dock>*{display:flex;align-items:center;gap:5px;padding:8px 10px;margin:0;color:var(--dna-mid);background:none;border:0;border-right:1px solid var(--dna-line);cursor:pointer;text-decoration:none;font:inherit;letter-spacing:inherit;white-space:nowrap}
 #dna-dock>*:last-child{border-right:0}
 #dna-dock>*:hover{color:var(--dna-accent)}
 #dna-dock .dd-mark{color:var(--dna-accent)}
-#dna-switch{position:fixed;right:14px;bottom:52px;z-index:2147483001;width:300px;display:none;flex-direction:column;background:var(--dna-panel);border:1px solid var(--dna-line);border-radius:2px;box-shadow:0 0 0 4px var(--dna-page);font:500 11px/1 'IBM Plex Mono',ui-monospace,monospace}
+#dna-switch{position:fixed;right:14px;bottom:52px;z-index:2147483001;width:300px;display:none;flex-direction:column;background:var(--dna-panel);border:1px solid var(--dna-line);border-radius:2px;box-shadow:0 0 0 4px var(--dna-page);font:500 11px/1 'Space Mono',ui-monospace,monospace}
 #dna-switch.open{display:flex}
 #dna-switch input{font:inherit;font-size:12px;color:var(--dna-ink);background:transparent;border:0;outline:0;border-bottom:1px solid var(--dna-line);padding:10px 12px;caret-color:var(--dna-accent);letter-spacing:.04em}
 #dna-switch input::placeholder{color:var(--dna-mid);opacity:.7}
@@ -561,7 +561,7 @@ html[data-theme="dark"]{color-scheme:dark}
 #dna-switch li.cur .n{color:var(--dna-accent)}
 #dna-switch .ft{display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--dna-line);color:var(--dna-mid);font-size:9px;letter-spacing:.10em}
 /* per-instrument dark palette */
-html[data-theme="dark"]{--on-accent:#141008;--paper:#0C0C0A;--sheet-line:rgba(234,232,225,.045);--surface:#121210;--surface-2:#181815;--surface-3:#1D1D19;--ink:#EAE8E1;--ink-2:#A9A69B;--ink-3:#6E747A;--ink-4:#4C4A43;--line:#232320;--line-2:#2E2E28;--accent:#E8A33B;--accent-2:#F2B95C;--accent-weak:#2E2517;--accent-ghost:rgba(232,163,59,.08);--err:#C8796C;--err-weak:#332420;--err-line:#54302C;--busy:#D9A03F;--ok:#8CAE8A;--t-kw:#B3A0BD;--t-str:#8CAE8A;--t-num:#CC8A55;--t-com:#6E747A;--t-bif:#E8A33B;--t-dec:#7FB0B0;--shadow:0 1px 2px rgba(0,0,0,.45);--shadow-sel:0 0 0 1px rgba(232,163,59,.40)}
+html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(232,230,222,.045);--surface:#1C1C15;--surface-2:#181815;--surface-3:#1D1D19;--ink:#E8E6DE;--ink-2:#A6A79C;--ink-3:#6E6F65;--ink-4:#4A4B43;--line:#232320;--line-2:#2E2E27;--accent:#7B68FF;--accent-2:#9686FF;--accent-weak:#1C172E;--accent-ghost:rgba(123,104,255,.08);--err:#C8796C;--err-weak:#332420;--err-line:#54302C;--busy:#5E3FD9;--ok:#8CAE8A;--t-kw:#B3A0BD;--t-str:#8CAE8A;--t-num:#6D55CC;--t-com:#6E6F65;--t-bif:#7B68FF;--t-dec:#7FB0B0;--shadow:0 1px 2px rgba(0,0,0,.45);--shadow-sel:0 0 0 1px rgba(123,104,255,.40)}
 /* ===== KaTeX + Mermaid in markdown cells ===== */
 .md-rendered .katex-display{overflow-x:auto; overflow-y:hidden; padding:2px 0; margin:.6em 0}
 .md-rendered .katex{font-size:1.04em}
@@ -3523,7 +3523,7 @@ window.addEventListener('ut-theme',function(){
 <script>
 (function(){
 var BASE='';
-var SUITE=[["kernel.html","KERNEL"],["kernel-agent.html","KERNEL·A"]];
+var SUITE=[["kernel.html","KERNEL"],["kernel-agent.html","KERNEL·A"],["kernel-agent-mobile.html","KERNEL·M"]];
 var here=decodeURIComponent(location.pathname.split('/').pop()||'');
 var cur=SUITE.findIndex(function(t){return t[0]===here});
 function $(id){return document.getElementById(id)}

@@ -3,8 +3,14 @@
 <head>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KERNEL v7 — a Python notebook in a single file</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="KERNEL·A — the agentic Python notebook, in a single file. Mobile build: installable and offline-capable.">
+<meta name="theme-color" content="#E9E7E0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KERNEL·A">
+<title>KERNEL·A — agentic notebook · mobile (PWA)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -207,7 +213,8 @@ body{
 .ct.run:hover{background:var(--accent); color:var(--on-accent)}
 .ct.del:hover{background:var(--err-weak); color:var(--err)}
 .ct svg{width:14px; height:14px}
-.ct.type{width:auto; padding:0 8px; font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+.ct.type,.ct.ai{width:auto; padding:0 8px; font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+.ct.ai:hover{background:var(--accent); color:var(--on-accent)}
 
 /* ---------- add-cell ---------- */
 .add-row{max-width:900px; margin:14px auto 0; display:flex; gap:8px; justify-content:center; opacity:.6; transition:.15s}
@@ -460,6 +467,73 @@ body.resizing{cursor:col-resize; user-select:none}
 .prompt-input{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:9px 11px;outline:none;caret-color:var(--accent)}
 .prompt-input:focus{border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
 .prompt-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+
+/* ===== KERNEL·A agent panel ===== */
+.brand-a{color:var(--accent);font-weight:800;letter-spacing:0}
+.panel-agent{border-right:1px solid var(--line-2)}
+.panel-agent .panel-grip{right:-4px}
+.ag-inner{display:flex;flex-direction:column;min-height:0;height:100%;flex:1 1 auto}
+.ag-head{border-bottom:1px solid var(--line);gap:8px}
+.ag-word{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.22em;color:var(--ink-2)}
+.ag-body{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;padding:10px 10px 12px}
+.ag-working{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-3)}
+.ag-working .dotp{width:9px;height:9px;border:1.5px solid var(--line-2);border-top-color:var(--accent);border-radius:50%;animation:agspin .8s linear infinite}
+@keyframes agspin{to{transform:rotate(360deg)}}
+.ag-a.live::after{content:"▍";color:var(--accent)}
+.ag-state{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
+  border:1px solid var(--line-2);border-radius:3px;padding:3px 6px;margin-left:auto}
+.ag-state.armed{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,var(--line-2))}
+.ag-state.run{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
+.ag-tx{flex:1 1 auto;min-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:3px;
+  background:var(--surface-2);padding:9px 10px;display:flex;flex-direction:column;gap:7px}
+.ag-u{position:relative;font-family:var(--sans);font-size:12px;line-height:1.45;color:var(--ink);border-left:2px solid var(--accent);
+  padding:2px 22px 2px 8px;white-space:pre-wrap;word-break:break-word}
+.ag-fork{position:absolute;top:1px;right:0;font-family:var(--mono);font-size:11px;color:var(--ink-4);
+  background:none;border:0;cursor:pointer;padding:1px 4px;opacity:0;transition:opacity .12s}
+.ag-u:hover .ag-fork{opacity:1}
+.ag-fork:hover{color:var(--accent)}
+.ag-a{font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
+.ag-chips{display:flex;flex-wrap:wrap;gap:4px}
+.ag-chip{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.04em;color:var(--ink-3);
+  border:1px solid var(--line-2);border-radius:3px;padding:3px 7px;background:var(--surface);cursor:default}
+.ag-chip.run{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line-2))}
+.ag-chip.err{color:var(--err);border-color:var(--err-line);background:var(--err-weak)}
+.ag-chip.click{cursor:pointer}
+.ag-chip.click:hover{color:var(--accent);border-color:var(--accent)}
+.ag-sys{font-family:var(--mono);font-size:9px;letter-spacing:.10em;color:var(--ink-4);text-transform:uppercase;text-align:center;padding:2px 0}
+.ag-approve{display:flex;gap:5px;align-items:center;font-family:var(--mono);font-size:9.5px;color:var(--ink-2);
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line-2));background:color-mix(in srgb,var(--accent) 8%,var(--surface));
+  border-radius:3px;padding:6px 8px;flex-wrap:wrap}
+.ag-approve button{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;border-radius:3px;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);padding:4px 9px;cursor:pointer}
+.ag-approve button.ok{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.ag-composer{margin-top:8px;flex:0 0 auto}
+.ag-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.ag-thumbs:empty{display:none}
+.ag-thumb{position:relative}
+.ag-thumb img{height:44px;display:block;border:1px solid var(--line-2);border-radius:3px}
+.ag-thumb button{position:absolute;top:-7px;right:-7px;width:16px;height:16px;line-height:1;font-size:10px;
+  font-family:var(--mono);color:var(--ink-2);background:var(--surface);border:1px solid var(--line-2);
+  border-radius:50%;cursor:pointer;padding:0}
+.ag-thumb button:hover{color:var(--err);border-color:var(--err-line)}
+.ag-img{max-width:100%;max-height:140px;align-self:flex-start;border:1px solid var(--line-2);border-radius:3px}
+.ag-composer textarea{width:100%;box-sizing:border-box;font-family:var(--sans);font-size:12.5px;line-height:1.45;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:8px 10px;
+  resize:vertical;min-height:44px;max-height:160px;outline:none}
+.ag-composer textarea:focus{border-color:color-mix(in srgb,var(--accent) 40%,var(--line-2))}
+.ag-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.ag-mode{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
+  border:1px solid var(--line-2);border-radius:3px;background:var(--surface);padding:5px 8px;cursor:pointer}
+.ag-mode.step{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
+.ag-steps{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-4)}
+.ag-usage{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--ink-3);flex:1;text-align:right;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-usage:hover{color:var(--accent)}
+.ag-stop{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.10em;color:var(--err);
+  border:1px solid var(--err-line);border-radius:3px;background:var(--err-weak);padding:5px 10px;cursor:pointer}
+.ag-send{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.10em;color:var(--on-accent);
+  border:1px solid var(--accent);border-radius:3px;background:var(--accent);padding:5px 12px;cursor:pointer}
+.ag-send:disabled{opacity:.4;cursor:default}
+.ag-send:hover:not(:disabled){background:var(--accent-2);border-color:var(--accent-2)}
 </style>
 <style id="dna-suite">
 /* ── USEFUL TOOLS · suite DNA (light default · dark via html[data-theme="dark"] · Alt+T) ── */
@@ -506,7 +580,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
 <header class="topbar">
-  <div class="brand"><span class="mark"></span><h1>KERNEL</h1>
+  <div class="brand"><span class="mark"></span><h1>KERNEL<span class="brand-a">·A</span></h1>
     <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
       <span id="nbTitleText">Untitled</span>
@@ -524,6 +598,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
     <button class="btn btn-chip" id="btnRestart" title="Restart kernel (clear all variables)">Restart</button>
     <button class="btn btn-chip" id="btnClear" title="Clear all outputs">Clear</button>
     <span class="tb-sep"></span>
+    <button class="btn btn-chip" id="btnAgent" title="Toggle the agent panel (⌘J)">Agent</button>
     <button class="btn btn-chip" id="btnVars" title="Toggle the variable inspector">Variables</button>
     <div class="menu-wrap">
       <button class="btn btn-chip btn-more" id="btnMore" title="More actions" aria-haspopup="true">⋯</button>
@@ -541,6 +616,33 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
 </header>
 
 <div class="workspace" id="workspace">
+  <aside class="panel panel-agent" id="agentPanel" aria-hidden="true">
+    <div class="panel-inner ag-inner">
+      <div class="panel-h ag-head">
+        <span class="ag-word">AGENT</span>
+        <span class="ag-state" id="agState">OFFLINE</span>
+        <button class="panel-add" id="agExport" title="Export conversation as markdown">⇩</button>
+        <button class="panel-add" id="agSettings" title="Agent settings (key · model · autonomy)">⋯</button>
+      </div>
+      <div class="ag-body">
+        <div class="ag-tx" id="agTx"></div>
+        <div class="ag-composer">
+          <div class="ag-thumbs" id="agThumbs"></div>
+          <textarea id="agIn" rows="2" placeholder="Describe an analysis — or paste an image to show it something… (⌘J)"></textarea>
+          <div class="ag-row">
+            <button class="ag-mode" id="agMode" title="Autonomy — AUTO runs freely, STEP asks before each run">AUTO</button>
+              <button class="ag-mode" id="agModelChip" title="Click to switch model (Sonnet ↔ Opus; set custom ids in settings)">sonnet</button>
+            <span class="ag-steps" id="agSteps"></span>
+              <span class="ag-usage" id="agUsage" title="session tokens · estimated cost (click to reset)"></span>
+            <button class="ag-stop" id="agStop" style="display:none">STOP</button>
+            <button class="ag-send" id="agSend">SEND</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-grip" data-side="agent" title="Drag to resize"></div>
+  </aside>
+
   <aside class="panel panel-left" id="leftPanel" aria-hidden="true">
     <div class="panel-inner">
       <section class="panel-section" id="secNotebooks">
@@ -628,6 +730,32 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
     </div>
   </div>
 </div>
+<div class="scrim" id="agScrim">
+  <div class="modal" style="max-width:420px" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Agent settings</h2><button class="modal-x" id="agX">×</button></div>
+    <div class="modal-b">
+      <label class="ag-lbl" for="agKey" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:4px 0 6px">ANTHROPIC API KEY</label>
+      <input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+      <label class="ag-lbl" for="agModel" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:12px 0 6px">MODEL ID</label>
+      <input id="agModel" class="prompt-input" type="text" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4-6">
+      <label class="ag-lbl" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:12px 0 6px">AUTONOMY · MAX TOOL STEPS / TURN</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn" id="agAutoBtn">AUTO</button>
+        <button class="btn" id="agStepBtn">STEP</button>
+        <input id="agMax" class="prompt-input" type="number" min="4" max="80" style="width:84px;margin-left:auto">
+      </div>
+      <div style="margin-top:12px;font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--ink-3)">
+        Key lives only in this browser; calls go directly to api.anthropic.com. AUTO runs the loop freely
+        (Stop anytime). STEP asks before every run and %pip install. The agent's code runs in the same
+        Pyodide sandbox as yours — no filesystem, no network. Long sessions self-compact to fit the
+        model's context window (~200k tokens; oldest tool exchanges drop first — hover the meter to
+        see the live estimate). Hover any of your messages and press ⑂ to fork the conversation into
+        a duplicated notebook.
+      </div>
+      <div class="prompt-acts"><button class="btn" id="agClear">Clear key</button><button class="btn primary" id="agSave">Save</button></div>
+    </div>
+  </div>
+</div>
 <div class="scrim" id="helpScrim">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-h"><h2>Keyboard</h2><button class="modal-x" id="helpX">×</button></div>
@@ -641,6 +769,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <div class="kbd-row"><span>Autocomplete</span><kbd>Ctrl Space</kbd></div>
           <div class="kbd-row"><span>Indent / dedent</span><kbd>Tab</kbd></div>
           <div class="kbd-row"><span>Leave cell</span><kbd>Esc</kbd></div>
+          <div class="kbd-row"><span>Agent panel</span><kbd>⌘ J</kbd></div>
         </div>
         <div>
           <h3>Command mode</h3>
@@ -1021,7 +1150,7 @@ let _pyChain=Promise.resolve();           // serializes all Pyodide interpreter 
 
 /* ===== v7 composable panel layout ===== */
 const UI_KEY="kernel.ui.v1";
-let ui={left:false,right:false,leftW:262,rightW:300,secNb:true,secData:true,splitOutputs:false,secOut:true,secVars:true};
+let ui={left:false,right:false,agent:false,agentW:360,leftW:262,rightW:300,secNb:true,secData:true,splitOutputs:false,secOut:true,secVars:true};
 function loadUI(){ try{ const r=localStorage.getItem(UI_KEY); if(r) Object.assign(ui, JSON.parse(r)); }catch(e){} }
 function saveUI(){ try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){} }
 function applyUI(){
@@ -1033,6 +1162,12 @@ function applyUI(){
   L.setAttribute("aria-hidden", ui.left?"false":"true"); R.setAttribute("aria-hidden", ui.right?"false":"true");
   $("#secNotebooks").classList.toggle("collapsed", ui.secNb===false);
   $("#secData").classList.toggle("collapsed", ui.secData===false);
+  const AG=$("#agentPanel");
+  if(AG){ ui.agentW=Math.max(280,Math.min(560,ui.agentW||360));
+    AG.style.width=ui.agentW+"px";
+    AG.classList.toggle("open", !!ui.agent);
+    AG.setAttribute("aria-hidden", ui.agent?"false":"true"); }
+  const ba=$("#btnAgent"); if(ba) ba.classList.toggle("active", !!ui.agent);
   $("#secOutputs").classList.toggle("collapsed", ui.secOut===false);
   $("#secVars").classList.toggle("collapsed", ui.secVars===false);
   $("#nbTitle").classList.toggle("active", !!ui.left);
@@ -1148,9 +1283,9 @@ function initPanels(){
   document.querySelectorAll(".panel-grip").forEach(g=>{
     g.addEventListener("mousedown", e=>{
       e.preventDefault();
-      const side=g.dataset.side, startX=e.clientX, startW=(side==="left")?ui.leftW:ui.rightW;
+      const side=g.dataset.side, startX=e.clientX, startW=(side==="left")?ui.leftW:(side==="agent"?ui.agentW:ui.rightW);
       document.body.classList.add("resizing");
-      function mv(ev){ let w=(side==="left")?startW+(ev.clientX-startX):startW-(ev.clientX-startX); w=Math.max(180,Math.min(520,w)); if(side==="left"){ ui.leftW=w; $("#leftPanel").style.width=w+"px"; } else { ui.rightW=w; $("#rightPanel").style.width=w+"px"; } }
+      function mv(ev){ let w=(side==="right")?startW-(ev.clientX-startX):startW+(ev.clientX-startX); if(side==="agent"){ w=Math.max(280,Math.min(560,w)); ui.agentW=w; $("#agentPanel").style.width=w+"px"; } else if(side==="left"){ w=Math.max(180,Math.min(520,w)); ui.leftW=w; $("#leftPanel").style.width=w+"px"; } else { w=Math.max(180,Math.min(520,w)); ui.rightW=w; $("#rightPanel").style.width=w+"px"; } }
       function up(){ document.body.classList.remove("resizing"); document.removeEventListener("mousemove",mv); document.removeEventListener("mouseup",up); saveUI(); }
       document.addEventListener("mousemove",mv); document.addEventListener("mouseup",up);
     });
@@ -1306,6 +1441,7 @@ function buildCell(cell){
     '<button class="ct" data-act="add" title="Insert below">'+ICON.add+'</button>'+
     '<button class="ct type" data-act="type" title="Toggle code/markdown">'+(cell.type==="code"?"py":"md")+'</button>'+
     '<button class="ct col" data-act="collapse" title="Collapse / expand"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>'+
+    '<button class="ct ai" data-act="ai" title="Ask the agent about this cell (opens the Agent panel)">ai</button>'+
     '<button class="ct del" data-act="del" title="Delete">'+ICON.del+'</button>';
 
   body.appendChild(editor); body.appendChild(mdr); body.appendChild(peek); body.appendChild(outs); body.appendChild(tools);
@@ -1336,6 +1472,7 @@ function buildCell(cell){
     else if(act==="down") moveCell(cell,1);
     else if(act==="add") insertCell(indexOf(cell)+1,"code",true);
     else if(act==="type") toggleType(cell);
+    else if(act==="ai"){ if(typeof agAskAboutCell==="function") agAskAboutCell(cell); }
     else if(act==="collapse") setCollapsed(cell, !cell.collapsed);
     else if(act==="del") deleteCell(cell);
   });
@@ -1808,6 +1945,7 @@ function toIpynb(){
       return base;
     }),
     metadata:{
+      kernel_agent: (typeof agExportBundle==="function"?agExportBundle():null)||undefined,
       kernelspec:{ name:"python3", display_name:"Python 3 (Pyodide)", language:"python" },
       language_info:{ name:"python", mimetype:"text/x-python", file_extension:".py" },
       kernel_app:"KERNEL"
@@ -1855,14 +1993,15 @@ function fromIpynb(obj){
   cells=nc.length?nc:[mkCell("code","")];
   execCounter=cells.reduce((m,c)=> (c.execCount!=null&&c.execCount>m)?c.execCount:m, 0);
   selectedId=null; render(); if(cells[0]) selectCell(cells[0].id,"command"); schedulePersist();
+  try{ agImportMeta(obj.metadata&&obj.metadata.kernel_agent); }catch(e){}
 }
 function downloadIpynb(){
   const blob=new Blob([JSON.stringify(toIpynb(),null,1)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download="kernel-notebook.ipynb";
+  const a=document.createElement("a"); a.href=url; a.download=(typeof agSlug==="function"?agSlug():"kernel-notebook")+".ipynb";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
-  toast("Saved kernel-notebook.ipynb");
+  toast("Saved "+(typeof agSlug==="function"?agSlug():"kernel-notebook")+".ipynb — conversation embedded");
 }
 
 /* ===== data files mounted into the kernel FS ===== */
@@ -2539,6 +2678,817 @@ const find = {
 };
 
 
+/* ════ KERNEL·A — the agent in the loop (spec: _dna/kernel-agent-spec.md) ════ */
+var DOCS="# Authoring great in-browser Python notebooks\n\nThe target is a rich in-browser Python notebook runtime built on Pyodide (CPython on\nWebAssembly): one persistent kernel, Jupyter-style cells, last-expression echo, rich HTML\noutput, inline matplotlib, `%pip install`, and a small set of `display_*` helpers for\ninteractive output. (KERNEL is the reference implementation; everything here applies to any\nruntime that honors the same contract \u2014 see `references/runtime.md`.) Your job is to produce\nnotebooks that feel like a thoughtful human analyst wrote them \u2014 a narrated argument that\nhappens to be runnable \u2014 using exactly the capabilities the runtime has and none it doesn't.\nYou may be **assembling a finished notebook** in one pass, or **driving a live kernel turn by\nturn** with a human watching (see \"Working live, in the loop\"); the craft below applies to\nboth, but the live loop has its own discipline.\n\nA great notebook is not a script with comments. It is a sequence of small, rerunnable steps,\neach introduced by prose that says what is about to happen and why, followed by code,\nfollowed by an output worth looking at, followed by a sentence interpreting it. The reader\nshould be able to skim the markdown alone and understand the whole story.\n\n## The workflow\n\n1. **Clarify the goal and the inputs.** What question does the notebook answer? Is the input\n   a dataset the user supplied, existing code to convert, a mounted file (via the **+Data**\n   button \u2192 read from the working directory), or a synthetic dataset you generate? If you\n   were given data, inspect its real columns/shape before writing analysis against guessed\n   ones. If you were given code, see \"Working from existing code or data\" below.\n2. **Outline the narrative as section headers** before writing any code. A typical arc:\n   framing \u2192 setup/imports \u2192 load & inspect \u2192 clean/feature-build \u2192 analysis/model \u2192\n   visualize \u2192 conclusion. Pick the arc that fits; don't pad.\n3. **Write the cells.** Alternate markdown and code. Keep each code cell to one idea. End\n   cells on the value worth showing (see \"Output discipline\").\n4. **Pressure-test the result before you narrate it.** This is the difference between a\n   demo and a real analysis. Before writing confident prose about a finding, confirm the\n   finding actually exists: that the model converged, the cascade spread, the correlation is\n   real, the clusters separate, the fit tracks the data. If the result is degenerate \u2014 a\n   simulation that fizzles, an R\u00b2 near zero, one cluster swallowing everything, a flat curve\n   \u2014 **change the setup until there is real signal**, then narrate the true result. Never\n   write a confident story over noise. If a result genuinely is null, say so plainly and\n   show why; a clear negative result is honest, a fake positive is not.\n5. **Assemble a valid `.ipynb`** with the bundled script \u2014 never hand-write notebook JSON.\n   Write a cell spec (a JSON list) and run:\n   ```bash\n   python scripts/build_notebook.py cells.json output.ipynb \"Notebook Title\"\n   ```\n   The script emits nbformat 4.5 the runtime imports cleanly. See the script header for the\n   spec format.\n6. **Sanity-check the runtime fit.** Re-read every import and chart against\n   `references/runtime.md` \u2014 no `requests`, no ipywidgets, no LaTeX in markdown, correct\n   `%pip` vs. plain import. A notebook that errors on cell 1 is worthless. When you can run\n   code, execute the cells in order (with `display_*` stubbed) to catch breakage before\n   delivery.\n\n## Working live, in the loop\n\nWhen you are driving a *running* kernel turn by turn rather than assembling a finished file,\nthe job is exploratory analysis with a human watching. The rhythm is a loop, not a one-shot:\n\n1. **Propose one coherent step** \u2014 a markdown framing cell and the code cell it sets up, not\n   ten cells you haven't seen run. Small steps keep you and the human oriented.\n2. **Run it and read what comes back.** Outputs return *in execution order* as a mix of:\n   stream text (stdout/stderr), **figures as PNG images you can actually see**, rich\n   tables/HTML rendered to text, and tracebacks. Look before you leap.\n3. **Interpret, then decide the next step from the evidence** \u2014 not from what you assumed the\n   data would say. Drop a one-sentence takeaway in a markdown cell, then propose the next move.\n4. **Loop with the human.** Surface forks (\"we could model this two ways\u2026\"), pause before\n   expensive or destructive steps, and let them redirect. You are a pair-analyst, not an\n   autopilot. The pressure-test rule (step 4 of the workflow) still holds: confirm a finding\n   is real before you narrate it.\n\n### Reading outputs so you can actually see\n\nYou only \"see\" what a cell emits, so emit deliberately \u2014 the output *is* your sensory input:\n\n- **To judge a distribution, shape, fit, or trend, draw it.** A matplotlib / `display_plotly`\n  figure comes back to you as an image; that is how you inspect a result visually. If you\n  need to see it, plot it \u2014 then interpret what the picture shows.\n- **To reason over data, summarize it as text:** `df.head()`, `df.describe()`, `df.dtypes`,\n  `value_counts()`, `df.shape`. **Never end a cell on a 10,000-row frame** \u2014 the whole thing\n  streams back into your context and tells you little; a 10-row head tells you more.\n- **Read tracebacks and repair the cell** before continuing. A run that errors and barrels\n  onward is worse than one that stops and fixes itself.\n- **Build on persistent state.** The kernel keeps everything in scope across cells (the\n  Variables panel shows what's live) \u2014 reuse a frame you built three steps ago instead of\n  recomputing it, and inspect an unfamiliar object before you assume its shape.\n\n## Working from existing code or data\n\nOften the input is not a blank prompt but **existing workbench code** or **a dataset** that\nshould become a notebook. Do not dump it into one cell. Convert it into a narrated notebook:\n\n- **Read it for intent first.** Identify the steps the code performs (load, transform,\n  model, plot) and the story the data tells. The notebook's structure should follow that\n  intent, not the original line order.\n- **Split into rerunnable steps**, one idea per cell, in the section arc above. Hoist\n  imports to a single early cell. Pull magic numbers into named constants.\n- **Add the narration the code lacks**: a framing cell, a sentence of setup before each\n  step, and a takeaway after each result. This is most of the value you add.\n- **Upgrade the outputs to the runtime.** Replace `print(df)` with a rendered DataFrame;\n  turn a static chart into `display_plotly` when interactivity helps; typeset equations with\n  `$\u2026$` / `$$\u2026$$` (KaTeX) and make a pipeline or state machine legible with a ```mermaid\n  diagram instead of a paragraph describing it.\n- **Preserve behavior.** Don't silently change logic or results while restructuring; if you\n  fix a real bug, call it out in prose.\n\n## Structure that reads well\n\n- **Open with a title cell**: an `#` H1, one or two sentences of framing, and a short\n  bulleted list of what the reader will see. No code yet.\n- **One imports cell, early.** Group all imports there so first-run package loading happens\n  once and later cells are fast. Set display options here too (`pd.set_option`, a seeded\n  `np.random.default_rng`, matplotlib style).\n- **Section by section**: each analytical step gets a `##`/`###` header, 1\u20133 sentences of\n  setup, the code, and then \u2014 crucially \u2014 a sentence of *takeaway* after the output. The\n  takeaway is what separates a notebook from a transcript.\n- **Close with a conclusion cell** that states what was found, the caveats, and one or two\n  next steps. This is the part readers remember.\n\n### The rhythm, concretely\n\nThree consecutive cells showing the markdown \u2192 code \u2192 takeaway beat:\n\n> **(markdown)** `## 2. Does engagement predict retention?` <br>\n> We regress 30-day retention on first-week engagement, controlling for cohort size.\n>\n> **(code)** ```...fit model...; coef_table``` &nbsp;(cell ends on the rich table, not `print`)\n>\n> **(markdown)** Engagement is the dominant signal (\u03b2 = 0.41, p < 0.001); cohort size\n> barely matters once it's included \u2014 so onboarding, not scale, is the lever.\n\nEvery section repeats that beat. No orphan code cells, no walls of prose.\n\n## Output discipline (this is where ordering matters)\n\nThe runtime builds each cell's output as a single ordered stream: prints, figures,\n`display_*` calls, and the cell's final value appear in the exact order they were produced.\nUse that.\n\n- **Let the last expression render.** End a cell on `df.head()`, a `Series`, a metrics\n  table, or a fitted-model summary \u2014 the runtime shows its rich `_repr_html_` (DataFrames\n  become real tables). Do **not** wrap it in `print()`, which collapses it to plain text.\n- **`print()` for narration of values mid-cell** (shapes, counts, chosen parameters); the\n  rich result for the headline object at the end.\n- **`display(a, b, c)`** when you need to show several objects in order within one cell.\n- **Figures auto-display.** Just build the figure; it's captured inline. `plt.show()` is\n  optional and harmless \u2014 figures created before the final value appear before it.\n- A cell that both plots and returns a table renders **plot then table**, matching execution\n  order \u2014 put the plot code before the final expression if that's the order you want.\n\n## Visualization\n\nDefault to **static matplotlib** for clarity and print-fidelity; reach for **interactive**\nwhen hovering, zooming, or panning genuinely helps the reader explore.\n\n- Every chart: a title, axis labels **with units**, a legend when there is more than one\n  series, a sensible `figsize`, and `fig.tight_layout()`. A chart without labels is a\n  failure regardless of how pretty it is.\n- One idea per chart. If you're tempted to put five series on one axis, ask whether two\n  small-multiples would read better.\n- **Interactive Plotly** is a one-liner: `%pip install plotly` once, then\n  `display_plotly(fig, height=520)` \u2014 a fully interactive chart (zoom, pan, hover, lasso) in\n  a sandboxed frame.\n- **Custom interactive HTML/JS** (d3, a hand-built widget, a Bokeh/Altair export):\n  `display_html(html_string, height=520)` drops trusted HTML into a sandboxed iframe.\n- See `references/chartsmanship.md` for concrete recipes, a matplotlib house style, and the\n  Plotly / `display_html` patterns.\n\n## Code craftsmanship\n\n- Idiomatic, readable Python: clear names, small functions, vectorized pandas/numpy over\n  Python loops. A notebook is read more than it is run.\n- Seed every random process (`np.random.default_rng(SEED)`) so the narrative is reproducible\n  across reruns.\n- Comment the *why*, not the *what*. The prose cell already said what; the comment explains a\n  non-obvious choice.\n- Prefer composing state across cells (the kernel is persistent) over recomputing \u2014 but keep\n  each cell independently rerunnable given the cells above it.\n\n## Hard runtime facts (do not violate)\n\nThese come from how the Pyodide runtime actually behaves. Full detail in\n`references/runtime.md`.\n\n- **Bundled scientific stack \u2014 just `import`:** numpy, pandas, scipy, scikit-learn,\n  matplotlib, sympy, networkx, statsmodels, Pillow, beautifulsoup4, lxml, regex. The runtime\n  auto-loads these on first import (the heavy ones \u2014 scipy/sklearn/statsmodels \u2014 take a\n  moment the first time).\n- **Pure-Python extras \u2014 `%pip install <name>` first:** e.g. plotly, altair, humanize.\n  micropip pulls them from PyPI.\n- **Will NOT work:** `requests` and raw sockets/threads/`subprocess` (no real OS/network\n  layer); ipywidgets and `%matplotlib widget` (no widget comm \u2014 use `display_html` /\n  `display_plotly` instead); any C-extension package Pyodide hasn't built (torch, tensorflow,\n  polars, etc.).\n- **Markdown renders:** headings, **flat** bullet/numbered lists, GFM tables, blockquotes,\n  fenced code (Python is syntax-highlighted), inline\n  `code`/**bold**/*italic*/~~strike~~/links/images, **LaTeX math via KaTeX** (`$\u2026$` inline,\n  `$$\u2026$$` display), and **Mermaid diagrams** inside a ```mermaid fenced block. It does **NOT**\n  nest lists. Use `$\u2026$` / `$$\u2026$$` freely for equations, and reach for ```mermaid for\n  flowcharts, sequence/state/ER diagrams, and pipeline schematics. (Reserve matplotlib\n  mathtext for labels *inside* a chart, where KaTeX can't reach \u2014 use `\\frac`, not `\\dfrac`,\n  there.)\n- **Data files** mounted via **+Data** land in the working directory; read them with\n  `open(\"name\")` / `pd.read_csv(\"name\")`.\n\n## Anti-patterns (rewrite if you catch these)\n\n- One giant cell doing everything \u2192 split into rerunnable steps.\n- `print(df)` for a DataFrame \u2192 end the cell on the DataFrame so it renders as a table.\n- A chart with no title/labels \u2192 add them; state units.\n- Narrating a result you never checked \u2192 a fizzled sim or near-zero R\u00b2 dressed up as a\n  finding. Pressure-test first; fix the setup or report the null honestly.\n- `import requests` / network calls that assume a server \u2192 generate or mount the data.\n- `$\\sum_i x_i$` rendered as a matplotlib *figure* when the markdown cell would typeset it \u2192\n  use `$\u2026$` / `$$\u2026$$` directly; reserve mathtext for labels inside a chart.\n- Walls of markdown with no code, or walls of code with no narration \u2192 alternate.\n- Skipping the takeaway sentence after a result \u2192 always interpret what was just shown.\n\n## Reference files\n\n- `references/runtime.md` \u2014 the full runtime/Pyodide contract: display helpers (exact\n  signatures), output ordering, the `%pip` vs import rule, package availability, the markdown\n  feature matrix, and gotchas.\n- `references/chartsmanship.md` \u2014 a matplotlib house style, small-multiples and twin-axis\n  recipes, the `display_plotly` and `display_html` patterns with complete examples, and how\n  to choose static vs. interactive.\n- `scripts/build_notebook.py` \u2014 assembles a valid nbformat 4.5 `.ipynb` from a JSON cell\n  spec. Always build notebooks with this rather than emitting JSON by hand.\n\n## Chart house style (condensed)\n- Every chart: title, axis labels WITH units, legend when >1 series, sensible figsize (~8x4.5), fig.tight_layout().\n- One idea per chart; prefer two small multiples over five series on one axis.\n- Seed RNGs; annotate the takeaway point rather than describing it only in prose.\n- Light grid only when it aids reading; no chartjunk; colorblind-safe default cycle.\n- Interactivity only when hover/zoom genuinely helps: %pip install plotly once, then display_plotly(fig, height=520).\n- Custom HTML/JS output goes through display_html(html, height) \u2014 sandboxed iframe.\n- matplotlib mathtext only for math inside a chart; markdown KaTeX ($\u2026$/$$\u2026$$) for narrative equations.\n\n# In-browser Python runtime contract\n\nEverything a notebook author needs to know about how the runtime executes code and renders\noutput. The runtime is CPython on WebAssembly (Pyodide) running entirely in the browser, with\none persistent kernel shared across all cells. (KERNEL is the reference implementation; the\nnames below \u2014 `display_html`, `display_plotly`, the ordering rules \u2014 are the contract any\ncompatible runtime should honor.)\n\n## Table of contents\n1. Execution model\n2. Output ordering\n3. Display helpers (exact signatures)\n4. matplotlib\n5. Packages: import vs `%pip`\n6. The markdown feature matrix\n7. Data files\n8. Things that don't exist here\n9. Performance notes\n\n## 1. Execution model\n\n- **One persistent namespace.** Variables, imports, and functions defined in one cell are\n  available in every later cell, exactly like Jupyter. Build state up incrementally.\n- **Top-level `await` is allowed.** Cells run with `eval_code_async`, so\n  `await something()` works at cell top level.\n- **Last-expression echo.** If a cell's final statement is an expression, its value is\n  displayed: rich HTML via `_repr_html_` when the object provides it (pandas DataFrame,\n  Series, styled objects), otherwise `repr()`. A trailing `;` or ending on an assignment\n  suppresses the echo.\n- **`_`** holds the last echoed value, as in a REPL.\n- **Errors** show a trimmed traceback starting at the user's cell frame.\n\n## 2. Output ordering\n\nEach cell's outputs are emitted as a single **ordered** stream in execution order:\nstdout/stderr fragments, figures, `display_*` calls, and finally the cell's return value.\n\nPractical consequences:\n- `print(\"loading...\")` then a plot then a returned table renders as: text, figure, table.\n- Figures created without an explicit `show()` are captured **right before** the cell's\n  final value, so they appear above a returned table.\n- `plt.show()` / `fig.show()` are intercepted to flush pending text and capture the figure\n  *at that point* in the stream \u2014 so multiple show() calls interleaved with prints render\n  in the right order. They never emit the Agg \"non-interactive\" warning.\n\n## 3. Display helpers (exact signatures)\n\nThese are injected into every cell's namespace \u2014 no import needed.\n\n```python\ndisplay(*objs)\n# Render one or more objects inline, in order. Uses _repr_html_ when available,\n# else repr(). Use when you want to show several things from one cell.\n\ndisplay_html(html: str, height: int = 480)\n# Render a trusted HTML string in a sandboxed <iframe srcdoc> (scripts allowed,\n# no same-origin access to the parent). height is clamped to [140, 1400].\n# This is the path for any custom interactive output: d3, hand-written JS,\n# a Bokeh/Altair standalone export, a Plotly doc, an HTML table you built, etc.\n\ndisplay_iframe(html: str, height: int = 480)\n# Alias for display_html.\n\ndisplay_plotly(fig, height: int = 520)\n# Convenience for Plotly figures. Internally calls\n# fig.to_html(include_plotlyjs=\"cdn\", full_html=True, config=...) and shows it via\n# display_html. Requires `%pip install plotly` earlier in the notebook. Raises a clear\n# TypeError if passed a non-Plotly object.\n```\n\nSecurity/behavior note: `display_html` content runs in a sandboxed iframe and may load\nscripts from a CDN (that's how Plotly renders), but cannot reach the parent page. The\nlast-expression and `display()` HTML path is sanitized (scripts/`on*=` stripped) and\nrendered inline \u2014 so use `display_html` when you genuinely need scripts to run.\n\n## 4. matplotlib\n\n- Backend is Agg (non-interactive); figures are rasterized to PNG and shown inline.\n- Just build figures \u2014 they are auto-captured. `plt.show()` is optional.\n- For crisp output use a reasonable `figsize` and `fig.tight_layout()`. KERNEL renders at\n  ~110 dpi with `bbox_inches=\"tight\"`.\n- `import matplotlib.pyplot as plt` triggers a one-time package load on first use; put it\n  in the early imports cell.\n- LaTeX-style math is available inside matplotlib via mathtext (`r\"$\\alpha$\"` in\n  titles/labels/`ax.text`) \u2014 use it for math that must live on a chart. For equations in the\n  narrative, markdown cells now typeset KaTeX directly (see \u00a76), so prefer `$\u2026$` / `$$\u2026$$`\n  there.\n\n## 5. Packages: import vs `%pip`\n\n**Bundled with Pyodide \u2014 import directly, KERNEL auto-loads them:**\nnumpy, pandas, scipy, scikit-learn (`sklearn`), matplotlib, sympy, networkx, statsmodels,\nPillow (`PIL`), beautifulsoup4 (`bs4`), lxml, regex, pyyaml (`yaml`), and more.\n\n**Pure-Python packages from PyPI \u2014 install once with the magic, then import:**\n```python\n%pip install plotly altair humanize\n```\n`%pip install` (or `!pip install`) is handled before the rest of the cell runs; it uses\nmicropip, which can install any pure-Python wheel on PyPI plus anything Pyodide has\npre-built. Good candidates: plotly, altair, humanize, tabulate, python-dateutil extras.\n\n**Not installable** (C/native extensions Pyodide hasn't built, or needs an OS): torch,\ntensorflow, polars, duckdb (varies), psycopg2, anything needing CUDA/threads/sockets.\n\nThe authoritative, current list of pre-built packages is at\n`https://pyodide.org/en/stable/usage/packages-in-pyodide.html` \u2014 when unsure whether a\nspecific package is available, prefer one from the bundled scientific stack, or generate\nthe data synthetically rather than reaching for an unavailable dependency.\n\n## 6. The markdown feature matrix\n\nKERNEL's markdown renderer supports:\n\n| Feature | Supported | Notes |\n|---|---|---|\n| Headings `#`\u2013`######` | yes | |\n| Paragraphs | yes | |\n| Bullet lists `- * +` | yes | **flat only \u2014 no nesting** |\n| Numbered lists `1.` | yes | flat only |\n| GFM tables `\\| a \\| b \\|` | yes | needs the `---` separator row |\n| Blockquotes `>` | yes | can contain nested markdown |\n| Fenced code ```` ``` ```` | yes | ` ```python ` is syntax-highlighted |\n| Inline `code` | yes | |\n| **bold** / *italic* / ~~strike~~ | yes | `**`/`__`, `*`/`_`, `~~` |\n| Links `[t](url)` / images `![a](url)` | yes | links open in a new tab |\n| LaTeX math `$...$` / `$$...$$` | **yes** | KaTeX: `$\u2026$` inline, `$$\u2026$$` display |\n| Mermaid diagrams ```` ```mermaid ```` | **yes** | fl/sequence/state/ER/gantt etc. |\n| Nested lists / task lists / footnotes | **NO** | flatten the structure instead |\n\nEquations typeset with KaTeX, so write them directly in the narrative: `$\u2026$` inline,\n`$$\u2026$$` (or `\\[ \u2026 \\]`) for display. Diagrams render from a ```mermaid fenced block. Reserve\nmatplotlib mathtext for math that must live *inside* a chart (axis labels, annotations),\nwhere KaTeX cannot reach \u2014 and there, use `\\frac`, not `\\dfrac`.\n\n## 7. Data files\n\nThe **+Data** button mounts uploaded files into the Pyodide working directory. Read them\nwith ordinary file APIs:\n```python\ndf = pd.read_csv(\"uploaded.csv\")\ntext = open(\"notes.txt\").read()\n```\nIf the notebook is meant to be self-contained (no upload), generate a realistic synthetic\ndataset with a seeded RNG and say so in the prose.\n\n## 8. Things that don't exist here\n\n- **Networking:** no `requests`, `urllib` to arbitrary hosts, or raw sockets. Don't fetch\n  remote data at runtime; mount it or synthesize it. (A `display_html` iframe may load a\n  charting library from a CDN, but Python-side network calls are not reliable.)\n- **ipywidgets / `%matplotlib widget` / `%matplotlib notebook`:** no widget comm protocol.\n  For interactivity use `display_plotly` or `display_html`.\n- **Threads, multiprocessing, subprocess:** single-threaded WASM; design accordingly.\n- **GPU / CUDA:** none.\n- **Other Jupyter magics:** only `%pip` / `!pip install` are special-cased. Don't rely on\n  `%matplotlib inline` (it's the default), `%timeit`, `%%bash`, etc.\n\n## 9. Performance notes\n\n- First import of a heavy package (pandas, matplotlib, scikit-learn) downloads and\n  initializes it once; subsequent cells are fast. Front-load imports.\n- Keep individual outputs reasonable \u2014 a 50k-row DataFrame repr or a 4000-point Plotly\n  scatter is fine; a million points will be slow. Sample or aggregate for display.\n- Big base64 PNGs and large iframes inflate the notebook; prefer one clear chart over ten.\n\n## Operating note (KERNEL agent)\nYou drive a LIVE KERNEL notebook through the tools provided. The human watches the notebook build in real time and can edit or run cells between your turns.\n- Work in small steps: add a short markdown framing cell plus the code cell it sets up (add_cells), then run_cell and READ the result before deciding the next move.\n- Figures come back to you as images \u2014 look at them. Tables/text come back as text. Interactive (iframe) output is invisible to you: print a text summary alongside if you must reason about it.\n- On a traceback: read it, edit_cell the failing cell, run it again. Do not barrel onward past an error.\n- Use inspect_namespace / inspect_variable / list_data_files before assuming what exists.\n- Narrate briefly between tool calls (one or two tight sentences). When the request is satisfied, stop calling tools and hand back with a short summary and suggested next steps.\n- Never fabricate outputs you did not see. Pressure-test findings before narrating them.";
+
+const AG_KEY='kernel.anthropic.key', AG_MODEL='kernel.agent.model', AG_AUTO='kernel.agent.autonomy', AG_MAX='kernel.agent.maxsteps';
+let agKey=localStorage.getItem(AG_KEY)||'';
+let agModel=localStorage.getItem(AG_MODEL)||'claude-sonnet-4-6';
+let agAutonomy=localStorage.getItem(AG_AUTO)||'auto';
+let agMaxSteps=parseInt(localStorage.getItem(AG_MAX)||'24',10);
+const AG_MAX_TEXT=4000, AG_MAX_ERR=6000, AG_MAX_IMG=4, AG_OLD_TEXT=1500;
+let agMsgs=[], agRunning=false, agStop=false, agSteps=0, agTxNb=null, agAbort=null;
+let agImgs=[], agUseIn=0, agUseOut=0, agUseCw=0, agUseCr=0, agTurnSeq=0;
+let agUseTurnNb=null;
+const AG_PRICES=[['opus',5,25],['sonnet',3,15],['haiku',1,5]];   /* $/Mtok in,out — estimates (Jun 2026) */
+const AG_QUICK=['claude-sonnet-4-6','claude-opus-4-8'];   /* model quick-cycle ring */
+function usageKey(){return 'kernel.agent.usage.'+(nbId||'anon')}
+function agLoadUsage(){try{const r=localStorage.getItem(usageKey());const u=r?JSON.parse(r):null;agUseIn=u&&u.i||0;agUseOut=u&&u.o||0;agUseCw=u&&u.cw||0;agUseCr=u&&u.cr||0}catch(e){agUseIn=0;agUseOut=0;agUseCw=0;agUseCr=0}}
+function agSaveUsage(){try{localStorage.setItem(usageKey(),JSON.stringify({i:agUseIn,o:agUseOut,cw:agUseCw,cr:agUseCr}))}catch(e){}}
+function agCost(){
+  let pin=3,pout=15;
+  for(const p of AG_PRICES)if(agModel.indexOf(p[0])>=0){pin=p[1];pout=p[2];break}
+  /* cache writes bill ~1.25x input, cache reads ~0.1x */
+  return (agUseIn+agUseCw*1.25+agUseCr*0.1)/1e6*pin+agUseOut/1e6*pout;
+}
+function fmtTok(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':String(n)}
+function meterUi(){
+  const el=document.getElementById('agUsage');if(!el)return;
+  if(!agUseIn&&!agUseOut&&!agUseCr&&!agUseCw){el.textContent='';el.title='session tokens · estimated cost (click to reset)';return}
+  const tin=agUseIn+agUseCw+agUseCr;
+  const pct=tin?Math.round(agUseCr/tin*100):0;
+  el.textContent=fmtTok(tin)+'↑'+(pct?(' ('+pct+'% cached)'):'')+' '+fmtTok(agUseOut)+'↓ · ≈$'+agCost().toFixed(agCost()<0.1?3:2);
+  try{el.title='session tokens · est cost (click to reset)\ncontext now ~'+fmtTok(agEstCtx(prunedMessages()))+' / '+fmtTok(agCtxLimit())+' ('+agModel+(agModelInfo&&agModelInfo.max_input_tokens?' · live from Models API':' · fallback estimate')+')'}catch(e){}
+}
+function agEsc(x){return String(x==null?'':x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+/* surface anything that would otherwise die silently */
+window.addEventListener('unhandledrejection',e=>{
+  try{ if(agRunning){ txDom('e','internal: '+String(e.reason&&e.reason.message?e.reason.message:e.reason)); agRunning=false; agStateUi(); progressOff(); } }catch(_){}
+});
+
+/* ── transcript & message persistence ── */
+function txKey(){return 'kernel.agent.tx.'+(nbId||'anon')}
+function msgsKey(){return 'kernel.agent.msgs.'+(nbId||'anon')}
+function agStripMsgs(msgs){
+  return msgs.map(m=>{
+    if(!Array.isArray(m.content))return m;
+    return {role:m.role,content:m.content.map(b=>{
+      if(b.type==='image')return {type:'text',text:'[image from the human]'};
+      if(b.type==='tool_result'){
+        const inner=(Array.isArray(b.content)?b.content:[]).map(c=>{
+          if(c.type==='image')return {type:'text',text:'[figure from an earlier step]'};
+          if(c.type==='text')return {type:'text',text:agTrunc(c.text,4000)};
+          return c;
+        });
+        return {type:'tool_result',tool_use_id:b.tool_use_id,content:inner};
+      }
+      return b;
+    })};
+  });
+}
+function agSaveMsgs(){
+  try{
+    let lite=agStripMsgs(agMsgs);
+    let out=JSON.stringify(lite);
+    while(out.length>1500000&&lite.length>4){lite=lite.slice(2);out=JSON.stringify(lite)}
+    localStorage.setItem(msgsKey(),out);
+  }catch(e){}
+}
+function agLoadMsgs(){
+  try{const r=localStorage.getItem(msgsKey());const a=r?JSON.parse(r):[];return Array.isArray(a)?a:[]}catch(e){return []}
+}
+function txEntries(){
+  const out=[];$("#agTx").querySelectorAll('[data-k]').forEach(el=>{
+    out.push({k:el.dataset.k,t:el.dataset.k==='c'?el.innerHTML:el.textContent})});
+  return out.filter(e=>e.k!=='s'&&e.k!=='w'&&e.k!=='img').slice(-300);
+}
+function agExportBundle(){
+  const tx=txEntries();
+  if(!tx.length&&!agMsgs.length)return null;
+  return {v:1,saved:new Date().toISOString(),notebook:nbName,transcript:tx,messages:agStripMsgs(agMsgs)};
+}
+function agImportMeta(meta){
+  if(!meta||typeof meta!=='object')return;
+  try{
+    localStorage.setItem(txKey(),JSON.stringify(meta.transcript||[]));
+    localStorage.setItem(msgsKey(),JSON.stringify(meta.messages||[]));
+  }catch(e){}
+  agMsgs=Array.isArray(meta.messages)?meta.messages:[];
+  txLoad();txDom('s','conversation restored from notebook');agStateUi();
+}
+function agSlug(){return (nbName||'kernel-notebook').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'kernel-notebook'}
+function agExportMd(){
+  const e=txEntries();
+  if(!e.length){toast('Nothing to export yet.');return}
+  let md='# KERNEL·A conversation — '+nbName+'\n\n_'+new Date().toISOString()+'_\n\n';
+  const tmp=document.createElement('div');
+  e.forEach(x=>{
+    if(x.k==='u')md+='**You:** '+x.t+'\n\n';
+    else if(x.k==='a')md+=x.t+'\n\n';
+    else if(x.k==='c'){tmp.innerHTML=x.t;md+='`'+tmp.textContent.trim()+'`\n\n'}
+    else if(x.k==='e')md+='> ERROR: '+x.t+'\n\n';
+  });
+  const blob=new Blob([md],{type:'text/markdown'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=agSlug()+'-conversation.md';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  toast('Conversation exported.');
+}
+function txLoad(){
+  agTurnSeq=0;
+  try{const r=localStorage.getItem(txKey());const arr=r?JSON.parse(r):[];
+    $("#agTx").innerHTML='';
+    if(arr.length){arr.forEach(e=>txDom(e.k,e.t,true));txDom('s','earlier session',true)}
+    else{txDom('s','new conversation',true);
+      txDom('a','I write, run, and read notebook cells with you. Arm a key (⋯ above), mount data with + Data, then describe an analysis — or just ask what I can do.',true)}
+  }catch(e){$("#agTx").innerHTML=''}
+}
+function txPersist(){
+  try{localStorage.setItem(txKey(),JSON.stringify(txEntries()))}catch(e){}
+}
+function txDom(kind,content,restoring){
+  const tx=$("#agTx");let el;
+  if(kind==='u'){el=document.createElement('div');el.className='ag-u';el.textContent=content;
+    el.dataset.turn=String(++agTurnSeq);
+    const fk=document.createElement('button');fk.className='ag-fork';fk.textContent='⑂';
+    fk.title='Fork from here — duplicates the notebook, rewinds the conversation to before this message';
+    el.appendChild(fk)}
+  else if(kind==='a'){el=document.createElement('div');el.className='ag-a';el.textContent=content}
+  else if(kind==='c'){el=document.createElement('div');el.className='ag-chips';el.innerHTML=content}
+  else if(kind==='e'){el=document.createElement('div');el.className='ag-chips';el.innerHTML='<span class="ag-chip err">'+agEsc(content)+'</span>'}
+  else if(kind==='w'){el=document.createElement('div');el.className='ag-working';el.innerHTML='<span class="dotp"></span>'+agEsc(content)}
+  else if(kind==='img'){el=document.createElement('img');el.className='ag-img';el.src=content}
+  else{el=document.createElement('div');el.className='ag-sys';el.textContent='— '+content+' —'}
+  el.dataset.k=kind;
+  tx.appendChild(el);tx.scrollTop=tx.scrollHeight;
+  if(!restoring)txPersist();
+  return el;
+}
+function chip(label,cls,cellId){
+  return '<span class="ag-chip '+(cls||'')+(cellId?' click':'')+(cellId?'" data-cell="'+cellId:'')+'">'+agEsc(label)+'</span>';
+}
+$("#agTx").addEventListener('click',e=>{
+  const f=e.target.closest('.ag-fork');
+  if(f){agFork(parseInt(f.parentElement.dataset.turn,10));return}
+  const c=e.target.closest('[data-cell]');
+  if(c){const cell=findCell(c.dataset.cell);if(cell&&cell.el){selectCell(cell.id,'command');cell.el.scrollIntoView({block:'center',behavior:'smooth'})}}
+});
+
+/* ── state chip ── */
+function agStateUi(){
+  const st=$("#agState");
+  if(agRunning){st.textContent='RUNNING';st.className='ag-state run'}
+  else if(agKey){st.textContent='ARMED · '+agModel.replace(/^claude-/,'');st.className='ag-state armed'}
+  else{st.textContent='OFFLINE';st.className='ag-state'}
+  $("#agMode").textContent=agAutonomy.toUpperCase();
+  $("#agMode").classList.toggle('step',agAutonomy==='step');
+  const mc=$("#agModelChip");
+  if(mc){mc.textContent=agModel.replace(/^claude-/,'').replace(/-\d{8}$/,'');
+    mc.classList.toggle('step',agModel.indexOf('opus')>=0)}
+  $("#agSteps").textContent=agRunning?('STEP '+agSteps+'/'+agMaxSteps):'';
+  $("#agStop").style.display=agRunning?'':'none';
+  $("#agSend").disabled=agRunning;
+}
+
+/* ── tool definitions ── */
+const AG_TOOLS=[
+ {name:'add_cells',description:'Add one or more cells to the notebook in order (markdown for framing, code for the step). Does NOT run code — stage then run.',
+  input_schema:{type:'object',properties:{cells:{type:'array',items:{type:'object',properties:{type:{type:'string',enum:['markdown','code']},source:{type:'string'}},required:['type','source']}},after_cell_id:{type:'string',description:'insert after this cell id; omit to append at the end'}},required:['cells']}},
+ {name:'run_cell',description:'Execute one code cell and return its outputs (text, tables, tracebacks, and figures as images you can see).',
+  input_schema:{type:'object',properties:{cell_id:{type:'string'}},required:['cell_id']}},
+ {name:'run_all',description:'Run all code cells from the top (or from a given cell). Stops at the first error. Returns per-cell summaries plus full output for the final and any errored cell.',
+  input_schema:{type:'object',properties:{from_cell_id:{type:'string'}}}},
+ {name:'edit_cell',description:'Replace a cell source (use after reading a traceback, then run it again).',
+  input_schema:{type:'object',properties:{cell_id:{type:'string'},source:{type:'string'}},required:['cell_id','source']}},
+ {name:'read_cell',description:'Re-read a cell current source and outputs without re-running it.',
+  input_schema:{type:'object',properties:{cell_id:{type:'string'}},required:['cell_id']}},
+ {name:'inspect_namespace',description:'List the live variables in the kernel (name, type, info, size).',
+  input_schema:{type:'object',properties:{}}},
+ {name:'inspect_variable',description:'Look closely at one variable: DataFrame head and dtypes, Series stats, array shape/min/max/mean, dict/list samples, scalar repr.',
+  input_schema:{type:'object',properties:{name:{type:'string'}},required:['name']}},
+ {name:'list_data_files',description:'List the data files mounted into the kernel working directory (name, type, size, short preview).',
+  input_schema:{type:'object',properties:{}}},
+ {name:'save_data_file',description:'Publish a file into the Data panel so the human can see, preview, and reuse it. If content is given, the file is written first; otherwise it must already exist in the working directory (e.g., written earlier via df.to_csv("name.csv")). Use this to promote results — cluster assignments, summary tables, cleaned datasets.',
+  input_schema:{type:'object',properties:{filename:{type:'string'},content:{type:'string',description:'optional file content; omit to publish an existing working-directory file'}},required:['filename']}},
+ {name:'set_notebook_name',description:'Name (or rename) the notebook once the topic is clear, e.g. "berry-cluster-analysis".',
+  input_schema:{type:'object',properties:{name:{type:'string'}},required:['name']}},
+ {name:'delete_cell',description:'Delete a cell.',
+  input_schema:{type:'object',properties:{cell_id:{type:'string'}},required:['cell_id']}},
+ {name:'move_cell',description:'Move a cell to a new index.',
+  input_schema:{type:'object',properties:{cell_id:{type:'string'},to_index:{type:'integer'}},required:['cell_id','to_index']}}
+];
+
+/* ── output marshaling ── */
+function agTrunc(t,n){t=String(t==null?'':t);return t.length>n?t.slice(0,n)+'…[truncated]':t}
+function agShrink(b64,mime){
+  return new Promise(res=>{
+    if(!b64||b64.length<2000000){res({b64,mime:mime||'image/png'});return}
+    const img=new Image();
+    img.onload=()=>{const w=Math.min(1200,img.width),h=Math.round(img.height*w/img.width);
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      res({b64:c.toDataURL('image/png').split(',')[1],mime:'image/png'})};
+    img.onerror=()=>res({b64,mime:mime||'image/png'});
+    img.src='data:'+(mime||'image/png')+';base64,'+b64;
+  });
+}
+async function marshalCell(cell){
+  const blocks=[];let imgs=0;
+  const hadErr=cell.outputs&&cell.outputs.some(o=>o.kind==='error');
+  blocks.push({type:'text',text:'Cell ['+(cell.execCount!=null?cell.execCount:'?')+'] · '+(cell.runtime!=null?fmtDur(cell.runtime):'—')+(hadErr?' · ERROR':'')});
+  const outs=cell.outputs||[];
+  if(!outs.length){blocks.push({type:'text',text:'Cell ran, no output.'});return blocks}
+  for(const o of outs){
+    if(o.kind==='stream')blocks.push({type:'text',text:(o.name==='stderr'?'stderr: ':'stdout: ')+agTrunc(o.text,AG_MAX_TEXT)});
+    else if(o.kind==='text')blocks.push({type:'text',text:agTrunc(o.text,AG_MAX_TEXT)});
+    else if(o.kind==='error')blocks.push({type:'text',text:'ERROR:\n'+agTrunc(o.text,AG_MAX_ERR)});
+    else if(o.kind==='image'){
+      imgs++;
+      if(imgs>AG_MAX_IMG)continue;
+      const im=await agShrink(o.b64,o.mime);
+      blocks.push({type:'image',source:{type:'base64',media_type:im.mime,data:im.b64}});
+    }
+    else if(o.kind==='html'){
+      const ex=String(o.html||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      blocks.push({type:'text',text:'[HTML output rendered]'+(ex&&ex.length<1200?' — '+ex:'')});
+    }
+    else if(o.kind==='iframe_html')blocks.push({type:'text',text:'[interactive output rendered — not visible to you; print a text summary if you must reason about it]'});
+  }
+  if(imgs>AG_MAX_IMG)blocks.push({type:'text',text:'['+(imgs-AG_MAX_IMG)+' more figures omitted]'});
+  return blocks;
+}
+
+/* ── kernel helpers ── */
+function agWaitKernel(){
+  return new Promise((res,rej)=>{
+    if(kernelReady){res();return}
+    let n=0;const iv=setInterval(()=>{
+      if(kernelReady){clearInterval(iv);res()}
+      else if(++n>240){clearInterval(iv);rej(new Error('kernel did not become ready'))}
+    },500);
+  });
+}
+function cellLabel(cell){return '['+(indexOf(cell)+1)+']'}
+function focusAgCell(cell){if(cell&&cell.el){selectCell(cell.id,'command');cell.el.scrollIntoView({block:'center',behavior:'smooth'})}}
+
+/* ── approval gates ── */
+function askApproval(label){
+  return new Promise(res=>{
+    const tx=$("#agTx");
+    const el=document.createElement('div');el.className='ag-approve';el.dataset.k='c';
+    el.innerHTML='<span>'+agEsc(label)+'</span><button class="ok">APPROVE</button><button class="skip">SKIP</button>';
+    tx.appendChild(el);tx.scrollTop=tx.scrollHeight;
+    el.querySelector('.ok').addEventListener('click',()=>{el.className='ag-chips';el.innerHTML=chip(label+' — approved');txPersist();res(true)});
+    el.querySelector('.skip').addEventListener('click',()=>{el.className='ag-chips';el.innerHTML=chip(label+' — skipped');txPersist();res(false)});
+  });
+}
+function askContinue(){
+  return new Promise(res=>{
+    const tx=$("#agTx");
+    const el=document.createElement('div');el.className='ag-approve';el.dataset.k='c';
+    el.innerHTML='<span>'+agMaxSteps+' steps this turn — still going.</span><button class="ok">CONTINUE</button><button class="skip">STOP</button>';
+    tx.appendChild(el);tx.scrollTop=tx.scrollHeight;
+    el.querySelector('.ok').addEventListener('click',()=>{el.remove();res(true)});
+    el.querySelector('.skip').addEventListener('click',()=>{el.remove();res(false)});
+  });
+}
+
+/* ── tool executor ── */
+async function execTool(tu){
+  const inp=tu.input||{},name=tu.name;
+  try{
+    if(name==='add_cells'){
+      const arr=Array.isArray(inp.cells)?inp.cells:[];
+      if(!arr.length)return [{type:'text',text:'No cells given.'}];
+      let at=cells.length;
+      if(inp.after_cell_id){const ac=findCell(inp.after_cell_id);if(ac)at=indexOf(ac)+1}
+      const added=[];
+      for(let i=0;i<arr.length;i++){
+        const spec=arr[i],type=spec.type==='markdown'?'markdown':'code';
+        const cell=insertCell(at+i,type,false);
+        cell.source=String(spec.source||'');
+        if(cell.taEl)cell.taEl.value=cell.source;
+        paint(cell);
+        if(type==='markdown')showRendered(cell,true);
+        added.push({cell_id:cell.id,index:indexOf(cell),type});
+        txDom('c',chip('+ '+type+' '+cellLabel(cell),'',cell.id));
+      }
+      schedulePersist();
+      focusAgCell(findCell(added[added.length-1].cell_id));
+      return [{type:'text',text:JSON.stringify({added})}];
+    }
+    if(name==='run_cell'){
+      const cell=findCell(inp.cell_id);
+      if(!cell)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
+      if(cell.type!=='code')return [{type:'text',text:'Not a code cell.'}];
+      await agWaitKernel();
+      focusAgCell(cell);
+      await runCell(cell);
+      const hadErr=cell.outputs&&cell.outputs.some(o=>o.kind==='error');
+      txDom('c',chip('▶ ran '+cellLabel(cell)+' · '+(cell.runtime!=null?fmtDur(cell.runtime):'—'),hadErr?'err':'run',cell.id));
+      return await marshalCell(cell);
+    }
+    if(name==='run_all'){
+      await agWaitKernel();
+      let start=0;
+      if(inp.from_cell_id){const fc=findCell(inp.from_cell_id);if(fc)start=indexOf(fc)}
+      const lines=[];let lastCell=null,errCell=null;
+      for(let j=start;j<cells.length;j++){
+        const c2=cells[j];
+        if(c2.type!=='code'){showRendered(c2,true);continue}
+        focusAgCell(c2);
+        await runCell(c2);
+        lastCell=c2;
+        const bad=c2.outputs&&c2.outputs.some(o=>o.kind==='error');
+        lines.push(cellLabel(c2)+' '+(bad?'ERROR':'ok')+' · '+(c2.runtime!=null?fmtDur(c2.runtime):'—')+' · '+(c2.outputs?c2.outputs.length:0)+' outputs');
+        if(bad){errCell=c2;break}
+        if(agStop){lines.push('(stopped by the human)');break}
+      }
+      txDom('c',chip('▶ ran '+lines.length+' cells'+(errCell?' · stopped at error':''),errCell?'err':'run'));
+      let blocks=[{type:'text',text:lines.join('\n')||'No code cells to run.'}];
+      const detail=errCell||lastCell;
+      if(detail)blocks=blocks.concat(await marshalCell(detail));
+      return blocks;
+    }
+    if(name==='edit_cell'){
+      const ce=findCell(inp.cell_id);
+      if(!ce)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
+      ce.source=String(inp.source||'');
+      if(ce.taEl)ce.taEl.value=ce.source;
+      paint(ce);
+      if(ce.type==='markdown')showRendered(ce,true);
+      schedulePersist();
+      txDom('c',chip('✎ edited '+cellLabel(ce),'',ce.id));
+      return [{type:'text',text:'{"ok":true}'}];
+    }
+    if(name==='read_cell'){
+      const cr=findCell(inp.cell_id);
+      if(!cr)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
+      txDom('c',chip('👁 read '+cellLabel(cr),'',cr.id));
+      let bb=[{type:'text',text:'source:\n'+agTrunc(cr.taEl?cr.taEl.value:cr.source,AG_MAX_TEXT)}];
+      if(cr.type==='code')bb=bb.concat(await marshalCell(cr));
+      return bb;
+    }
+    if(name==='inspect_namespace'){
+      await agWaitKernel();
+      const raw=await runPy('_inspect_ns()');
+      txDom('c',chip('⌕ namespace'));
+      try{
+        const rows=JSON.parse(raw);
+        if(!rows.length)return [{type:'text',text:'(namespace is empty)'}];
+        return [{type:'text',text:rows.map(r=>r.name+' · '+r.type+' · '+(r.info||'')+(r.size?' · '+r.size:'')).join('\n')}];
+      }catch(e){return [{type:'text',text:agTrunc(raw,AG_MAX_TEXT)}]}
+    }
+    if(name==='inspect_variable'){
+      await agWaitKernel();
+      if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(String(inp.name||'')))return [{type:'text',text:'ERROR: invalid identifier'}];
+      const det=await runPy('_var_detail('+JSON.stringify(inp.name)+')');
+      txDom('c',chip('⌕ '+inp.name));
+      return [{type:'text',text:agTrunc(det,AG_MAX_TEXT)}];
+    }
+    if(name==='list_data_files'){
+      txDom('c',chip('⌕ data files'));
+      if(!dataFiles.length)return [{type:'text',text:'(no files mounted — the human can add them with + Data)'}];
+      return [{type:'text',text:dataFiles.map(d=>d.name+' · '+(d.name.split('.').pop()||'file').toUpperCase()+' · '+(d.size||0)+' bytes'+(d.preview?'\n  preview: '+agTrunc(d.preview,240):'')).join('\n')}];
+    }
+    if(name==='save_data_file'){
+      await agWaitKernel();
+      const fname=String(inp.filename||'').replace(/[\\/]+/g,'_').trim();
+      if(!fname)return [{type:'text',text:'ERROR: empty filename'}];
+      try{
+        if(inp.content!=null)pyodide.FS.writeFile(fname,new TextEncoder().encode(String(inp.content)));
+        const buf=pyodide.FS.readFile(fname);
+        let preview='';
+        try{preview=new TextDecoder('utf-8',{fatal:false}).decode(buf.slice(0,8192)).slice(0,4000)}catch(e){}
+        const rec={name:fname,size:buf.length,type:'',preview};
+        const ent=dataFiles.find(d=>d.name===fname);
+        if(ent)Object.assign(ent,rec);else dataFiles.push(rec);
+        renderDataChips();renderDataList();
+        txDom('c',chip('⤴ published '+fname+' · '+buf.length+' bytes'));
+        return [{type:'text',text:JSON.stringify({ok:true,filename:fname,size:buf.length})}];
+      }catch(err){
+        return [{type:'text',text:'ERROR: could not publish "'+fname+'" — '+String(err&&err.message?err.message:err)+'. Write it first (e.g., df.to_csv("'+fname+'")) or pass content.'}];
+      }
+    }
+    if(name==='set_notebook_name'){
+      const nm=String(inp.name||'').trim().slice(0,80);
+      if(!nm)return [{type:'text',text:'ERROR: empty name'}];
+      nbName=nm;setNbTitle();
+      try{
+        const lib=readLib();const e2=lib.notebooks.find(n=>n.id===nbId);
+        if(e2){e2.name=nm;e2.updated=Date.now();writeLib(lib)}
+        const d=loadCellsFor(nbId)||{cells:[]};d.name=nm;localStorage.setItem(nbKey(nbId),JSON.stringify(d));
+      }catch(e){}
+      if(ui.left)renderLibrary();
+      txDom('c',chip('✎ named "'+nm+'"'));
+      return [{type:'text',text:'{"ok":true}'}];
+    }
+    if(name==='delete_cell'){
+      const cd=findCell(inp.cell_id);
+      if(!cd)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
+      const lbl=cellLabel(cd);
+      deleteCell(cd);
+      txDom('c',chip('✕ deleted '+lbl));
+      return [{type:'text',text:'{"ok":true}'}];
+    }
+    if(name==='move_cell'){
+      const cm=findCell(inp.cell_id);
+      if(!cm)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
+      const i0=indexOf(cm),i1=Math.max(0,Math.min(cells.length-1,inp.to_index|0));
+      cells.splice(i0,1);cells.splice(i1,0,cm);
+      render();selectCell(cm.id,'command');schedulePersist();
+      txDom('c',chip('⇅ moved to ['+(i1+1)+']',null,cm.id));
+      return [{type:'text',text:'{"ok":true}'}];
+    }
+    return [{type:'text',text:'ERROR: unknown tool '+name}];
+  }catch(err){
+    return [{type:'text',text:'ERROR (tool '+name+'): '+String(err&&err.message?err.message:err)}];
+  }
+}
+
+/* ── system prompt ── */
+function agOutline(){
+  if(!cells.length)return '(empty notebook)';
+  return cells.map((c,i)=>{
+    const first=((c.taEl?c.taEl.value:c.source)||'').split('\n')[0].slice(0,80);
+    return '['+i+'] '+c.id+' '+c.type+(c.execCount!=null?' · ran['+c.execCount+']':'')+' "'+first+'"';
+  }).join('\n');
+}
+function buildSystem(){
+  /* two blocks: the big static doc gets a cache breakpoint (read at ~10% price on
+     every subsequent loop step); the per-turn state rides uncached behind it */
+  const dyn='## Live notebook outline (current — the human may have edited)\n'+agOutline()+
+    '\n\n## Runtime state\nkernelReady: '+kernelReady+
+    '\nloaded python packages: '+((typeof pyodide!=='undefined'&&pyodide&&pyodide.loadedPackages)?(Object.keys(pyodide.loadedPackages).join(', ')||'(none yet)'):'(kernel booting)')+
+    '\nmounted data files: '+(dataFiles.length?dataFiles.map(d=>d.name).join(', '):'(none)')+
+    '\nnotebook name: '+nbName+
+    '\nHouse habits: name the notebook with set_notebook_name once the topic is clear; publish result tables (cluster assignments, summaries, cleaned data) with save_data_file so the human keeps them.';
+  return [{type:'text',text:DOCS,cache_control:{type:'ephemeral'}},{type:'text',text:dyn}];
+}
+AG_TOOLS[AG_TOOLS.length-1].cache_control={type:'ephemeral'};
+
+/* ── context budget (per model) ── */
+/* fallbacks if the Models API is unreachable (Jun 2026: opus-4-8 & sonnet-4-6 are 1M) */
+const AG_CTX=[['opus-4-8',1000000],['sonnet-4-6',1000000],['opus',200000],['sonnet',200000],['haiku',200000]];
+let agModelInfo=null;
+function agInfoKey(){return 'kernel.agent.modelinfo.'+agModel}
+async function agFetchModelInfo(){
+  if(!agKey)return;
+  try{const r=localStorage.getItem(agInfoKey());if(r){agModelInfo=JSON.parse(r);meterUi();return}}catch(e){}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/models/'+encodeURIComponent(agModel),{
+      headers:{'x-api-key':agKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});
+    if(!res.ok)return;
+    const d=await res.json();
+    if(d&&(d.max_input_tokens||d.max_tokens)){
+      agModelInfo={max_input_tokens:d.max_input_tokens||null,max_tokens:d.max_tokens||null};
+      try{localStorage.setItem(agInfoKey(),JSON.stringify(agModelInfo))}catch(e){}
+      meterUi();
+    }
+  }catch(e){}
+}
+function agCtxLimit(){
+  if(agModelInfo&&agModelInfo.max_input_tokens)return agModelInfo.max_input_tokens;
+  for(const c of AG_CTX)if(agModel.indexOf(c[0])>=0)return c[1];
+  return 200000;
+}
+function estBlocks(content){
+  let t=0;
+  for(const b of (Array.isArray(content)?content:[])){
+    if(b.type==='text')t+=Math.ceil((b.text||'').length/3.6);
+    else if(b.type==='image')t+=1500;
+    else if(b.type==='tool_use')t+=Math.ceil(JSON.stringify(b.input||{}).length/3.6)+30;
+    else if(b.type==='tool_result'){t+=estBlocks(b.content)+20}
+  }
+  return t;
+}
+function agEstCtx(msgs){
+  let t=Math.ceil(DOCS.length/3.6)+1200; /* system + tools overhead */
+  for(const m of msgs)t+=estBlocks(m.content)+10;
+  return t;
+}
+
+/* ── history pruning ── */
+function prunedMessages(){
+  const resultIdx=[];
+  agMsgs.forEach((m,i)=>{
+    if(m.role==='user'&&Array.isArray(m.content)&&m.content.some(b=>b.type==='tool_result'))resultIdx.push(i);
+  });
+  const keep=new Set(resultIdx.slice(-2));
+  let lastUserIdx=-1;
+  agMsgs.forEach((m,i)=>{
+    if(m.role==='user'&&Array.isArray(m.content)&&!m.content.some(b=>b.type==='tool_result'))lastUserIdx=i;
+  });
+  return agMsgs.map((m,i)=>{
+    if(!Array.isArray(m.content))return m;
+    const fresh=keep.has(i);
+    const content=m.content.map(b=>{
+      if(b.type==='image'&&i!==lastUserIdx)return {type:'text',text:'[image from an earlier message]'};
+      if(b.type==='tool_result'&&!fresh){
+        const inner=(Array.isArray(b.content)?b.content:[]).map(c=>{
+          if(c.type==='image')return {type:'text',text:'[figure from an earlier step]'};
+          if(c.type==='text')return {type:'text',text:agTrunc(c.text,AG_OLD_TEXT)};
+          return c;
+        });
+        return {type:'tool_result',tool_use_id:b.tool_use_id,content:inner};
+      }
+      if(b.type==='tool_use'&&!fresh&&b.input&&typeof b.input.source==='string'&&b.input.source.length>2000){
+        const inp={};for(const k in b.input)inp[k]=b.input[k];
+        inp.source=agTrunc(inp.source,2000);
+        return {type:'tool_use',id:b.id,name:b.name,input:inp};
+      }
+      return b;
+    });
+    return {role:m.role,content};
+  });
+}
+function agCompact(msgs){
+  /* drop oldest assistant+tool_result pairs until the estimate fits the window */
+  const limit=Math.floor(agCtxLimit()*0.85);
+  let est=agEstCtx(msgs);
+  if(est<=limit)return msgs;
+  msgs=msgs.slice();
+  let dropped=0;
+  while(est>limit){
+    let idx=-1;
+    for(let i=1;i<msgs.length-2;i++){
+      const a=msgs[i],b=msgs[i+1];
+      if(a.role==='assistant'&&b&&b.role==='user'&&Array.isArray(b.content)&&b.content.some(x=>x.type==='tool_result')){idx=i;break}
+    }
+    if(idx<0)break;
+    msgs.splice(idx,2);dropped++;
+    est=agEstCtx(msgs);
+  }
+  if(dropped){
+    msgs.splice(1,0,{role:'assistant',content:[{type:'text',text:'[context compacted: '+dropped+' earlier tool exchanges removed to fit the model window — the notebook outline above is current]'}]},
+                    {role:'user',content:[{type:'text',text:'(noted — continue)'}]});
+  }
+  return msgs;
+}
+
+/* ── streaming call (SSE) — live narration, visible progress ── */
+async function apiStream(){
+  agAbort=new AbortController();
+  let idleTimer=null;
+  const armIdle=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>{try{agAbort.abort()}catch(_){}}, 120000)};
+  armIdle();
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',signal:agAbort.signal,
+    headers:{'content-type':'application/json','x-api-key':agKey,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:agModel,max_tokens:4096,temperature:0.4,stream:true,
+      system:buildSystem(),tools:AG_TOOLS,tool_choice:{type:'auto'},messages:agCompact(prunedMessages())})
+  });
+  if(!res.ok){clearTimeout(idleTimer);let t='';try{t=await res.text()}catch(e){}
+    throw new Error('API '+res.status+(t?' — '+agTrunc(t,400):''))}
+  const reader=res.body.getReader(),dec=new TextDecoder();
+  let buf='',content=[],liveEl=null,liveText='',jsonBuf={};
+  let outTok=0,outBase=agUseOut;
+  const meterUi2=(o)=>{agUseOut=outBase+o;meterUi()};
+  const finishLive=()=>{if(liveEl){liveEl.classList.remove('live');liveEl=null;txPersist()}};
+  try{
+    for(;;){
+      const {done,value}=await reader.read();
+      if(done)break;
+      armIdle();
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const ln of lines){
+        if(!ln.startsWith('data:'))continue;
+        const payload=ln.slice(5).trim();
+        if(!payload||payload==='[DONE]')continue;
+        let ev;try{ev=JSON.parse(payload)}catch(e){continue}
+        if(ev.type==='message_start'){
+          const u=ev.message&&ev.message.usage;
+          if(u){agUseIn+=u.input_tokens||0;agUseCw+=u.cache_creation_input_tokens||0;agUseCr+=u.cache_read_input_tokens||0;meterUi()}
+        }
+        else if(ev.type==='message_delta'){
+          if(ev.usage&&ev.usage.output_tokens!=null){outTok=ev.usage.output_tokens;meterUi2(outTok)}
+        }
+        else if(ev.type==='content_block_start'){
+          const b=ev.content_block;
+          if(b.type==='text'){content[ev.index]={type:'text',text:b.text||''};liveText=b.text||'';
+            liveEl=txDom('a',liveText,true);liveEl.classList.add('live')}
+          else if(b.type==='tool_use'){content[ev.index]={type:'tool_use',id:b.id,name:b.name,input:{}};jsonBuf[ev.index]='';
+            finishLive()}
+        }
+        else if(ev.type==='content_block_delta'){
+          if(ev.delta.type==='text_delta'&&content[ev.index]){
+            content[ev.index].text+=ev.delta.text;
+            if(liveEl){liveText+=ev.delta.text;liveEl.textContent=liveText;
+              const tx=$("#agTx");tx.scrollTop=tx.scrollHeight}
+          }
+          else if(ev.delta.type==='input_json_delta'&&content[ev.index]!=null){
+            jsonBuf[ev.index]+=ev.delta.partial_json||'';
+          }
+        }
+        else if(ev.type==='content_block_stop'){
+          const c=content[ev.index];
+          if(c&&c.type==='tool_use'){try{c.input=jsonBuf[ev.index]?JSON.parse(jsonBuf[ev.index]):{}}catch(e){c.input={}}}
+          if(c&&c.type==='text')finishLive();
+        }
+        else if(ev.type==='error'){throw new Error('API stream: '+(ev.error&&ev.error.message||'unknown'))}
+      }
+    }
+  }finally{clearTimeout(idleTimer);finishLive();agUseOut=outBase+outTok;meterUi();agSaveUsage()}
+  return content.filter(Boolean);
+}
+
+/* ── the loop ── */
+async function agentTurn(text){
+  if(agRunning)return;
+  if(!agKey){openAgSettings();return}
+  const turnNb=nbId;
+  try{
+    agRunning=true;agStop=false;agSteps=0;agStateUi();progressOn();
+    const imgs=agImgs.slice();agImgs=[];renderThumbs();
+    imgs.forEach(im=>txDom('img',im.url));
+    const utext=text||'Look at the attached image'+(imgs.length>1?'s':'')+'.';
+    txDom('u',utext);
+    agMsgs.push({role:'user',content:[
+      ...imgs.map(im=>({type:'image',source:{type:'base64',media_type:im.media_type,data:im.data}})),
+      {type:'text',text:utext}
+    ]});
+    for(;;){
+      const w=txDom('w','calling '+agModel+'…');
+      let content;
+      try{content=await apiStream()}
+      finally{w.remove()}
+      agMsgs.push({role:'assistant',content});
+      const tus=content.filter(b=>b.type==='tool_use');
+      if(!tus.length)break;
+      const results=[];
+      for(const tu of tus){
+        let blocks;
+        if(nbId!==turnNb){agStop=true;blocks=[{type:'text',text:'The human switched notebooks — this turn is cancelled. Do not act further.'}]}
+        else if(agStop)blocks=[{type:'text',text:'The human pressed Stop. End the turn and summarize.'}];
+        else if(agAutonomy==='step'&&(tu.name==='run_cell'||tu.name==='run_all')){
+          const okd=await askApproval(tu.name==='run_all'?'run all cells?':'run cell?');
+          blocks=okd?await execTool(tu):[{type:'text',text:'Human skipped this action.'}];
+        }
+        else blocks=await execTool(tu);
+        agSteps++;agStateUi();
+        results.push({type:'tool_result',tool_use_id:tu.id,content:blocks});
+      }
+      agMsgs.push({role:'user',content:results});
+      txPersist();
+      if(agStop){txDom('s','stopped');break}
+      if(agSteps>=agMaxSteps){
+        const go=await askContinue();
+        if(!go){txDom('s','paused at step limit');break}
+        agSteps=0;
+      }
+    }
+  }catch(err){
+    if(err&&err.name==='AbortError')txDom('s',agStop?'stopped':'timed out — no data for 2 minutes');
+    else if(nbId!==turnNb){/* turn died because the notebook changed — note quietly */}
+    else txDom('e',String(err&&err.message?err.message:err));
+    /* drop a dangling user msg so the next turn starts clean */
+    if(agMsgs.length&&agMsgs[agMsgs.length-1].role==='user'&&!Array.isArray(agMsgs[agMsgs.length-1].content))agMsgs.pop();
+  }
+  agRunning=false;agAbort=null;agStateUi();progressOff();txPersist();agSaveMsgs();
+}
+
+/* ── settings ── */
+function openAgSettings(){
+  $("#agKey").value=agKey;$("#agModel").value=agModel;$("#agMax").value=agMaxSteps;
+  syncAgAuto();$("#agScrim").classList.add('show');$("#agKey").focus();
+}
+function closeAgSettings(){$("#agScrim").classList.remove('show')}
+function syncAgAuto(){
+  $("#agAutoBtn").classList.toggle('active',agAutonomy==='auto');
+  $("#agStepBtn").classList.toggle('active',agAutonomy==='step');
+}
+$("#agSettings").addEventListener('click',openAgSettings);
+$("#agExport").addEventListener('click',agExportMd);
+$("#agX").addEventListener('click',closeAgSettings);
+$("#agAutoBtn").addEventListener('click',()=>{agAutonomy='auto';syncAgAuto()});
+$("#agStepBtn").addEventListener('click',()=>{agAutonomy='step';syncAgAuto()});
+$("#agSave").addEventListener('click',()=>{
+  agKey=$("#agKey").value.trim();
+  agModel=$("#agModel").value.trim()||'claude-sonnet-4-6';
+  agMaxSteps=Math.max(4,Math.min(80,parseInt($("#agMax").value,10)||24));
+  try{localStorage.setItem(AG_KEY,agKey);localStorage.setItem(AG_MODEL,agModel);
+      localStorage.setItem(AG_AUTO,agAutonomy);localStorage.setItem(AG_MAX,String(agMaxSteps))}catch(e){}
+  closeAgSettings();agModelInfo=null;agFetchModelInfo();agStateUi();meterUi();
+});
+$("#agClear").addEventListener('click',()=>{agKey='';try{localStorage.removeItem(AG_KEY)}catch(e){}$("#agKey").value='';agStateUi()});
+$("#agScrim").addEventListener('mousedown',e=>{if(e.target===$("#agScrim"))closeAgSettings()});
+["agKey","agModel","agMax"].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>e.stopPropagation())});
+
+/* ── composer ── */
+function agSendMsg(){
+  const v=$("#agIn").value.trim();
+  if((!v&&!agImgs.length)||agRunning)return;
+  $("#agIn").value='';
+  agentTurn(v);
+}
+$("#agSend").addEventListener('click',agSendMsg);
+$("#agStop").addEventListener('click',()=>{agStop=true;if(agAbort){try{agAbort.abort()}catch(e){}}$("#agStop").textContent='STOPPING…';setTimeout(()=>{$("#agStop").textContent='STOP'},1500)});
+document.getElementById('agUsage').addEventListener('click',()=>{agUseIn=0;agUseOut=0;agUseCw=0;agUseCr=0;agSaveUsage();meterUi();toast('Usage meter reset.')});
+$("#agMode").addEventListener('click',()=>{agAutonomy=agAutonomy==='auto'?'step':'auto';try{localStorage.setItem(AG_AUTO,agAutonomy)}catch(e){}agStateUi()});
+$("#agModelChip").addEventListener('click',()=>{
+  if(agRunning){toast("Finish the current turn first.","err");return}
+  const ring=AG_QUICK.includes(agModel)?AG_QUICK:[agModel,...AG_QUICK];
+  agModel=ring[(ring.indexOf(agModel)+1)%ring.length];
+  try{localStorage.setItem(AG_MODEL,agModel)}catch(e){}
+  agModelInfo=null;agFetchModelInfo();agStateUi();meterUi();
+  toast('Model → '+agModel);
+});
+$("#agIn").addEventListener('keydown',e=>{
+  e.stopPropagation();
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();agSendMsg()}
+});
+function renderThumbs(){
+  $("#agThumbs").innerHTML=agImgs.map((im,i)=>
+    '<span class="ag-thumb"><img src="'+im.url+'"><button data-rm="'+i+'" title="remove">✕</button></span>').join('');
+}
+$("#agThumbs").addEventListener('click',e=>{
+  const b=e.target.closest('[data-rm]');
+  if(b){agImgs.splice(+b.dataset.rm,1);renderThumbs()}
+});
+async function agAddImage(file){
+  if(!file||agImgs.length>=4)return;
+  const okTypes=['image/png','image/jpeg','image/webp','image/gif'];
+  const mt=okTypes.includes(file.type)?file.type:'image/png';
+  const url=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(file)});
+  const b64=String(url).split(',')[1]||'';
+  const sh=await agShrink(b64,mt);
+  agImgs.push({media_type:sh.mime,data:sh.b64,url:'data:'+sh.mime+';base64,'+sh.b64});
+  renderThumbs();
+}
+$("#agIn").addEventListener('paste',e=>{
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(const it of items){
+    if(it.type&&it.type.indexOf('image/')===0){e.preventDefault();agAddImage(it.getAsFile())}
+  }
+});
+const agPanelEl=document.getElementById('agentPanel');
+agPanelEl.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){e.preventDefault()}});
+agPanelEl.addEventListener('drop',e=>{
+  const fs=e.dataTransfer&&e.dataTransfer.files;if(!fs||!fs.length)return;
+  let any=false;
+  for(const f of fs)if(f.type&&f.type.indexOf('image/')===0){any=true;agAddImage(f)}
+  if(any)e.preventDefault();
+});
+
+/* ── forking ── */
+function agFork(turn){
+  if(agRunning){toast("Wait for the current turn to finish.","err");return}
+  if(!turn||turn<1)return;
+  /* conversation: cut agMsgs before the turn-th plain user message */
+  let seen=0,cut=agMsgs.length;
+  for(let i=0;i<agMsgs.length;i++){
+    const m=agMsgs[i];
+    if(m.role==='user'&&Array.isArray(m.content)&&!m.content.some(b=>b.type==='tool_result')){
+      seen++;
+      if(seen===turn){cut=i;break}
+    }
+  }
+  const forkMsgs=agStripMsgs(agMsgs.slice(0,cut));
+  /* transcript: keep entries before the turn-th 'u' row */
+  const ents=txEntries();let u=0;const keep=[];
+  for(const e of ents){
+    if(e.k==='u'){u++;if(u===turn)break}
+    keep.push(e);
+  }
+  /* duplicate the notebook and switch */
+  const srcName=nbName;
+  duplicateNotebook(nbId);
+  const lib=readLib();
+  const ent=lib.notebooks[0];
+  if(!ent){toast("Fork failed.","err");return}
+  ent.name=srcName+" ⑂";ent.updated=Date.now();writeLib(lib);
+  try{const d=loadCellsFor(ent.id)||{cells:[]};d.name=ent.name;localStorage.setItem(nbKey(ent.id),JSON.stringify(d));}catch(e){}
+  try{
+    localStorage.setItem('kernel.agent.tx.'+ent.id,JSON.stringify(keep));
+    localStorage.setItem('kernel.agent.msgs.'+ent.id,JSON.stringify(forkMsgs));
+    localStorage.setItem('kernel.agent.usage.'+ent.id,JSON.stringify({i:agUseIn,o:agUseOut}));
+  }catch(e){}
+  switchNotebook(ent.id);
+  agTxNb=null; /* force the follower to reload transcript + msgs for the fork */
+  toast('Forked — you are now on "'+ent.name+'". The original thread is untouched.');
+}
+
+function agAskAboutCell(cell){
+  ui.agent=true;applyUI();saveUI();
+  const i=indexOf(cell)+1;
+  const inp=$("#agIn");
+  inp.value='About cell ['+i+'] (cell_id: '+cell.id+'): ';
+  inp.focus();
+  try{inp.setSelectionRange(inp.value.length,inp.value.length)}catch(e){}
+}
+
+/* ── open/toggle ── */
+function openAgent(){ui.agent=true;applyUI();saveUI();$("#agIn").focus()}
+$("#btnAgent").addEventListener('click',()=>{ui.agent=!ui.agent;applyUI();saveUI();if(ui.agent)$("#agIn").focus()});
+window.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&!e.altKey&&(e.key==='j'||e.key==='J')){e.preventDefault();openAgent()}
+});
+
+/* ── per-notebook transcript follow ── */
+setInterval(()=>{
+  if(nbId!==agTxNb){
+    if(agRunning){agStop=true;if(agAbort){try{agAbort.abort()}catch(e){}}}
+    agTxNb=nbId;agMsgs=agLoadMsgs();agLoadUsage();txLoad();agStateUi();meterUi();
+  }
+},800);
+
+txLoad();agStateUi();agFetchModelInfo();
+
+
 /* live theme: kernels flip without a reload (agent runs survive Alt+T) */
 window.addEventListener('ut-theme',function(){
   try{
@@ -2560,8 +3510,136 @@ window.addEventListener('ut-theme',function(){
   bootKernel();
 })();
 
+/* ===== mobile UI controller (variant only) ===== */
+/* ===== KERNEL·A mobile UI controller (variant only) =====
+   Injected INSIDE the main IIFE, so it can drive the private
+   panel state (ui / applyUI / saveUI) directly. Desktop layout
+   is untouched: everything here is gated on the phone breakpoint. */
+(function mobileUI(){
+  var mq = window.matchMedia('(max-width:760px)');
+  var PAN = [['agent','#agentPanel'],['left','#leftPanel'],['right','#rightPanel']];
+  function el(s){ return document.querySelector(s); }
+  function openNow(){
+    return PAN.filter(function(p){ var e=el(p[1]); return e && e.classList.contains('open'); })
+              .map(function(p){ return p[0]; });
+  }
+
+  /* ----- backdrop ----- */
+  var scrim=document.createElement('div'); scrim.id='mob-scrim'; document.body.appendChild(scrim);
+  scrim.addEventListener('click', closeAll);
+  function refreshScrim(){ scrim.classList.toggle('on', mq.matches && openNow().length>0); }
+
+  function closeAll(){ ui.agent=false; ui.left=false; ui.right=false; applyUI(); saveUI(); }
+
+  /* ----- open one sheet, close the others (toggles if already open) ----- */
+  function only(which){
+    var wasOpen = !!ui[which];
+    ui.agent=false; ui.left=false; ui.right=false;
+    if(!wasOpen) ui[which]=true;
+    applyUI(); saveUI();
+    if(ui.left){ try{renderLibrary();}catch(e){} try{renderDataList();}catch(e){} }
+    if(ui.right){ try{refreshInspector();}catch(e){} }
+    if(ui.agent){ var a=el('#agIn'); if(a) setTimeout(function(){ try{a.focus();}catch(e){} },70); }
+  }
+
+  /* ----- enforce single-open on mobile (covers ⌘J, nbTitle pill, +Data, etc.) ----- */
+  var guard=false, prev=new Set(openNow());
+  var obs=new MutationObserver(function(){
+    if(guard) return;
+    if(!mq.matches){ prev=new Set(openNow()); refreshScrim(); syncBar(); return; }
+    var now=openNow();
+    if(now.length>1){
+      var newly=null;
+      for(var i=0;i<now.length;i++){ if(!prev.has(now[i])){ newly=now[i]; break; } }
+      if(!newly) newly=now[now.length-1];
+      guard=true;
+      if(newly!=='agent') ui.agent=false;
+      if(newly!=='left')  ui.left=false;
+      if(newly!=='right') ui.right=false;
+      applyUI(); saveUI();
+      guard=false;
+    }
+    prev=new Set(openNow());
+    refreshScrim(); syncBar();
+  });
+  PAN.forEach(function(p){ var e=el(p[1]); if(e) obs.observe(e,{attributes:true,attributeFilter:['class']}); });
+
+  /* ----- grab handle on each sheet: drag down to dismiss ----- */
+  PAN.forEach(function(p){
+    var panel=el(p[1]); if(!panel) return;
+    var g=document.createElement('div'); g.className='ms-grab'; g.setAttribute('aria-hidden','true');
+    panel.insertBefore(g, panel.firstChild);
+    var startY=0, dy=0, dragging=false, H=0;
+    function down(y){ if(!mq.matches) return; dragging=true; startY=y; dy=0; H=panel.getBoundingClientRect().height||1; panel.style.transition='none'; }
+    function move(y){ if(!dragging) return; dy=Math.max(0,y-startY); panel.style.transform='translateY('+dy+'px)'; }
+    function up(){ if(!dragging) return; dragging=false; panel.style.transition='';
+      if(dy > H*0.28){ ui[p[0]]=false; applyUI(); saveUI(); }
+      panel.style.transform=''; }
+    g.addEventListener('touchstart',function(e){ down(e.touches[0].clientY); },{passive:true});
+    g.addEventListener('touchmove', function(e){ move(e.touches[0].clientY); },{passive:true});
+    g.addEventListener('touchend', up); g.addEventListener('touchcancel', up);
+    g.addEventListener('mousedown',function(e){
+      down(e.clientY);
+      function mm(ev){ move(ev.clientY); }
+      function mu(){ up(); document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); }
+      document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+    });
+  });
+
+  /* ----- bottom navigation bar ----- */
+  var ICON={
+    files:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+    run:'<svg viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg>',
+    agent:'<svg viewBox="0 0 24 24"><path d="M12 3l2.1 4.7L19 10l-4.9 2.3L12 17l-2.1-4.7L5 10l4.9-2.3z"/></svg>',
+    vars:'<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>'
+  };
+  var bar=document.createElement('nav'); bar.id='mob-bar'; bar.setAttribute('aria-label','Mobile navigation');
+  bar.innerHTML=
+    '<button class="mb-btn" data-k="left"><span class="mb-ic">'+ICON.files+'</span>Files</button>'+
+    '<button class="mb-btn" data-k="run"><span class="mb-ic">'+ICON.run+'</span>Run all</button>'+
+    '<button class="mb-btn prime" data-k="agent"><span class="mb-ic">'+ICON.agent+'</span>Agent</button>'+
+    '<button class="mb-btn" data-k="vars"><span class="mb-ic">'+ICON.vars+'</span>Vars</button>';
+  document.body.appendChild(bar);
+  bar.addEventListener('click',function(e){
+    var b=e.target.closest('.mb-btn'); if(!b) return;
+    var k=b.dataset.k;
+    if(k==='run'){ var r=el('#btnRunAll'); if(r) r.click(); b.classList.add('active'); setTimeout(syncBar,220); return; }
+    only(k);
+  });
+  function syncBar(){
+    var o=openNow();
+    var btns=bar.querySelectorAll('.mb-btn');
+    for(var i=0;i<btns.length;i++){
+      var k=btns[i].dataset.k; if(k==='run') continue;
+      btns[i].classList.toggle('active', o.indexOf(k)>=0);
+    }
+  }
+
+  /* ----- normalize when entering mobile / on breakpoint change ----- */
+  function normalize(){
+    if(mq.matches){
+      var o=openNow();
+      if(o.length>1){
+        var keep=(o.indexOf('agent')>=0)?'agent':o[0];
+        guard=true;
+        ui.agent=(keep==='agent'); ui.left=(keep==='left'); ui.right=(keep==='right');
+        applyUI(); saveUI(); guard=false;
+      }
+    } else {
+      PAN.forEach(function(p){ var e=el(p[1]); if(e){ e.style.transform=''; e.style.transition=''; } });
+    }
+    refreshScrim(); syncBar();
+  }
+  if(mq.addEventListener) mq.addEventListener('change',normalize);
+  else if(mq.addListener) mq.addListener(normalize);
+  normalize();
+
+  window.__kaMobile={ normalize:normalize, only:only, closeAll:closeAll };
+})();
 })();
 </script>
+
+
 
 <div id="dna-grid" aria-hidden="true"></div>
 <div id="dna-switch" role="dialog" aria-label="Instrument switcher">
@@ -2625,6 +3703,212 @@ try{fetch(BASE+'index.html').then(function(r){return r.text()}).then(function(t)
     if(arr&&arr.length){SUITE=arr.map(function(o){return[o.file,o.name]});cur=SUITE.findIndex(function(t){return t[0]===here});setPos();render()}}
 }).catch(function(){})}catch(e){}
 setPos();setTh();render();
+})();
+</script>
+<style id="mobile-pwa">
+/* ===== KERNEL·A — mobile + PWA layer (variant only) ===== */
+/* Affordances that only appear on phones; hidden by default. */
+#mob-bar,#mob-scrim,.ms-grab,#pwa-install{display:none}
+
+@media (max-width:760px){
+  /* code/editor sized to avoid iOS focus-zoom and use the width */
+  :root{--gutter-w:40px; --code-fs:16px; --code-pad-x:12px; --code-pad-y:11px;}
+
+  /* ---- top bar: compact, horizontally scrollable tools ---- */
+  .topbar{gap:8px; padding:8px 10px;}
+  .brand{gap:7px;}
+  .brand h1{font-size:15px; letter-spacing:.10em;}
+  .nb-pill{margin-left:4px; max-width:38vw; padding:4px 7px;}
+  .status{max-width:34vw; font-size:10px; padding:4px 8px;}
+  .toolbar{flex:1 1 auto; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+           -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-left:6px; gap:5px; justify-content:flex-start;}
+  .toolbar::-webkit-scrollbar{display:none;}
+  .btn{padding:7px 10px;}
+  #btnAgent,#btnVars{display:none;}            /* covered by the bottom bar */
+
+  /* ---- notebook canvas ---- */
+  .sheet{padding:14px 10px 112px; background-size:24px 24px;}
+  .notebook{gap:12px;}
+  .add-row{opacity:1; margin:12px auto 8px;}
+  .add-btn{padding:9px 16px;}
+  .cell-tools{opacity:1; top:5px; right:6px;}   /* always reachable (no hover on touch) */
+  .ct{width:32px; height:32px;}
+  .ct.type,.ct.ai{height:32px;}
+  .md-rendered{font-size:15.5px;}
+  .foot{display:none;}                           /* replaced by the bottom bar */
+
+  /* prevent iOS zoom on focus for every text entry */
+  textarea,input[type=text],input[type=password],input[type=number],input[type=search],input:not([type]){font-size:16px;}
+
+  /* ---- side panels become bottom sheets ---- */
+  .panel{
+    position:fixed !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
+    width:auto !important; max-width:none !important; min-width:0 !important;
+    height:86dvh; max-height:90dvh;
+    border:1px solid var(--line-2) !important; border-bottom:0 !important;
+    border-radius:16px 16px 0 0;
+    box-shadow:0 -20px 60px -24px rgba(0,0,0,.55);
+    transform:translateY(112%); visibility:hidden; pointer-events:none;
+    transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s linear .32s;
+    z-index:120; overscroll-behavior:contain;
+  }
+  .panel.open{transform:none; visibility:visible; pointer-events:auto;
+    transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s;}
+  .panel-agent{height:90dvh;}
+  .panel-grip{display:none !important;}          /* no edge-resize on touch */
+
+  /* grab handle at the top of each sheet (injected) */
+  .ms-grab{display:flex; align-items:center; justify-content:center; height:22px; flex:0 0 auto; touch-action:none; cursor:grab;}
+  .ms-grab::before{content:""; width:38px; height:4px; border-radius:3px; background:var(--line-2);}
+
+  /* sheet internals fit the sheet height */
+  .panel-agent .panel-inner{overflow:hidden;}
+  .ag-body{padding:8px 10px 10px;}
+  .ag-composer textarea{min-height:54px;}
+  .ag-row{flex-wrap:wrap; gap:6px;}
+  .ag-mode,.ag-send,.ag-stop,.ag-model,#agModelChip{padding:9px 14px; font-size:11px;}
+  .ag-usage{flex:1 1 100%; text-align:left;}
+
+  /* modals: rise from the bottom, full small-screen friendly */
+  .scrim{padding:10px; align-items:flex-end;}
+  .modal{max-height:88dvh; border-radius:14px;}
+
+  /* ---- backdrop behind an open sheet ---- */
+  #mob-scrim{display:block; position:fixed; inset:0; z-index:110;
+    background:rgba(8,9,11,.42); backdrop-filter:blur(2px);
+    opacity:0; pointer-events:none; transition:opacity .3s;}
+  #mob-scrim.on{opacity:1; pointer-events:auto;}
+
+  /* ---- bottom navigation bar ---- */
+  #mob-bar{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:130;
+    height:calc(56px + env(safe-area-inset-bottom));
+    padding:0 6px env(safe-area-inset-bottom);
+    background:color-mix(in srgb,var(--paper) 90%,white);
+    border-top:1px solid var(--line-2); backdrop-filter:saturate(1.3) blur(10px);
+    align-items:stretch; justify-content:space-around;}
+  .mb-btn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    background:none; border:0; cursor:pointer; color:var(--ink-3);
+    font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.10em; text-transform:uppercase;}
+  .mb-btn .mb-ic{display:flex; align-items:center; justify-content:center;}
+  .mb-btn svg{width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .mb-btn[data-k="run"] svg{fill:currentColor; stroke:none;}
+  .mb-btn[data-k="agent"] svg{fill:currentColor; stroke:none;}
+  .mb-btn.active{color:var(--accent);}
+  .mb-btn.prime .mb-ic{width:42px; height:28px; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line-2));
+    border-radius:9px; background:var(--accent-ghost); color:var(--accent);}
+  .mb-btn.prime.active .mb-ic{background:var(--accent); color:var(--on-accent);}
+  .mb-btn.prime{color:var(--accent);}
+
+  /* nudge the suite dock above the bar so it stays reachable */
+  #dna-dock{bottom:calc(64px + env(safe-area-inset-bottom)) !important; right:8px !important; z-index:135 !important; opacity:.96;}
+  #dna-switch{bottom:calc(104px + env(safe-area-inset-bottom)) !important; right:8px !important; left:auto !important; width:min(300px,92vw) !important;}
+
+  /* install pill */
+  #pwa-install{position:fixed; left:50%; transform:translateX(-50%);
+    bottom:calc(68px + env(safe-area-inset-bottom)); z-index:136; display:none;
+    align-items:center; gap:10px; padding:9px 10px 9px 14px;
+    background:var(--surface); border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2)); border-radius:11px;
+    box-shadow:0 14px 36px -16px rgba(0,0,0,.55); font-family:var(--sans); font-size:12.5px; color:var(--ink); max-width:92vw;}
+  #pwa-install.on{display:flex;}
+  #pwa-install b{color:var(--accent); font-weight:700;}
+  #pwa-install .pi-go{font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--on-accent); background:var(--accent); border:0; border-radius:7px; padding:8px 12px; cursor:pointer;}
+  #pwa-install .pi-x{background:none; border:0; color:var(--ink-3); font-size:18px; line-height:1; cursor:pointer; padding:0 4px;}
+}
+
+/* very small phones */
+@media (max-width:380px){
+  .nb-pill{max-width:30vw;}
+  .status{max-width:28vw;}
+  .mb-btn{font-size:8px;}
+}
+
+/* short landscape phones: taller sheets */
+@media (max-width:900px) and (orientation:landscape) and (max-height:540px){
+  .panel,.panel-agent{height:94dvh;}
+}
+</style>
+<script id="pwa-layer">
+/* ===== KERNEL·A — PWA layer (installable + offline) =====
+   Standalone; no dependency on the app's internals. */
+(function(){
+  "use strict";
+  var ICON192="data:image/png;base64,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", ICON512="data:image/png;base64,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", ICONMASK="data:image/png;base64,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", ICONAPPLE="data:image/png;base64,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";
+
+  /* apple touch icon (iOS home-screen) */
+  try{ var al=document.createElement('link'); al.rel='apple-touch-icon'; al.href=ICONAPPLE; document.head.appendChild(al); }catch(e){}
+
+  /* theme-color kept in sync with the in-app theme (Alt+T) */
+  var tc=document.querySelector('meta[name="theme-color"]');
+  if(!tc){ tc=document.createElement('meta'); tc.setAttribute('name','theme-color'); document.head.appendChild(tc); }
+  function syncTheme(){ var dk=document.documentElement.getAttribute('data-theme')==='dark'; tc.setAttribute('content', dk?'#0E0F0D':'#E9E7E0'); }
+  syncTheme(); window.addEventListener('ut-theme', syncTheme);
+
+  /* web app manifest, built as a blob so the file stays self-contained */
+  try{
+    var base=location.href.replace(/[#?].*$/,'');
+    var manifest={
+      name:"KERNEL·A — Agentic Notebook",
+      short_name:"KERNEL·A",
+      description:"The agentic Python notebook, in a single file. Mobile build — installable and offline-capable.",
+      start_url:base,
+      scope:base.replace(/[^/]*$/,''),
+      display:"standalone",
+      display_override:["standalone","minimal-ui"],
+      orientation:"any",
+      background_color:"#0E0F0D",
+      theme_color:"#0E0F0D",
+      icons:[
+        {src:ICON192,sizes:"192x192",type:"image/png",purpose:"any"},
+        {src:ICON512,sizes:"512x512",type:"image/png",purpose:"any"},
+        {src:ICONMASK,sizes:"512x512",type:"image/png",purpose:"maskable"}
+      ]
+    };
+    var mblob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+    var ml=document.createElement('link'); ml.rel='manifest'; ml.href=URL.createObjectURL(mblob);
+    document.head.appendChild(ml);
+  }catch(e){}
+
+  /* service worker (offline) — only over http(s); silently skipped on file:// */
+  if('serviceWorker' in navigator && (location.protocol==='https:'||location.protocol==='http:')){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('./kernel-agent-sw.js').catch(function(){/* offline unavailable — app still works online */});
+    });
+  }
+
+  /* ----- install affordance ----- */
+  var pill=document.createElement('div'); pill.id='pwa-install'; document.body.appendChild(pill);
+  var DKEY='kernel.pwa.installDismiss';
+  function dismissed(){ try{ return localStorage.getItem(DKEY)==='1'; }catch(e){ return false; } }
+  function dismiss(){ try{ localStorage.setItem(DKEY,'1'); }catch(e){} pill.classList.remove('on'); }
+  var deferred=null;
+
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault(); deferred=e;
+    if(dismissed()) return;
+    pill.innerHTML='<span>Install <b>KERNEL·A</b> as an app</span>'+
+                   '<button class="pi-go">Install</button>'+
+                   '<button class="pi-x" aria-label="Dismiss">×</button>';
+    pill.classList.add('on');
+    pill.querySelector('.pi-go').onclick=function(){
+      pill.classList.remove('on');
+      if(deferred){ deferred.prompt(); if(deferred.userChoice&&deferred.userChoice.finally) deferred.userChoice.finally(function(){deferred=null;}); }
+    };
+    pill.querySelector('.pi-x').onclick=dismiss;
+  });
+  window.addEventListener('appinstalled',function(){ pill.classList.remove('on'); });
+
+  /* iOS Safari has no beforeinstallprompt — show a one-time Add-to-Home hint */
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  var standalone=(window.navigator.standalone===true)||window.matchMedia('(display-mode: standalone)').matches;
+  if(isIOS && !standalone && !dismissed()){
+    setTimeout(function(){
+      pill.innerHTML='<span>Install: tap <b>Share</b> ▸ <b>Add to Home Screen</b></span>'+
+                     '<button class="pi-x" aria-label="Dismiss">×</button>';
+      pill.classList.add('on');
+      pill.querySelector('.pi-x').onclick=dismiss;
+    },1500);
+  }
 })();
 </script>
 </body>

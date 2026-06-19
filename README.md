@@ -4,11 +4,12 @@ A complete Python notebook that runs entirely in your browser, from **one self-c
 
 **[→ Launch it / see it live](https://dogum.github.io/kernel/)**
 
-This repo bundles three things that belong together:
+This repo bundles a few things that belong together:
 
 1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
 3. **KERNEL Agent** — a human-in-the-loop agent that builds notebooks from natural language (`docs/kernel-agent.html`; design in [`AGENT-SPEC.md`](AGENT-SPEC.md)).
+4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
 
 ## What KERNEL is
 
@@ -57,9 +58,11 @@ skill/
 └── scripts/
     └── build_notebook.py . assembles a valid .ipynb from a JSON cell spec
 docs/
-├── index.html ........... the landing / launch page
-├── kernel.html .......... the notebook
-├── kernel-agent.html .... the agentic notebook (bring your own key)
+├── index.html ................. the landing / launch page
+├── kernel.html ................ the notebook
+├── kernel-agent.html .......... the agentic notebook (bring your own key)
+├── kernel-agent-mobile.html ... the mobile / PWA build of the agent
+├── kernel-agent-sw.js ......... service worker (offline cache for the PWA)
 └── .nojekyll
 ```
 
@@ -82,6 +85,12 @@ What it does today, beyond the core loop:
 - **Autonomy modes** — AUTO runs free with a Stop button; STEP gates every execution behind Approve/Skip. A model chip switches Sonnet ↔ Opus mid-session, and every cell has an *ai* button that drops it into the agent's composer.
 
 It's a client-only, bring-your-own-key design — the key lives in your browser and is sent only to Anthropic — and its system prompt is the `kernel-notebooks` skill in this repo.
+
+## Mobile / PWA (KERNEL·M)
+
+`docs/kernel-agent-mobile.html` is a phone-friendly build of the Agent. The desktop layout is rebuilt as a single column: the notebook fills the screen and the Agent, Files and Variables panels become bottom sheets driven by a bottom navigation bar (swipe a sheet down to dismiss). It's also a Progressive Web App — installable to the home screen with its own icon, running standalone, and (served over https) caching the app shell and the Pyodide runtime through a service worker so it keeps working offline after the first load. It shares everything else with the Agent, including bring-your-own-key.
+
+Open it from the [live page](https://dogum.github.io/kernel/) or [`docs/kernel-agent-mobile.html`](docs/kernel-agent-mobile.html). Install and offline need https (GitHub Pages provides it); opening the raw file over `file://` gives the responsive layout but not the service worker.
 
 ## Privacy
 
