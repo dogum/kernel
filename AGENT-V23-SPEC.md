@@ -317,6 +317,12 @@ attempts without new notebook/plan progress, the run pauses in the `completion` 
 inspection rather than looping or displaying a false success. Simple conversational answers that
 never create a plan or use a tool remain lightweight and may finish directly.
 
+Rejected `finish_run` tool calls use that same bounded counter; a third no-progress rejection is
+committed as a canonical tool result before the run pauses. Once `finish_run` is accepted, KERNEL
+revalidates the cited cells and artifacts immediately before terminal completion and rejects the
+completion if any reference disappeared, became excluded, went stale, errored, or changed since
+acceptance.
+
 The active system context contains an authoritative run-control block with remaining tool, active
 time, and token capacity plus the exact active boundary reason. Models are explicitly forbidden to
 invent a timeout, pause, stop, or budget condition. Those states are emitted only by KERNEL.
