@@ -318,10 +318,12 @@ inspection rather than looping or displaying a false success. Simple conversatio
 never create a plan or use a tool remain lightweight and may finish directly.
 
 Rejected `finish_run` tool calls use that same bounded counter; a third no-progress rejection is
-committed as a canonical tool result before the run pauses. Once `finish_run` is accepted, KERNEL
-revalidates the cited cells and artifacts immediately before terminal completion and rejects the
-completion if any reference disappeared, became excluded, went stale, errored, or changed since
-acceptance.
+committed as a canonical tool result before the run pauses. Any remaining calls in that provider
+batch are recorded as skipped and never execute. Once `finish_run` is accepted, KERNEL revalidates
+the cited cells and artifacts after the completion checkpoint has finished persisting and
+immediately before the synchronous terminal transition. The candidate checkpoint is discarded and
+completion is rejected if any reference disappeared, became excluded, went stale, errored, or
+changed since acceptance.
 
 The active system context contains an authoritative run-control block with remaining tool, active
 time, and token capacity plus the exact active boundary reason. Models are explicitly forbidden to

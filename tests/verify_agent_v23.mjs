@@ -283,7 +283,9 @@ assert.equal(evidenceFactory.validate([{kind:"cell",id:"cell_fresh",claim:"Hidde
 assert.ok(desktop.includes("enum:['cell','artifact']"),"finish_run exposes structured stable-ID evidence to providers");
 assert.ok(functionSource(desktop,"execTool").includes("validateCompletionEvidence(inp.evidence)") && functionSource(desktop,"execTool").includes("recordCompletionRejection(reason)") && functionSource(desktop,"execTool").includes("completionAccepted") && functionSource(desktop,"execTool").includes("Completion rejected"),"finish_run is application-validated and rejected calls enter the bounded completion guard");
 assert.ok(functionSource(desktop,"completionContractReason").includes("completionEvidenceSignature(checked.evidence)"),"accepted evidence is revalidated immediately before finalization");
-assert.ok(functionSource(desktop,"agentTurn").includes("enforceCompletionContract") && functionSource(desktop,"agentTurn").includes("Run completed after completion contract"),"no-tool model output cannot bypass the completion contract");
+const agentTurnSource=functionSource(desktop,"agentTurn"),completionCandidateAt=agentTurnSource.indexOf("createCheckpoint('Completion candidate'"),postCheckpointValidationAt=agentTurnSource.indexOf("completionContractReason()",completionCandidateAt),terminalCompletionAt=agentTurnSource.indexOf("finalizeRun('completed'",postCheckpointValidationAt);
+assert.ok(completionCandidateAt>=0&&completionCandidateAt<postCheckpointValidationAt&&postCheckpointValidationAt<terminalCompletionAt,"completion evidence is revalidated after checkpoint persistence and immediately before the terminal transition");
+assert.ok(agentTurnSource.includes("discardCompletionCheckpoint") && agentTurnSource.includes("Run completed after completion contract"),"a failed post-checkpoint validation discards its candidate and cannot bypass the completion contract");
 assert.ok(functionSource(desktop,"agRunControlContext").includes("Only KERNEL may report"),"the model receives authoritative run-state and anti-hallucination guidance");
 assert.ok(!functionSource(desktop,"checkedStream").includes("runElapsed"),"a soft active-time checkpoint cannot masquerade as a connection timeout");
 
@@ -309,19 +311,19 @@ assert.match(repaired[1].content[0].text, /not durably confirmed/, "ambiguous to
 const checkpointBoundaryFactory=new Function(`
   const MUTATING_TOOLS=new Set(["edit_cell"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
   let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0,rejectedFinish=false;
-  let checkpoints=[],order=[],paused=null;
+  let checkpoints=[],order=[],paused=null,executed=[];
   const runBudgetReason=()=>"",enforceRunBudget=async()=>false,noteRunProgress=()=>{},redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
   async function runEvent(){}
   async function pauseRun(reason,phase){paused={reason,phase};agRun.status="paused"}
   async function askApproval(){return true}
-  async function execTool(){if(rejectedFinish)agRun.completionPauseReason="invalid completion evidence";return [{type:"text",text:rejectedFinish?"Completion rejected":"ok"}]}
+  async function execTool(tool){executed.push(tool.name);if(rejectedFinish)agRun.completionPauseReason="invalid completion evidence";return [{type:"text",text:rejectedFinish?"Completion rejected":"ok"}]}
   async function saveWorkspaceState(){order.push("workspace")}
   async function saveActiveThreadNow(){order.push("thread")}
   async function createCheckpoint(label,reason,run){order.push("checkpoint");checkpoints.push({label,pending:clonePlain(run.pendingTools),messages:clonePlain(agMsgs),mutations:clonePlain(run.pendingMutations)});return {id:"cp"}}
   async function saveRun(){}
   async function finalizeRun(){}
   ${functionSource(desktop,"completePendingTools")}
-  return {run:async(resumed,rejected=false)=>{checkpoints=[];order=[];paused=null;agStop=false;rejectedFinish=rejected;const tool={id:"call_1",name:rejected?"finish_run":"edit_cell",input:rejected?{}:{cell_id:"c1"}};agMsgs=[{role:"assistant",content:[{type:"tool_use",...tool}]}];agRun={id:"run",pendingTools:[tool],pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed&&!rejected?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{},completionPauseReason:""};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs,paused}}};
+  return {run:async(resumed,rejected=false)=>{checkpoints=[];order=[];paused=null;executed=[];agStop=false;rejectedFinish=rejected;const first={id:"call_1",name:rejected?"finish_run":"edit_cell",input:rejected?{}:{cell_id:"c1"}},tools=rejected?[first,{id:"call_2",name:"edit_cell",input:{cell_id:"must_not_run"}}]:[first];agMsgs=[{role:"assistant",content:tools.map(tool=>({type:"tool_use",...tool}))}];agRun={id:"run",pendingTools:tools,pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed&&!rejected?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{},completionPauseReason:""};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs,paused,executed}}};
 `)();
 for(const resumed of [false,true]){
   const committed=await checkpointBoundaryFactory.run(resumed),cp=committed.checkpoints[0];
@@ -332,7 +334,9 @@ for(const resumed of [false,true]){
 const rejectedCompletionBatch=await checkpointBoundaryFactory.run(false,true);
 assert.equal(rejectedCompletionBatch.ok,false,"a third rejected finish_run stops the automatic model loop");
 assert.equal(rejectedCompletionBatch.paused.phase,"completion","the rejected finish_run pauses at the authoritative completion boundary");
-assert.equal(rejectedCompletionBatch.messages.at(-1).content[0].type,"tool_result","the rejected finish_run result is committed before pausing");
+assert.deepEqual(rejectedCompletionBatch.executed,["finish_run"],"tools after a terminal finish_run rejection are never executed");
+assert.equal(rejectedCompletionBatch.messages.at(-1).content.length,2,"the rejected call and every skipped remainder receive canonical tool results");
+assert.match(rejectedCompletionBatch.messages.at(-1).content[1].content[0].text,/Not executed because KERNEL reached the terminal completion-retry guard/,"the skipped remainder explains the terminal batch boundary");
 assert.ok(functionSource(desktop,"createCheckpoint").includes("run.pendingTools&&run.pendingTools.length"),"manual checkpoints refuse an unmatched pending tool batch");
 assert.ok(functionSource(desktop,"agentTurn").includes("Resume or end the current run"),"a new prompt cannot orphan an unfinished run boundary");
 
