@@ -8,7 +8,7 @@ This repo bundles a few things that belong together:
 
 1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent v2.3** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)).
+3. **KERNEL Agent v2.3.1** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)).
 4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
 
 ## What KERNEL is
@@ -75,7 +75,7 @@ tests/
 
 `SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
 
-## KERNEL Agent v2.3
+## KERNEL Agent v2.3.1
 
 KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures), and iterates with you in the loop. It is a client-only, bring-your-own-key design with first-class adapters for Anthropic, OpenAI, and xAI/Grok. Keys remain in browser storage and requests go directly to the API base you select.
 
@@ -87,10 +87,12 @@ What it does today, beyond the core loop:
 - **Live Markdown transcript** — narration streams token-by-token and renders headings, tables, code, math, and Mermaid when complete. Reasoning summaries use a separate progressive-disclosure panel; tool calls remain compact, click-to-cell action chips.
 - **Multiple threads per notebook** — create, rename, switch, or delete independent threads without mixing notebooks. Full messages and transcripts live in IndexedDB rather than a size-capped localStorage string.
 - **Durable runs and recovery** — every request has a persisted run, phase, event timeline, visible plan, token/tool/time budgets, safe pause/resume, and recovery after reload. An ambiguous interrupted mutation is never silently repeated.
+- **Completion-safe autonomy** — a tool-using or planned run must complete its visible plan and pass the `finish_run` evidence contract. A provider merely stopping tool calls cannot create a false success; AUTO extends tool/time checkpoints only while durable progress continues, while the token budget remains a hard cost boundary.
 - **Notebook intelligence** — KERNEL tracks conservative Python dependencies, cell/file/environment provenance, and `fresh`, `stale`, or `historical` output state. Structured tracebacks navigate back to the exact cell and source line.
 - **Artifact workspace** — uploads, working files, and final results have stable IDs, safe folder paths, previews, lifecycle controls, provenance, and notebook isolation. Folder upload preserves relative paths and collisions never silently overwrite data.
 - **Exact checkpoints and forks** — runs checkpoint notebook cells, rendered outputs, artifacts, environment, and thread state. Restore in place or fork a new notebook from that exact point without changing the source.
 - **Conversations that persist and travel** — one-click `.kernel.zip` export carries the notebook, outputs, all threads, artifacts, durable runs, usage, environment, and checkpoints; open it elsewhere to resume. A separate share-safe ZIP strips chat/run history and inputs, scans copied text, and includes approved final results only.
+- **Compact private run handoff** — a checkpoint-free `.kernel-run.zip` preserves the current notebook, outputs, artifacts, complete threads, and run ledgers for debugging or review without repeatedly embedding every historical checkpoint. It remains private and unredacted.
 - **Multimodal input** — paste or drag images into the chat (sketch a chart, screenshot a figure); the agent sees them.
 - **Explicit context control** — input, output, cache, and reasoning tokens are exposed. Pin or exclude cells and artifacts; large results use bounded handles; compaction changes only the active API payload, never the full local thread. When shared runtime state cannot be isolated safely, agent execution/inspection stops rather than bypass an exclusion; human cell controls remain available.
 - **Read-only model comparison** — send the same notebook-grounded prompt to up to six configured provider/model profiles and compare answers, latency, and reported token use without giving contenders mutation tools.

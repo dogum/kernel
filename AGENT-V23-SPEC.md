@@ -298,3 +298,44 @@ Automated verification must cover:
 
 Live provider calls remain BYO-key smoke tests. Static/provider-fixture tests must still prove
 the request/response transformations and all non-network state behavior.
+
+## 14. v2.3.1 completion and autonomy stabilization
+
+The v2.3.1 patch distinguishes a provider ending its response from KERNEL proving that a run is
+complete. Any run that published a plan or used a tool must pass an application-owned completion
+contract:
+
+- the visible plan has no `pending` or `in_progress` steps;
+- the agent calls `finish_run` with a concise summary and structured evidence claims referencing stable cell or artifact IDs;
+- KERNEL validates every reference itself: code-cell evidence must be freshly executed and error-free, while artifact evidence must still exist and remain included in context;
+- the accepted completion still matches the current plan version;
+- no later notebook mutation has invalidated that acceptance.
+
+If a model returns without tools before satisfying this contract, KERNEL records
+`completion_rejected` and automatically asks it to continue. After two consecutive completion
+attempts without new notebook/plan progress, the run pauses in the `completion` phase for human
+inspection rather than looping or displaying a false success. Simple conversational answers that
+never create a plan or use a tool remain lightweight and may finish directly.
+
+The active system context contains an authoritative run-control block with remaining tool, active
+time, and token capacity plus the exact active boundary reason. Models are explicitly forbidden to
+invent a timeout, pause, stop, or budget condition. Those states are emitted only by KERNEL.
+
+In AUTO mode, tool-call and active-time values become progress checkpoints. KERNEL may extend them
+by the configured segment while:
+
+- at least one durable notebook or plan change occurred since the previous extension;
+- fewer than two consecutive tool failures occurred;
+- the configured automatic-extension count has not been exhausted; and
+- the hard reported-token budget has not been reached.
+
+The token budget remains a mandatory human boundary because it most directly controls provider cost.
+STEP mode never auto-extends. Every automatic or explicit extension is an event in the durable run
+ledger, and the run dock exposes the number of automatic extensions used. Provider connection and
+stream-stall health timers remain separate from notebook execution and run budgets.
+
+For review and support transfers, v2.3.1 also adds a clearly labeled **private run ZIP**. It contains
+the current notebook, outputs, artifacts, environment, complete threads, and durable run ledgers but
+does not read or serialize historical checkpoints. It is neither redacted nor share-safe. The normal
+full ZIP retains every checkpoint and exact restore/fork behavior, while the existing share-safe ZIP
+continues to remove private conversation and run history.

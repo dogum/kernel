@@ -55,8 +55,8 @@ target = target.replace(
   '  initPanels();\n  activateNotebookAgent(nbId);\n  bootKernel();\n})();\n\n/* ===== mobile UI controller',
 );
 
-target = target.replace(/<title>[^<]*<\/title>/, '<title>KERNEL·A v2.3 — agentic notebook · mobile (PWA)</title>');
-target = target.replace(/<h1>KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span><\/h1>/, '<h1>KERNEL<span class="brand-a">·A v2.3</span></h1>');
+target = target.replace(/<title>[^<]*<\/title>/, '<title>KERNEL·A v2.3.1 — agentic notebook · mobile (PWA)</title>');
+target = target.replace(/<h1>KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span><\/h1>/, '<h1>KERNEL<span class="brand-a">·A v2.3.1</span></h1>');
 target = target.replace('id="btnOpen" title="Open .ipynb"', 'id="btnOpen" title="Open .ipynb or .kernel.zip"');
 if (!target.includes('id="btnWorkspace"')) {
   const zipButton = source.match(/^\s*<button class="btn" id="btnWorkspace"[^\n]*$/m)?.[0];
@@ -78,6 +78,11 @@ if (!target.includes('data-mi="shareZip"')) {
   if (!shareItems) throw new Error("Missing desktop share/diagnostics menu items");
   target = target.replace(/(^\s*<button class="menu-item" data-mi="downloadPy"[^\n]*$)/m, `$1\n${shareItems}`);
 }
+if (!target.includes('data-mi="runZip"')) {
+  const runZipItem = source.match(/^\s*<button class="menu-item" data-mi="runZip"[^\n]*$/m)?.[0];
+  if (!runZipItem) throw new Error("Missing desktop private-run ZIP menu item");
+  target = target.replace(/(^\s*<button class="menu-item" data-mi="downloadPy"[^\n]*$)/m, `$1\n${runZipItem}`);
+}
 const fileInput = source.match(/^<input type="file" id="fileIpynb"[^\n]*$/m)?.[0];
 if (!fileInput) throw new Error("Missing desktop notebook file input");
 target = target.replace(/^<input type="file" id="fileIpynb"[^\n]*$/m, fileInput);
@@ -88,8 +93,8 @@ else target = target.replace(/(^<input type="file" id="fileData"[^\n]*$)/m, `$1\
 
 if (check) {
   if (target !== originalTarget) throw new Error(`${targetPath} is out of sync; run node scripts/sync_agent_builds.mjs`);
-  console.log(`KERNEL·A v2.3 desktop/mobile sync verified for ${targetPath}`);
+  console.log(`KERNEL·A v2.3.1 desktop/mobile sync verified for ${targetPath}`);
 } else {
   fs.writeFileSync(targetPath, target);
-  console.log(`Synced shared KERNEL·A v2.3 runtime and UI into ${targetPath}`);
+  console.log(`Synced shared KERNEL·A v2.3.1 runtime and UI into ${targetPath}`);
 }
