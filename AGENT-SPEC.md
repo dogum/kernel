@@ -1,5 +1,9 @@
 # KERNEL Agent — Capstone Specification
 
+> **Historical v1 specification.** This document records the original Anthropic-only
+> implementation. The active multi-provider/thread/workspace contract is
+> [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md); where the documents differ, the v2 spec wins.
+
 > A natural-language, human-in-the-loop agent that builds and explores Python notebooks
 > *inside* KERNEL: it writes markdown and code cells, runs them, **sees** the results
 > (text **and** images), and iterates — turning KERNEL into an agentic exploratory-analysis

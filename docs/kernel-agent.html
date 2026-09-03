@@ -4,7 +4,7 @@
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KERNEL·A — the agentic notebook, in a single file</title>
+<title>KERNEL·A v2 — the agentic notebook, in a single file</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -529,6 +529,39 @@ body.resizing{cursor:col-resize; user-select:none}
 .ag-send:disabled{opacity:.4;cursor:default}
 .ag-send:hover:not(:disabled){background:var(--accent-2);border-color:var(--accent-2)}
 </style>
+<style id="kernel-agent-v2">
+/* ===== KERNEL·A v2 · provider-neutral, threaded, portable ===== */
+.ag-threadbar{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.ag-threadbar select{min-width:0;flex:1;font-family:var(--sans);font-size:11.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:5px 7px;outline:none}
+.ag-threadbar select:focus{border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
+.ag-thread-act{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:5px 7px;cursor:pointer}
+.ag-thread-act:hover{color:var(--accent);border-color:var(--accent)}
+.ag-a{white-space:normal}
+.ag-a>*:first-child{margin-top:0}.ag-a>*:last-child{margin-bottom:0}
+.ag-a p{margin:.35em 0}.ag-a h1,.ag-a h2,.ag-a h3,.ag-a h4{font-family:var(--disp);color:var(--ink);line-height:1.25;margin:.85em 0 .35em}
+.ag-a h1{font-size:17px}.ag-a h2{font-size:15px}.ag-a h3,.ag-a h4{font-size:13px}
+.ag-a ul,.ag-a ol{margin:.35em 0;padding-left:1.45em}.ag-a li{margin:.18em 0}
+.ag-a pre{overflow:auto;margin:.55em 0;padding:8px 9px;border:1px solid var(--line);border-radius:3px;background:var(--surface);font:10.5px/1.55 var(--mono);color:var(--ink)}
+.ag-a code{font-family:var(--mono);font-size:.9em;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:.05em .28em}
+.ag-a pre code{font-size:inherit;background:none;border:0;padding:0}.ag-a blockquote{margin:.5em 0;padding-left:9px;border-left:2px solid var(--line-2);color:var(--ink-3)}
+.ag-a table{border-collapse:collapse;display:block;max-width:100%;overflow-x:auto;margin:.55em 0;font-size:11px}.ag-a th,.ag-a td{border:1px solid var(--line);padding:3px 6px;text-align:left;white-space:nowrap}.ag-a th{background:var(--surface);color:var(--ink)}
+.ag-a a{color:var(--accent);text-decoration:none}.ag-a a:hover{text-decoration:underline}
+.ag-reason{font-family:var(--sans);font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:3px;background:var(--surface);padding:5px 7px}
+.ag-reason summary{font-family:var(--mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;color:var(--ink-4)}
+.ag-reason-body{padding-top:5px;line-height:1.45;white-space:pre-wrap}
+.ag-provider-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:5px}
+.ag-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ag-settings-grid .wide{grid-column:1/-1}
+.ag-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.10em;color:var(--ink-3);margin:0 0 5px}
+.ag-field select{appearance:auto}.ag-field-note{font-family:var(--sans);font-size:10.5px;line-height:1.45;color:var(--ink-3);margin-top:5px}
+.ag-model-row{display:flex;gap:6px}.ag-model-row .prompt-input{min-width:0}.ag-model-row button{flex:0 0 auto}
+.ag-discovery{min-height:14px;font-family:var(--mono);font-size:9px;color:var(--ink-4);margin-top:5px}.ag-discovery.ok{color:var(--ok)}.ag-discovery.err{color:var(--err)}
+.ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}.ctx-stat{border:1px solid var(--line);background:var(--surface-2);border-radius:3px;padding:8px}.ctx-k{font:8.5px/1.2 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4)}.ctx-v{font:600 15px/1.3 var(--disp);color:var(--ink);margin-top:3px}.ctx-note{font:11px/1.5 var(--sans);color:var(--ink-3);margin:8px 0}.ctx-bar{height:5px;background:var(--surface-3);border-radius:9px;overflow:hidden;margin:7px 0}.ctx-bar span{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}.ctx-bar.warn span{background:var(--busy)}
+.var-tools{display:flex;gap:6px;padding:0 12px 9px}.var-tools select{min-width:0;flex:1;font:10px var(--mono);color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:5px 7px}.var-refresh{font:9px var(--mono);color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:5px 7px;cursor:pointer}.var-refresh:hover{color:var(--accent);border-color:var(--accent)}
+.data-group{margin:8px 4px 3px;font:8.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}.data-kind{display:inline-block;margin-left:5px;padding:1px 4px;border-radius:2px;background:var(--surface-3);font:8px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4)}.data-kind.result{color:var(--accent);background:var(--accent-ghost)}
+.out-card-home{border:0;background:none;color:var(--ink-4);font:9px var(--mono);cursor:pointer;padding:2px}.out-card-home:hover{color:var(--accent)}
+.workspace-saving::after{content:" · workspace";color:var(--accent)}
+@media (max-width:620px){.ag-settings-grid{grid-template-columns:1fr}.ag-settings-grid .wide{grid-column:auto}.ctx-grid{grid-template-columns:1fr 1fr}}
+</style>
 <style id="dna-suite">
 /* ── USEFUL TOOLS · suite DNA (light default · dark via html[data-theme="dark"] · Alt+T) ── */
 :root{--dna-page:#E9E7E0;--dna-panel:#FBFAF6;--dna-ink:#1A1B18;--dna-mid:#83857B;--dna-line:rgba(26,27,24,.18);--dna-gmaj:rgba(26,27,24,.05);--dna-gmin:rgba(26,27,24,.028);--dna-accent:#4A33D6;--dna-accent-line:rgba(74,51,214,.45);--dna-sel:rgba(74,51,214,.25);--dna-thumb:#C4C3B7;--dna-thumb-h:#ABA89C}
@@ -574,7 +607,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
 <header class="topbar">
-  <div class="brand"><span class="mark"></span><h1>KERNEL<span class="brand-a">·A</span></h1>
+  <div class="brand"><span class="mark"></span><h1>KERNEL<span class="brand-a">·A v2</span></h1>
     <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
       <span id="nbTitleText">Untitled</span>
@@ -584,8 +617,9 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
   <div class="status" id="status" data-s="boot"><span class="dot"></span><span id="statusText">Booting…</span></div>
   <div class="toolbar">
     <button class="btn" id="btnNew" title="New notebook">New</button>
-    <button class="btn" id="btnOpen" title="Open .ipynb">Open</button>
+    <button class="btn" id="btnOpen" title="Open .ipynb or .kernel.zip">Open</button>
     <button class="btn" id="btnSave" title="Download .ipynb (⌘/Ctrl+S)">Save .ipynb</button>
+    <button class="btn" id="btnWorkspace" title="Save this notebook, every thread, inputs, results, and outputs as a portable ZIP">Save ZIP</button>
     <button class="btn" id="btnData" title="Mount data files into the kernel">+ Data</button>
     <span class="tb-sep"></span>
     <button class="btn primary btn-chip" id="btnRunAll" title="Run every cell">Run all</button>
@@ -615,8 +649,15 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
       <div class="panel-h ag-head">
         <span class="ag-word">AGENT</span>
         <span class="ag-state" id="agState">OFFLINE</span>
-        <button class="panel-add" id="agExport" title="Export conversation as markdown">⇩</button>
-        <button class="panel-add" id="agSettings" title="Agent settings (key · model · autonomy)">⋯</button>
+        <button class="panel-add" id="agExport" title="Export active thread as markdown">⇩</button>
+        <button class="panel-add" id="agContext" title="Context, token usage, and compaction">◫</button>
+        <button class="panel-add" id="agSettings" title="Provider, model, context, and autonomy settings">⋯</button>
+      </div>
+      <div class="ag-threadbar">
+        <select id="agThreadSelect" title="Active thread"></select>
+        <button class="ag-thread-act" id="agThreadNew" title="New thread">NEW</button>
+        <button class="ag-thread-act" id="agThreadRename" title="Rename active thread">EDIT</button>
+        <button class="ag-thread-act" id="agThreadDelete" title="Delete active thread">DEL</button>
       </div>
       <div class="ag-body">
         <div class="ag-tx" id="agTx"></div>
@@ -625,9 +666,9 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <textarea id="agIn" rows="2" placeholder="Describe an analysis — or paste an image to show it something… (⌘J)"></textarea>
           <div class="ag-row">
             <button class="ag-mode" id="agMode" title="Autonomy — AUTO runs freely, STEP asks before each run">AUTO</button>
-              <button class="ag-mode" id="agModelChip" title="Click to switch model (Sonnet ↔ Opus; set custom ids in settings)">sonnet</button>
+              <button class="ag-mode" id="agModelChip" title="Open provider and model settings">sonnet</button>
             <span class="ag-steps" id="agSteps"></span>
-              <span class="ag-usage" id="agUsage" title="session tokens · estimated cost (click to reset)"></span>
+              <span class="ag-usage" id="agUsage" title="Input and output tokens · click for context details"></span>
             <button class="ag-stop" id="agStop" style="display:none">STOP</button>
             <button class="ag-send" id="agSend">SEND</button>
           </div>
@@ -684,6 +725,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <span class="panel-count" id="varsCount">0 names</span>
         </div>
         <div class="panel-search"><input id="varsFilter" placeholder="Filter variables" autocomplete="off" spellcheck="false"></div>
+        <div class="var-tools"><select id="varsSort" aria-label="Sort variables"><option value="name">Name</option><option value="type">Type</option><option value="memory">Memory</option></select><button class="var-refresh" id="varsRefresh">REFRESH</button></div>
         <div class="panel-b" id="varsList"></div>
       </section>
     </div>
@@ -725,28 +767,33 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
   </div>
 </div>
 <div class="scrim" id="agScrim">
-  <div class="modal" style="max-width:420px" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:560px;max-height:min(720px,92vh);overflow:auto" role="dialog" aria-modal="true">
     <div class="modal-h"><h2>Agent settings</h2><button class="modal-x" id="agX">×</button></div>
     <div class="modal-b">
-      <label class="ag-lbl" for="agKey" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:4px 0 6px">ANTHROPIC API KEY</label>
-      <input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-      <label class="ag-lbl" for="agModel" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:12px 0 6px">MODEL ID</label>
-      <input id="agModel" class="prompt-input" type="text" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4-6">
-      <label class="ag-lbl" style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.10em;color:var(--ink-3);margin:12px 0 6px">AUTONOMY · MAX TOOL STEPS / TURN</label>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="btn" id="agAutoBtn">AUTO</button>
-        <button class="btn" id="agStepBtn">STEP</button>
-        <input id="agMax" class="prompt-input" type="number" min="4" max="80" style="width:84px;margin-left:auto">
+      <div class="ag-settings-grid">
+        <div class="ag-field"><label for="agProvider">PROVIDER</label><select id="agProvider" class="prompt-input"><option value="anthropic">Anthropic</option><option value="openai">OpenAI</option><option value="xai">xAI / Grok</option></select></div>
+        <div class="ag-field"><label for="agReasoning">RESPONSES REASONING EFFORT</label><select id="agReasoning" class="prompt-input"><option value="off">Provider default</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+        <div class="ag-field wide"><label id="agKeyLabel" for="agKey">ANTHROPIC API KEY</label><input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></div>
+        <div class="ag-field wide"><label for="agBase">API BASE URL</label><input id="agBase" class="prompt-input" type="url" autocomplete="off" spellcheck="false"><div class="ag-field-note">Editable for compatible gateways. Kernel never includes keys in notebook or ZIP exports.</div></div>
+        <div class="ag-field wide"><label for="agModel">MODEL ID</label><div class="ag-model-row"><input id="agModel" class="prompt-input" type="text" list="agModelList" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4-6"><datalist id="agModelList"></datalist><button class="btn" id="agDiscover" type="button">Discover</button></div><div class="ag-discovery" id="agDiscovery"></div></div>
+        <div class="ag-field"><label for="agOut">MAX OUTPUT TOKENS</label><input id="agOut" class="prompt-input" type="number" min="512" max="128000" step="256"></div>
+        <div class="ag-field"><label for="agCtxOverride">CONTEXT LIMIT · OPTIONAL</label><input id="agCtxOverride" class="prompt-input" type="number" min="8192" max="4000000" step="1024" placeholder="auto"></div>
+        <div class="ag-field"><label for="agCompactAt">COMPACT ACTIVE PAYLOAD AT %</label><input id="agCompactAt" class="prompt-input" type="number" min="50" max="95"></div>
+        <div class="ag-field"><label for="agMax">MAX TOOL STEPS / TURN</label><input id="agMax" class="prompt-input" type="number" min="4" max="80"></div>
+        <div class="ag-field wide"><label>AUTONOMY</label><div style="display:flex;gap:6px"><button class="btn" id="agAutoBtn">AUTO</button><button class="btn" id="agStepBtn">STEP</button></div></div>
       </div>
-      <div style="margin-top:12px;font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--ink-3)">
-        Key lives only in this browser; calls go directly to api.anthropic.com. AUTO runs the loop freely
-        (Stop anytime). STEP asks before every run and %pip install. The agent's code runs in the same
-        Pyodide sandbox as yours — no filesystem, no network. Long sessions self-compact to fit the
-        model's context window (~200k tokens; oldest tool exchanges drop first — hover the meter to
-        see the live estimate). Hover any of your messages and press ⑂ to fork the conversation into
-        a duplicated notebook.
-      </div>
+      <div class="ag-field-note" style="margin-top:12px">Keys remain in this browser and are sent only to the selected API base. AUTO runs freely; STEP asks before execution. Full thread history stays local and portable while only the active API payload is compacted.</div>
       <div class="prompt-acts"><button class="btn" id="agClear">Clear key</button><button class="btn primary" id="agSave">Save</button></div>
+    </div>
+  </div>
+</div>
+<div class="scrim" id="ctxScrim">
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Thread context</h2><button class="modal-x" id="ctxX">×</button></div>
+    <div class="modal-b">
+      <div class="ctx-grid"><div class="ctx-stat"><div class="ctx-k">Full history</div><div class="ctx-v" id="ctxFull">0</div></div><div class="ctx-stat"><div class="ctx-k">Active payload</div><div class="ctx-v" id="ctxActive">0</div></div><div class="ctx-stat"><div class="ctx-k">Input tokens</div><div class="ctx-v" id="ctxInput">0</div></div><div class="ctx-stat"><div class="ctx-k">Output tokens</div><div class="ctx-v" id="ctxOutput">0</div></div></div>
+      <div class="ctx-bar" id="ctxBar"><span></span></div><div class="ctx-note" id="ctxNote"></div><div class="ctx-note" id="ctxUsageDetail"></div>
+      <div class="prompt-acts"><button class="btn" id="ctxReset">Reset usage</button><button class="btn" id="ctxExport">Export thread</button><button class="btn primary" id="ctxDone">Done</button></div>
     </div>
   </div>
 </div>
@@ -783,7 +830,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
   </div>
 </div>
 
-<input type="file" id="fileIpynb" accept=".ipynb,application/json" hidden>
+<input type="file" id="fileIpynb" accept=".ipynb,.zip,.kernel.zip,application/json,application/zip" hidden>
 <input type="file" id="fileData" multiple hidden>
 
 <script>
@@ -1020,7 +1067,7 @@ def _inspect_ns():
         except Exception:
             info = ""
         b = _var_bytes(v, tn)
-        rows.append({"name": k, "type": tn, "info": info, "size": _human_bytes(b) if b is not None else ""})
+        rows.append({"name": k, "type": tn, "info": info, "bytes": b if b is not None else 0, "size": _human_bytes(b) if b is not None else ""})
     rows.sort(key=lambda r: r["name"].lower())
     return json.dumps(rows)
 
@@ -1177,58 +1224,68 @@ function firstLine(cell){
   return ln.trim().slice(0,80);
 }
 function inlineHome(cell){ return cell.el?cell.el.querySelector(".body"):null; }
+const outputCards=new Map();
 function returnOutputInline(cell){
   const body=inlineHome(cell); if(!body||!cell.outEl) return;
   if(cell.outEl.parentNode!==body){
-    cell.outEl.innerHTML="";
     const tools=body.querySelector(".cell-tools");
     body.insertBefore(cell.outEl, tools);
   }
-  renderOutputs(cell);
 }
 function makeCard(cell){
   const card=document.createElement("div"); card.className="out-card"; card.dataset.id=cell.id;
   const head=document.createElement("div"); head.className="out-card-h";
   const ex=document.createElement("span"); ex.className="out-card-ex"; ex.textContent=cell.execCount!=null?("["+cell.execCount+"]"):"[ ]";
   const lbl=document.createElement("span"); lbl.className="out-card-lbl"; lbl.textContent=firstLine(cell);
-  head.appendChild(ex); head.appendChild(lbl); card.appendChild(head);
-  cell.outEl.innerHTML=""; card.appendChild(cell.outEl);
-  head.addEventListener("click",()=>{ selectCell(cell.id,"command"); if(cell.el) cell.el.scrollIntoView({block:"center"}); });
-  card.addEventListener("mouseenter",()=>linkHover(cell.id,true));
-  card.addEventListener("mouseleave",()=>linkHover(cell.id,false));
+  const home=document.createElement("button");home.className="out-card-home";home.textContent="↙";home.title="Move all outputs inline";
+  home.addEventListener("click",e=>{e.stopPropagation();setSplitOutputs(false)});
+  head.appendChild(ex); head.appendChild(lbl);head.appendChild(home); card.appendChild(head);
+  card.appendChild(cell.outEl);card._outEl=cell.outEl;
+  head.addEventListener("click",()=>{const current=findCell(card.dataset.id);if(current){selectCell(current.id,"command");if(current.el)current.el.scrollIntoView({block:"center"})}});
+  card.addEventListener("mouseenter",()=>linkHover(card.dataset.id,true));
+  card.addEventListener("mouseleave",()=>linkHover(card.dataset.id,false));
+  outputCards.set(cell.id,card);
+  return card;
+}
+function outputCard(cell){
+  let card=outputCards.get(cell.id);
+  if(!card)return makeCard(cell);
+  if(card._outEl!==cell.outEl){card.querySelector(".outputs")?.remove();card.appendChild(cell.outEl);card._outEl=cell.outEl}
+  const ex=card.querySelector(".out-card-ex");if(ex)ex.textContent=cell.execCount!=null?("["+cell.execCount+"]"):"[ ]";
+  const lbl=card.querySelector(".out-card-lbl");if(lbl)lbl.textContent=firstLine(cell);
   return card;
 }
 function hasOut(cell){ return cell.type==="code" && cell.outputs && cell.outputs.length; }
 function layoutOutputs(){
   const list=$("#outList"); if(!list) return;
   if(!ui.splitOutputs){
-    list.innerHTML="";
     for(const c of cells) if(c.type==="code") returnOutputInline(c);
+    list.replaceChildren();outputCards.clear();
     updateOutputsSectionUI(); return;
   }
-  list.innerHTML="";
+  const frag=document.createDocumentFragment();
   let n=0;
   for(const cell of cells){
     if(!hasOut(cell)) continue;
-    list.appendChild(makeCard(cell));
-    renderOutputs(cell);
+    frag.appendChild(outputCard(cell));
     n++;
   }
-  if(!n){ const e=document.createElement("div"); e.className="out-empty"; e.textContent="Run a code cell — its output lands here, synced to the cell."; list.appendChild(e); }
+  if(!n){ const e=document.createElement("div"); e.className="out-empty"; e.textContent="Run a code cell — its output lands here, synced to the cell."; frag.appendChild(e); }
+  list.replaceChildren(frag);
+  for(const id of [...outputCards.keys()])if(!cells.some(c=>c.id===id&&hasOut(c)))outputCards.delete(id);
   updateOutputsSectionUI();
 }
 function syncCardFor(cell){
   const list=$("#outList"); if(!list||!ui.splitOutputs) return;
   const empty=list.querySelector(".out-empty"); if(empty) empty.remove();
-  let card=list.querySelector('.out-card[data-id="'+cell.id+'"]');
-  if(!hasOut(cell)){ if(card){ returnOutputInline(cell); card.remove(); } updateOutputsSectionUI(); if(!list.children.length){ layoutOutputs(); } return; }
+  let card=outputCards.get(cell.id)||list.querySelector('.out-card[data-id="'+cell.id+'"]');
+  if(!hasOut(cell)){ if(card){ returnOutputInline(cell); card.remove();outputCards.delete(cell.id); } updateOutputsSectionUI(); if(!list.querySelector(".out-card")){ layoutOutputs(); } return; }
   if(!card){
-    card=makeCard(cell);
+    card=outputCard(cell);
     // insert in document order: before the first existing card whose cell comes later
     const i=indexOf(cell); let anchor=null;
     for(const other of list.querySelectorAll(".out-card")){ const oi=cells.findIndex(c=>c.id===other.dataset.id); if(oi>i){ anchor=other; break; } }
     list.insertBefore(card, anchor);
-    renderOutputs(cell);
   } else {
     const ex=card.querySelector(".out-card-ex"); if(ex) ex.textContent=cell.execCount!=null?("["+cell.execCount+"]"):"[ ]";
     const lbl=card.querySelector(".out-card-lbl"); if(lbl) lbl.textContent=firstLine(cell);
@@ -1388,7 +1445,7 @@ function renderMarkdownCore(md){
 }
 
 /* ===== cell model + DOM ===== */
-function mkCell(type,source){ return {id:uid(), type:type||"code", source:source||"", outputs:[], execCount:null, editing:type==="markdown"?false:false, collapsed:false, el:null}; }
+function mkCell(type,source,id){ return {id:id||uid(), type:type||"code", source:source||"", outputs:[], execCount:null, editing:false, collapsed:false, el:null}; }
 
 function paint(cell){
   if(!cell.codeEl) return;
@@ -1673,7 +1730,7 @@ function moveCell(cell, dir){
 function convertTo(cell, type){
   if(cell.type===type) return;
   cell.type=type; cell.execCount=null; cell.outputs=[]; cell.editing=false;
-  render(); selectCell(cell.id,"command"); schedulePersist();
+  render(); selectCell(cell.id,"command"); schedulePersist(); scheduleWorkspacePersist();
 }
 function toggleType(cell){ convertTo(cell, cell.type==="code"?"markdown":"code"); }
 function deleteCell(cell){
@@ -1681,7 +1738,7 @@ function deleteCell(cell){
   if(!cells.length) cells.push(mkCell("code",""));
   render();
   const sel=cells[Math.min(i, cells.length-1)]; if(sel) selectCell(sel.id,"command");
-  schedulePersist();
+  schedulePersist(); scheduleWorkspacePersist();
 }
 
 /* ===== execution ===== */
@@ -1732,7 +1789,7 @@ async function runCell(cell){
   if(busy){ toast("Kernel is busy with another cell.","err"); return; }
   cmp.hide();
   let src=cell.taEl?cell.taEl.value:cell.source; cell.source=src;
-  if(!src.trim()){ cell.outputs=[]; cell.execCount=++execCounter; cell.runtime=null; if(cell.timeEl) cell.timeEl.textContent=""; renderOutputs(cell); refreshExec(cell); schedulePersist(); return; }
+  if(!src.trim()){ cell.outputs=[]; cell.execCount=++execCounter; cell.runtime=null; if(cell.timeEl) cell.timeEl.textContent=""; renderOutputs(cell); refreshExec(cell); schedulePersist(); scheduleWorkspacePersist(); return; }
   busy=true;
   cell.el.classList.add("running"); cell.el.classList.remove("done"); cell.execEl.textContent="[*]";
   if(cell.timeEl) cell.timeEl.textContent="";
@@ -1778,6 +1835,7 @@ async function runCell(cell){
     if(cell.timeEl) cell.timeEl.textContent = (cell.outputs&&cell.outputs.some(o=>o.kind==="error")) ? "" : fmtDur(dt);
     setStatus(kernelReady?"Ready":"Kernel failed", kernelReady?"ok":"err"); progressOff();
     schedulePersist();
+    scheduleWorkspacePersist();
     try{ await refreshInspector(); }catch(_){}
     busy=false;
   }
@@ -1871,6 +1929,8 @@ async function bootKernel(){
     const ver=await runPy("import sys; sys.version.split()[0]");
     kernelReady=true; setStatus("Ready","ok");
     $("#kernelInfo").textContent="Python "+ver+" · Pyodide 0.29.4";
+    await restoreWorkspaceState(nbId);
+    if(agTxNb!==nbId)await activateNotebookAgent(nbId);
     toast("Kernel ready · Python "+ver);
     loadExtras();
   }catch(err){
@@ -1905,7 +1965,7 @@ async function restartKernel(){
 function clearOutputs(){
   for(const cell of cells){ cell.outputs=[]; cell.execCount=null; cell.runtime=null; if(cell.timeEl) cell.timeEl.textContent=""; renderOutputs(cell); refreshExec(cell); }
   if(ui.splitOutputs) layoutOutputs();
-  schedulePersist(); toast("Outputs cleared");
+  schedulePersist(); scheduleWorkspacePersist(); toast("Outputs cleared");
 }
 /* newNotebook lives in the notebook-library section below */
 
@@ -1934,7 +1994,7 @@ function outputsToIpynb(outs, ec){
 function toIpynb(){
   return {
     cells: cells.map(c=>{
-      const base={ cell_type:c.type, metadata:{}, source:splitLines(c.taEl?c.taEl.value:c.source) };
+      const base={ cell_type:c.type, metadata:{kernel:{cell_id:c.id,collapsed:!!c.collapsed}}, source:splitLines(c.taEl?c.taEl.value:c.source) };
       if(c.type==="code"){ base.execution_count=c.execCount==null?null:c.execCount; base.outputs=outputsToIpynb(c.outputs, c.execCount); }
       return base;
     }),
@@ -1980,14 +2040,16 @@ function fromIpynb(obj){
   const nc=obj.cells.map(c=>{
     const t=c.cell_type==="code"?"code":"markdown";
     const src=Array.isArray(c.source)?c.source.join(""):(c.source||"");
-    const cell=mkCell(t, src);
+    const km=c.metadata&&c.metadata.kernel;
+    const cell=mkCell(t, src, km&&km.cell_id);
+    cell.collapsed=!!(km&&km.collapsed);
     if(t==="code"){ cell.execCount=(typeof c.execution_count==="number")?c.execution_count:null; cell.outputs=ipynbToOutputs(c.outputs||[]); }
     return cell;
   });
   cells=nc.length?nc:[mkCell("code","")];
   execCounter=cells.reduce((m,c)=> (c.execCount!=null&&c.execCount>m)?c.execCount:m, 0);
   selectedId=null; render(); if(cells[0]) selectCell(cells[0].id,"command"); schedulePersist();
-  try{ agImportMeta(obj.metadata&&obj.metadata.kernel_agent); }catch(e){}
+  try{ if(!workspaceArchiveImport)agImportMeta(obj.metadata&&obj.metadata.kernel_agent); }catch(e){}
 }
 function downloadIpynb(){
   const blob=new Blob([JSON.stringify(toIpynb(),null,1)],{type:"application/json"});
@@ -2028,7 +2090,7 @@ function insertReadSnippet(name){
 async function removeData(name){
   try{ if(pyodide&&pyodide.FS){ try{ pyodide.FS.unlink(name); }catch(_){ } } }catch(_){ }
   const i=dataFiles.findIndex(d=>d.name===name); if(i>=0) dataFiles.splice(i,1);
-  renderDataChips(); renderDataList(); toast("Removed "+name);
+  renderDataChips(); renderDataList(); scheduleWorkspacePersist(); toast("Removed "+name);
 }
 function openData(){ toggleLeft(true); ui.secData=true; applyUI(); saveUI(); renderDataList(); }
 function closeData(){ /* panels persist */ }
@@ -2039,12 +2101,17 @@ function renderDataList(){
     e.textContent="No files mounted yet. Upload a CSV, JSON, or any file to read it from your code.";
     host.appendChild(e); return;
   }
-  for(const d of dataFiles){
+  const originOrder={upload:0,result:1};
+  const ordered=dataFiles.slice().sort((a,b)=>(originOrder[a.origin||"upload"]??9)-(originOrder[b.origin||"upload"]??9)||a.name.localeCompare(b.name));
+  let lastOrigin="";
+  for(const d of ordered){
+    const origin=d.origin||"upload";
+    if(origin!==lastOrigin){const group=document.createElement("div");group.className="data-group";group.textContent=origin==="result"?"AGENT RESULTS":"USER UPLOADS";host.appendChild(group);lastOrigin=origin}
     const row=document.createElement("div"); row.className="data-row";
     const top=document.createElement("div"); top.className="data-top";
     const meta=document.createElement("div"); meta.className="data-meta";
     const nm=document.createElement("div"); nm.className="data-name"; nm.textContent=d.name;
-    const sub=document.createElement("div"); sub.className="data-sub"; sub.textContent=(fileExt(d.name)||"file").toUpperCase()+" · "+fmtBytes(d.size||0);
+    const sub=document.createElement("div"); sub.className="data-sub"; sub.textContent=(fileExt(d.name)||"file").toUpperCase()+" · "+fmtBytes(d.size||0)+" · "+(origin==="result"?"agent result":"user upload");
     meta.appendChild(nm); meta.appendChild(sub);
     const acts=document.createElement("div"); acts.className="data-acts";
     const prev=document.createElement("div"); prev.className="data-preview";
@@ -2074,7 +2141,187 @@ function renderDataList(){
   }
 }
 
-/* ===== persistence + notebook library (source/type/collapsed only) ===== */
+/* ===== durable per-notebook workspace (large state lives in IndexedDB) ===== */
+const KDB_NAME="kernel.workspace.v2",KDB_VERSION=1;
+let kdbPromise=null,workspaceTimer=null,workspaceLoading=false,workspaceArchiveImport=false;
+const kdbMemory={workspaces:new Map(),threads:new Map()};let kdbWarned=false;
+function kdbFallback(error){if(!kdbWarned){kdbWarned=true;console.warn("Persistent workspace storage unavailable; using an in-memory fallback",error);toast("Persistent browser storage is unavailable · Save ZIP before closing.","err")}}
+function kdbClone(value){try{return structuredClone(value)}catch(e){return value}}
+function kdbOpen(){
+  if(kdbPromise)return kdbPromise;
+  kdbPromise=new Promise((resolve,reject)=>{
+    if(!window.indexedDB){reject(new Error("IndexedDB unavailable"));return}
+    const req=indexedDB.open(KDB_NAME,KDB_VERSION);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains("workspaces"))db.createObjectStore("workspaces",{keyPath:"notebookId"});
+      if(!db.objectStoreNames.contains("threads")){
+        const st=db.createObjectStore("threads",{keyPath:"key"});st.createIndex("notebookId","notebookId",{unique:false});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Could not open workspace database"));
+  });
+  return kdbPromise;
+}
+async function kdbRequest(store,mode,fn){
+  const db=await kdbOpen();
+  return await new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,mode),st=tx.objectStore(store);let req;
+    try{req=fn(st)}catch(e){reject(e);return}
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Workspace database operation failed"));
+  });
+}
+async function kdbGet(store,key){try{return await kdbRequest(store,"readonly",st=>st.get(key))}catch(e){kdbFallback(e);return kdbClone(kdbMemory[store].get(key)||null)}}
+async function kdbPut(store,value){try{return await kdbRequest(store,"readwrite",st=>st.put(value))}catch(e){kdbFallback(e);const key=store==="threads"?value.key:value.notebookId;kdbMemory[store].set(key,kdbClone(value));return key}}
+async function kdbDelete(store,key){kdbMemory[store].delete(key);try{return await kdbRequest(store,"readwrite",st=>st.delete(key))}catch(e){kdbFallback(e)}}
+async function kdbThreads(notebookId){
+  try{
+    const db=await kdbOpen();
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction("threads","readonly"),idx=tx.objectStore("threads").index("notebookId"),req=idx.getAll(IDBKeyRange.only(notebookId));
+      req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error);
+    });
+  }catch(e){kdbFallback(e);return [...kdbMemory.threads.values()].filter(t=>t.notebookId===notebookId).map(kdbClone)}
+}
+function clonePlain(value){return value==null?value:JSON.parse(JSON.stringify(value))}
+function scheduleWorkspacePersist(){
+  if(workspaceLoading)return;
+  clearTimeout(workspaceTimer);workspaceTimer=setTimeout(()=>saveWorkspaceState(),550);
+  const el=$("#saveState");if(el)el.classList.add("workspace-saving");
+}
+async function collectWorkspaceFiles(){
+  const out=[];
+  for(const d of dataFiles){
+    try{
+      const raw=pyodide&&pyodide.FS?pyodide.FS.readFile(d.name):(d.bytes||new Uint8Array());
+      const bytes=raw instanceof Uint8Array?raw.slice():new Uint8Array(raw);
+      d.bytes=bytes;
+      out.push({name:d.name,size:bytes.byteLength,type:d.type||"",preview:d.preview||"",origin:d.origin||"upload",bytes});
+    }catch(e){if(d.bytes)out.push({name:d.name,size:d.bytes.byteLength,type:d.type||"",preview:d.preview||"",origin:d.origin||"upload",bytes:d.bytes})}
+  }
+  return out;
+}
+async function saveWorkspaceState(id){
+  clearTimeout(workspaceTimer);id=id||nbId;if(!id||id!==nbId||workspaceLoading)return;
+  const rec={v:2,notebookId:id,updated:Date.now(),files:await collectWorkspaceFiles(),outputs:cells.filter(c=>c.type==="code"&&(c.outputs.length||c.execCount!=null)).map(c=>({cellId:c.id,outputs:clonePlain(c.outputs),execCount:c.execCount,runtime:c.runtime==null?null:c.runtime}))};
+  await kdbPut("workspaces",rec);
+  const el=$("#saveState");if(el)el.classList.remove("workspace-saving");
+  return rec;
+}
+async function clearMountedData(){
+  if(pyodide&&pyodide.FS){for(const d of dataFiles){try{pyodide.FS.unlink(d.name)}catch(_){}}}
+  dataFiles.splice(0,dataFiles.length);renderDataChips();renderDataList();
+}
+async function isolateNotebookRuntime(){
+  if(kernelReady&&pyodide){try{await runPy("_kernel_reset()") }catch(e){console.warn("namespace reset failed",e)}}
+  await clearMountedData();lastVarRows=[];paintInspector();
+}
+async function restoreWorkspaceState(id){
+  workspaceLoading=true;
+  try{
+    await clearMountedData();
+    const rec=await kdbGet("workspaces",id);
+    if(rec&&Array.isArray(rec.files)){
+      for(const f of rec.files){
+        const bytes=f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes||[]);
+        try{if(kernelReady&&pyodide)pyodide.FS.writeFile(f.name,bytes)}catch(e){console.warn("Could not remount",f.name,e)}
+        dataFiles.push({name:f.name,size:bytes.byteLength,type:f.type||"",preview:f.preview||"",origin:f.origin||"upload",bytes});
+      }
+    }
+    const byId=new Map(((rec&&rec.outputs)||[]).map(o=>[o.cellId,o]));
+    for(const cell of cells){
+      const o=byId.get(cell.id);if(!o)continue;
+      cell.outputs=clonePlain(o.outputs)||[];cell.execCount=o.execCount==null?null:o.execCount;cell.runtime=o.runtime==null?null:o.runtime;
+      renderOutputs(cell);refreshExec(cell);if(cell.timeEl&&cell.runtime!=null)cell.timeEl.textContent=fmtDur(cell.runtime);
+    }
+    execCounter=cells.reduce((m,c)=>c.execCount!=null?Math.max(m,c.execCount):m,0);
+    renderDataChips();renderDataList();if(ui.splitOutputs)layoutOutputs();
+  }finally{workspaceLoading=false}
+}
+async function deleteNotebookWorkspace(id){
+  await kdbDelete("workspaces",id);for(const t of await kdbThreads(id))await kdbDelete("threads",t.key);
+}
+async function cloneNotebookWorkspace(fromId,toId){
+  const src=fromId===nbId?await saveWorkspaceState(fromId):await kdbGet("workspaces",fromId);
+  if(src)await kdbPut("workspaces",Object.assign({},src,{notebookId:toId,updated:Date.now(),files:(src.files||[]).map(f=>Object.assign({},f,{bytes:(f.bytes instanceof Uint8Array?f.bytes.slice():new Uint8Array(f.bytes||[]))})),outputs:clonePlain(src.outputs||[])}));
+  const idxRaw=localStorage.getItem("kernel.agent.threadindex."+fromId);if(idxRaw)localStorage.setItem("kernel.agent.threadindex."+toId,idxRaw);
+  for(const t of await kdbThreads(fromId))await kdbPut("threads",Object.assign({},t,{key:toId+":"+t.id,notebookId:toId,updated:Date.now()}));
+}
+
+/* ===== portable .kernel.zip (standard ZIP, stored entries, no dependency) ===== */
+const ZIP_UTF8=0x0800;
+let crcTable=null;
+function crc32(bytes){
+  if(!crcTable){crcTable=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);crcTable[n]=c>>>0}}
+  let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;
+}
+function zipHeader(size){return new Uint8Array(size)}
+function z16(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint16(o,n,true)}
+function z32(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint32(o,n>>>0,true)}
+function joinBytes(parts){let n=0;for(const p of parts)n+=p.byteLength;const out=new Uint8Array(n);let at=0;for(const p of parts){out.set(p,at);at+=p.byteLength}return out}
+function zipStore(entries){
+  const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;
+  for(const ent of entries){
+    const name=enc.encode(ent.name),data=ent.data instanceof Uint8Array?ent.data:new Uint8Array(ent.data),crc=crc32(data);
+    const lh=zipHeader(30);z32(lh,0,0x04034b50);z16(lh,4,20);z16(lh,6,ZIP_UTF8);z16(lh,8,0);z32(lh,14,crc);z32(lh,18,data.length);z32(lh,22,data.length);z16(lh,26,name.length);
+    locals.push(lh,name,data);
+    const ch=zipHeader(46);z32(ch,0,0x02014b50);z16(ch,4,20);z16(ch,6,20);z16(ch,8,ZIP_UTF8);z16(ch,10,0);z32(ch,16,crc);z32(ch,20,data.length);z32(ch,24,data.length);z16(ch,28,name.length);z32(ch,42,offset);
+    centrals.push(ch,name);offset+=lh.length+name.length+data.length;
+  }
+  const central=joinBytes(centrals),end=zipHeader(22);z32(end,0,0x06054b50);z16(end,8,entries.length);z16(end,10,entries.length);z32(end,12,central.length);z32(end,16,offset);
+  return joinBytes([...locals,central,end]);
+}
+function zipReadStore(bytes){
+  bytes=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),dec=new TextDecoder();let end=-1;
+  for(let i=Math.max(0,bytes.length-65557);i<=bytes.length-22;i++)if(dv.getUint32(i,true)===0x06054b50)end=i;
+  if(end<0)throw new Error("Not a valid ZIP archive");
+  const count=dv.getUint16(end+10,true),out=new Map();let at=dv.getUint32(end+16,true);
+  for(let i=0;i<count;i++){
+    if(dv.getUint32(at,true)!==0x02014b50)throw new Error("Invalid ZIP directory");
+    const method=dv.getUint16(at+10,true),crc=dv.getUint32(at+16,true),size=dv.getUint32(at+24,true),nl=dv.getUint16(at+28,true),xl=dv.getUint16(at+30,true),cl=dv.getUint16(at+32,true),lo=dv.getUint32(at+42,true),name=dec.decode(bytes.slice(at+46,at+46+nl));
+    if(method!==0)throw new Error("This importer accepts KERNEL archives (stored ZIP entries) only");
+    if(dv.getUint32(lo,true)!==0x04034b50)throw new Error("Invalid ZIP entry");
+    const lnl=dv.getUint16(lo+26,true),lxl=dv.getUint16(lo+28,true),data=bytes.slice(lo+30+lnl+lxl,lo+30+lnl+lxl+size);
+    if(crc32(data)!==crc)throw new Error("ZIP checksum failed for "+name);out.set(name,data);at+=46+nl+xl+cl;
+  }
+  return out;
+}
+function downloadBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1800)}
+async function downloadWorkspaceZip(){
+  if(agRunning||busy){toast("Finish or stop the current run first.","err");return}
+  progressOn();setStatus("Packing workspace…","busy");
+  try{
+    persist();if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();const ws=await saveWorkspaceState();const threadIndex=typeof readThreadIndex==="function"?readThreadIndex(nbId):null,threads=await kdbThreads(nbId),enc=new TextEncoder(),entries=[];
+    if(agThreadId&&!threads.some(t=>t.id===agThreadId)){const meta=threadIndex&&threadIndex.threads.find(t=>t.id===agThreadId);threads.push({key:nbId+":"+agThreadId,notebookId:nbId,id:agThreadId,name:(meta&&meta.name)||"Thread",created:(meta&&meta.created)||Date.now(),updated:Date.now(),messages:clonePlain(agMsgs),transcript:txEntries(),usage:agUsage(),provider:agProvider,model:agModel})}
+    const manifest={format:"kernel-workspace",version:2,app:"KERNEL·A",app_version:"2.0.0",exported_at:new Date().toISOString(),notebook:{name:nbName},active_thread_id:threadIndex&&threadIndex.active||null,thread_index:threadIndex||null,files:[]};
+    entries.push({name:"manifest.json",data:enc.encode(JSON.stringify(manifest,null,2))});
+    entries.push({name:"notebook.ipynb",data:enc.encode(JSON.stringify(toIpynb(),null,1))});
+    for(let i=0;i<((ws&&ws.files)||[]).length;i++){
+      const f=ws.files[i],base=String(f.name||"file").replace(/[\\/\0]/g,"_").slice(0,160),path="data/"+(f.origin==="result"?"results/":"uploads/")+String(i+1).padStart(3,"0")+"-"+base;
+      manifest.files.push({path,name:f.name,type:f.type||"",origin:f.origin||"upload",size:f.bytes.byteLength,preview:f.preview||""});entries.push({name:path,data:f.bytes});
+    }
+    for(const t of threads)entries.push({name:"threads/"+encodeURIComponent(t.id)+".json",data:enc.encode(JSON.stringify(t))});
+    entries[0]={name:"manifest.json",data:enc.encode(JSON.stringify(manifest,null,2))};
+    entries.push({name:"README.txt",data:enc.encode("KERNEL·A portable workspace v2\n\nOpen this .kernel.zip from KERNEL·A to restore the notebook, rendered outputs, uploaded inputs, promoted results, every chat thread, usage counters, and active-thread selection. API keys are intentionally excluded. The live Python namespace is recreated by rerunning the notebook cells.\n")});
+    downloadBlob(new Blob([zipStore(entries)],{type:"application/zip"}),agSlug()+".kernel.zip");toast("Workspace ZIP saved · "+threads.length+" thread"+(threads.length===1?"":"s")+" · "+manifest.files.length+" file"+(manifest.files.length===1?"":"s"));
+  }catch(e){toast("Could not save workspace · "+esc(e.message||e),"err")}finally{setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
+}
+async function importWorkspaceZip(file){
+  progressOn();setStatus("Restoring workspace…","busy");
+  try{
+    if(agRunning||busy)throw new Error("stop the current run first");const entries=zipReadStore(new Uint8Array(await file.arrayBuffer())),dec=new TextDecoder(),manifest=JSON.parse(dec.decode(entries.get("manifest.json")||new Uint8Array()));
+    if(manifest.format!=="kernel-workspace"||manifest.version!==2)throw new Error("unsupported KERNEL workspace version");
+    const note=JSON.parse(dec.decode(entries.get("notebook.ipynb")||new Uint8Array()));if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();await saveWorkspaceState();await isolateNotebookRuntime();
+    const id=createNotebook((manifest.notebook&&manifest.notebook.name)||"Imported workspace");applyNotebook(id);workspaceArchiveImport=true;fromIpynb(note);workspaceArchiveImport=false;nbName=(manifest.notebook&&manifest.notebook.name)||nbName;setNbTitle();persist();
+    const files=[];for(const f of (manifest.files||[])){const bytes=entries.get(f.path);if(!bytes)continue;const name=String(f.name||"file").replace(/[\\/\0]/g,"_").replace(/^\.+/,"")||"file";files.push({name,type:f.type||"",origin:f.origin||"upload",size:bytes.byteLength,preview:f.preview||"",bytes});if(kernelReady)pyodide.FS.writeFile(name,bytes)}
+    dataFiles.splice(0,dataFiles.length,...files);const outputs=cells.filter(c=>c.type==="code"&&(c.outputs.length||c.execCount!=null)).map(c=>({cellId:c.id,outputs:clonePlain(c.outputs),execCount:c.execCount,runtime:c.runtime||null}));await kdbPut("workspaces",{v:2,notebookId:id,updated:Date.now(),files,outputs});
+    const idx=manifest.thread_index;if(idx&&typeof writeThreadIndex==="function")writeThreadIndex(idx,id);
+    for(const [path,bytes] of entries){if(!path.startsWith("threads/")||!path.endsWith(".json"))continue;const t=JSON.parse(dec.decode(bytes));t.notebookId=id;t.key=id+":"+t.id;await kdbPut("threads",t)}
+    renderDataChips();renderDataList();if(typeof activateNotebookAgent==="function")await activateNotebookAgent(id);if(ui.left)renderLibrary();toast("Workspace restored · "+nbName);
+  }finally{workspaceArchiveImport=false;setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
+}
+
+/* ===== persistence + notebook library (source/type/stable id/collapsed) ===== */
 let persistTimer=null;
 function schedulePersist(){ markSaving(); clearTimeout(persistTimer); persistTimer=setTimeout(persist, 400); }
 
@@ -2084,12 +2331,12 @@ function readLib(){
 function writeLib(lib){ try{ localStorage.setItem(LIB_KEY, JSON.stringify(lib)); }catch(e){} }
 function libEntry(id){ const lib=readLib(); return lib?lib.notebooks.find(n=>n.id===id):null; }
 
-function cellPayload(){ return cells.map(c=>({type:c.type, source:c.taEl?c.taEl.value:c.source, collapsed:!!c.collapsed})); }
+function cellPayload(){ return cells.map(c=>({id:c.id,type:c.type, source:c.taEl?c.taEl.value:c.source, collapsed:!!c.collapsed})); }
 
 function persist(){
   if(!nbId) return;
   const now=Date.now();
-  try{ localStorage.setItem(nbKey(nbId), JSON.stringify({ v:2, name:nbName, cells:cellPayload(), updated:now })); }catch(e){}
+  try{ localStorage.setItem(nbKey(nbId), JSON.stringify({ v:3, name:nbName, cells:cellPayload(), updated:now })); }catch(e){}
   const lib=readLib();
   if(lib){
     const ent=lib.notebooks.find(n=>n.id===nbId);
@@ -2111,7 +2358,7 @@ function applyNotebook(id){
   const ent=libEntry(id);
   nbId=id; nbName=(ent&&ent.name)||(data&&data.name)||"Untitled";
   const list=(data&&data.cells&&data.cells.length)?data.cells:[{type:"code",source:"",collapsed:false}];
-  cells=list.map(c=>{ const cell=mkCell(c.type==="markdown"?"markdown":"code", c.source||""); cell.collapsed=!!c.collapsed; return cell; });
+  cells=list.map(c=>{ const cell=mkCell(c.type==="markdown"?"markdown":"code", c.source||"", c.id); cell.collapsed=!!c.collapsed; return cell; });
   selectedId=null; execCounter=0;
   setNbTitle();
 }
@@ -2124,7 +2371,7 @@ function migrateLegacy(lib){
     const data=JSON.parse(raw);
     if(!data||!Array.isArray(data.cells)||!data.cells.length) return false;
     const id=nuid(), now=Date.now();
-    localStorage.setItem(nbKey(id), JSON.stringify({ v:2, name:"Untitled", cells:data.cells.map(c=>({type:c.type==="markdown"?"markdown":"code", source:c.source||"", collapsed:false})), updated:now }));
+    localStorage.setItem(nbKey(id), JSON.stringify({ v:3, name:"Untitled", cells:data.cells.map(c=>({id:c.id||uid(),type:c.type==="markdown"?"markdown":"code", source:c.source||"", collapsed:false})), updated:now }));
     lib.notebooks.unshift({id, name:"Untitled", updated:now});
     lib.current=id;
     localStorage.removeItem(STORE_KEY);
@@ -2140,7 +2387,7 @@ function initLibrary(){
     const id=nuid(), now=Date.now();
     lib.notebooks.push({id, name:"Untitled", updated:now});
     lib.current=id; writeLib(lib);
-    localStorage.setItem(nbKey(id), JSON.stringify({ v:2, name:"Untitled", cells:[{type:"code",source:"",collapsed:false}], updated:now }));
+    localStorage.setItem(nbKey(id), JSON.stringify({ v:3, name:"Untitled", cells:[{id:uid(),type:"code",source:"",collapsed:false}], updated:now }));
   }
   const cur=(lib.current && lib.notebooks.some(n=>n.id===lib.current)) ? lib.current : lib.notebooks[0].id;
   applyNotebook(cur);
@@ -2151,28 +2398,30 @@ function createNotebook(name){
   const id=nuid(), now=Date.now();
   lib.notebooks.unshift({id, name:name||"Untitled", updated:now});
   lib.current=id; writeLib(lib);
-  localStorage.setItem(nbKey(id), JSON.stringify({ v:2, name:name||"Untitled", cells:[{type:"code",source:"",collapsed:false}], updated:now }));
+  localStorage.setItem(nbKey(id), JSON.stringify({ v:3, name:name||"Untitled", cells:[{id:uid(),type:"code",source:"",collapsed:false}], updated:now }));
   return id;
 }
 
-function newNotebook(){
-  persist();
+async function newNotebook(){
+  if(agRunning||busy){toast("Finish or stop the current run first.","err");return}
+  persist();await saveActiveThreadNow();await saveWorkspaceState();await isolateNotebookRuntime();
   const id=createNotebook("Untitled");
   applyNotebook(id);
   render();
   if(cells[0]) selectCell(cells[0].id,"edit");
-  refreshInspector();
+  await restoreWorkspaceState(id);await activateNotebookAgent(id);refreshInspector();
   if(ui.left) renderLibrary();
   toast("New notebook");
 }
-function switchNotebook(id){
+async function switchNotebook(id){
   if(id===nbId){ closeLibrary(); return; }
-  persist();
+  if(agRunning||busy){toast("Finish or stop the current run first.","err");return}
+  persist();await saveActiveThreadNow();await saveWorkspaceState();await isolateNotebookRuntime();
   applyNotebook(id);
   render();
   if(cells[0]) selectCell(cells[0].id,"command");
   closeLibrary();
-  refreshInspector();
+  await restoreWorkspaceState(id);await activateNotebookAgent(id);refreshInspector();
   if(ui.left) renderLibrary();
 }
 function appPrompt(title, value, okLabel){
@@ -2212,27 +2461,32 @@ function renameNotebook(id){
     renderLibrary();
   });
 }
-function duplicateNotebook(id){
+async function duplicateNotebook(id){
+  if(busy&&id===nbId){toast("Finish the current run first.","err");return null}
   const src=loadCellsFor(id); const ent=libEntry(id);
   const baseName=((ent&&ent.name)||"Untitled")+" copy";
   const newId=nuid(), now=Date.now();
   const lib=readLib();
   lib.notebooks.unshift({id:newId, name:baseName, updated:now}); writeLib(lib);
-  const payload={ v:2, name:baseName, cells:(src&&src.cells)?src.cells:[{type:"code",source:"",collapsed:false}], updated:now };
+  const payload={ v:3, name:baseName, cells:(src&&src.cells)?src.cells.map(c=>Object.assign({},c)):[{id:uid(),type:"code",source:"",collapsed:false}], updated:now };
   try{ localStorage.setItem(nbKey(newId), JSON.stringify(payload)); }catch(e){}
-  renderLibrary();
+  await cloneNotebookWorkspace(id,newId);renderLibrary();
   toast("Duplicated");
+  return newId;
 }
-function deleteNotebook(id){
+async function deleteNotebook(id){
+  if((busy||agRunning)&&id===nbId){toast("Finish or stop the current run first.","err");return}
   const lib=readLib(); if(!lib) return;
   if(lib.notebooks.length<=1){ toast("Can't delete the only notebook.","err"); return; }
   const ent=lib.notebooks.find(n=>n.id===id);
   if(!confirm("Delete \""+((ent&&ent.name)||"notebook")+"\"? This can't be undone.")) return;
   lib.notebooks=lib.notebooks.filter(n=>n.id!==id);
   try{ localStorage.removeItem(nbKey(id)); }catch(e){}
+  await deleteNotebookWorkspace(id);
+  try{localStorage.removeItem("kernel.agent.threadindex."+id);localStorage.removeItem("kernel.agent.tx."+id);localStorage.removeItem("kernel.agent.msgs."+id);localStorage.removeItem("kernel.agent.usage."+id)}catch(e){}
   if(id===nbId){
     const nextId=lib.notebooks[0].id; lib.current=nextId; writeLib(lib);
-    applyNotebook(nextId); render(); if(cells[0]) selectCell(cells[0].id,"command"); refreshInspector();
+    await isolateNotebookRuntime();applyNotebook(nextId); render(); if(cells[0]) selectCell(cells[0].id,"command");await restoreWorkspaceState(nextId);await activateNotebookAgent(nextId);refreshInspector();
   } else { writeLib(lib); }
   renderLibrary();
 }
@@ -2341,6 +2595,7 @@ $("#findInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventD
 $("#replaceInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); find.replaceOne(); } });
 $("#btnOpen").addEventListener("click", ()=>$("#fileIpynb").click());
 $("#btnSave").addEventListener("click", downloadIpynb);
+$("#btnWorkspace").addEventListener("click", downloadWorkspaceZip);
 $("#btnData").addEventListener("click", openData);
 $("#dataUpload").addEventListener("click", ()=>{ if(!kernelReady){ toast("Kernel still booting — one moment.","err"); return; } $("#fileData").click(); });
 $("#btnMore").addEventListener("click", e=>{ e.stopPropagation(); toggleMenu(); });
@@ -2356,6 +2611,8 @@ $("#moreMenu").addEventListener("click", e=>{
 });
 document.addEventListener("click", e=>{ if(!e.target.closest(".menu-wrap")) closeMenu(); });
 $("#varsFilter").addEventListener("input", paintInspector);
+$("#varsSort").addEventListener("change", paintInspector);
+$("#varsRefresh").addEventListener("click", refreshInspector);
 $("#btnRunAll").addEventListener("click", runAll);
 $("#btnRestart").addEventListener("click", restartKernel);
 $("#btnClear").addEventListener("click", clearOutputs);
@@ -2364,12 +2621,18 @@ $("#helpX").addEventListener("click", closeHelp);
 $("#helpScrim").addEventListener("mousedown", e=>{ if(e.target===$("#helpScrim")) closeHelp(); });
 document.querySelectorAll(".add-btn").forEach(btn=>{ btn.addEventListener("click", ()=>insertCell(cells.length, btn.dataset.add, true)); });
 
-$("#fileIpynb").addEventListener("change", e=>{
+$("#fileIpynb").addEventListener("change", async e=>{
   const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{ try{ fromIpynb(JSON.parse(r.result)); toast("Opened "+esc(f.name)); }catch(err){ toast("Could not open notebook · "+esc(String(err&&err.message?err.message:err)),"err"); } };
-  r.onerror=()=>toast("Could not read file.","err");
-  r.readAsText(f); e.target.value="";
+  try{
+    if(/\.zip$/i.test(f.name)){await importWorkspaceZip(f)}
+    else{
+      if(agRunning||busy)throw new Error("finish or stop the current run first");
+      await saveActiveThreadNow();await saveWorkspaceState();
+      fromIpynb(JSON.parse(await f.text()));await saveWorkspaceState();
+      toast("Opened "+esc(f.name));
+    }
+  }catch(err){ toast("Could not open notebook · "+esc(String(err&&err.message?err.message:err)),"err"); }
+  e.target.value="";
 });
 $("#fileData").addEventListener("change", async e=>{
   const files=[...e.target.files]; if(!files.length) return;
@@ -2384,13 +2647,14 @@ $("#fileData").addEventListener("change", async e=>{
       if(TEXT.includes(fileExt(f.name))){
         try{ preview=new TextDecoder("utf-8",{fatal:false}).decode(buf.slice(0,8192)).slice(0,4000); }catch(_){ }
       }
-      const rec={name:f.name, size:f.size, type:f.type, preview};
+      const rec={name:f.name, size:f.size, type:f.type, preview, origin:"upload", bytes:buf.slice()};
       const ent=dataEntry(f.name);
       if(ent) Object.assign(ent, rec); else dataFiles.push(rec);
       ok++;
     }catch(err){ toast("Could not mount "+esc(f.name),"err"); console.error(err); }
   }
   renderDataChips(); renderDataList();
+  scheduleWorkspacePersist();
   if(ok) toast(ok+" file"+(ok>1?"s":"")+" mounted · read with open(\""+esc(files[0].name)+"\")");
   e.target.value="";
 });
@@ -2513,13 +2777,16 @@ function renderInspector(rows){
 function paintInspector(){
   const host=$("#varsList"), count=$("#varsCount"); if(!host) return;
   const q=(($("#varsFilter")&&$("#varsFilter").value)||"").trim().toLowerCase();
-  const rows=q?lastVarRows.filter(r=>r.name.toLowerCase().includes(q)||r.type.toLowerCase().includes(q)):lastVarRows;
+  const sort=($("#varsSort")&&$("#varsSort").value)||"name";
+  const rows=(q?lastVarRows.filter(r=>r.name.toLowerCase().includes(q)||r.type.toLowerCase().includes(q)):lastVarRows).slice();
+  rows.sort(sort==="memory"?(a,b)=>(b.bytes||0)-(a.bytes||0)||a.name.localeCompare(b.name):sort==="type"?(a,b)=>a.type.localeCompare(b.type)||a.name.localeCompare(b.name):(a,b)=>a.name.localeCompare(b.name));
   host.innerHTML="";
   if(!lastVarRows.length){
     const e=document.createElement("div"); e.className="var-empty"; e.textContent="No variables yet — run a cell that assigns something."; host.appendChild(e);
   } else if(!rows.length){
     const e=document.createElement("div"); e.className="var-empty"; e.textContent="No variables match that filter."; host.appendChild(e);
   } else {
+    const frag=document.createDocumentFragment();
     for(const r of rows){
       const item=document.createElement("div"); item.className="var-item";
       const row=document.createElement("div"); row.className="var-row"; row.title="Click for detail";
@@ -2536,8 +2803,9 @@ function paintInspector(){
       const det=document.createElement("div"); det.className="var-detail";
       row.addEventListener("click",()=>toggleVarDetail(r.name, item, det));
       item.appendChild(row); item.appendChild(det);
-      host.appendChild(item);
+      frag.appendChild(item);
     }
+    host.appendChild(frag);
   }
   if(count) count.textContent=lastVarRows.length+(lastVarRows.length===1?" name":" names")+(q?(" · "+rows.length+" shown"):"");
 }
@@ -2672,143 +2940,109 @@ const find = {
 };
 
 
-/* ════ KERNEL·A — the agent in the loop (spec: _dna/kernel-agent-spec.md) ════ */
+/* ════ KERNEL·A v2 — provider-neutral agent loop (spec: AGENT-V2-SPEC.md) ════ */
 var DOCS="# Authoring great in-browser Python notebooks\n\nThe target is a rich in-browser Python notebook runtime built on Pyodide (CPython on\nWebAssembly): one persistent kernel, Jupyter-style cells, last-expression echo, rich HTML\noutput, inline matplotlib, `%pip install`, and a small set of `display_*` helpers for\ninteractive output. (KERNEL is the reference implementation; everything here applies to any\nruntime that honors the same contract \u2014 see `references/runtime.md`.) Your job is to produce\nnotebooks that feel like a thoughtful human analyst wrote them \u2014 a narrated argument that\nhappens to be runnable \u2014 using exactly the capabilities the runtime has and none it doesn't.\nYou may be **assembling a finished notebook** in one pass, or **driving a live kernel turn by\nturn** with a human watching (see \"Working live, in the loop\"); the craft below applies to\nboth, but the live loop has its own discipline.\n\nA great notebook is not a script with comments. It is a sequence of small, rerunnable steps,\neach introduced by prose that says what is about to happen and why, followed by code,\nfollowed by an output worth looking at, followed by a sentence interpreting it. The reader\nshould be able to skim the markdown alone and understand the whole story.\n\n## The workflow\n\n1. **Clarify the goal and the inputs.** What question does the notebook answer? Is the input\n   a dataset the user supplied, existing code to convert, a mounted file (via the **+Data**\n   button \u2192 read from the working directory), or a synthetic dataset you generate? If you\n   were given data, inspect its real columns/shape before writing analysis against guessed\n   ones. If you were given code, see \"Working from existing code or data\" below.\n2. **Outline the narrative as section headers** before writing any code. A typical arc:\n   framing \u2192 setup/imports \u2192 load & inspect \u2192 clean/feature-build \u2192 analysis/model \u2192\n   visualize \u2192 conclusion. Pick the arc that fits; don't pad.\n3. **Write the cells.** Alternate markdown and code. Keep each code cell to one idea. End\n   cells on the value worth showing (see \"Output discipline\").\n4. **Pressure-test the result before you narrate it.** This is the difference between a\n   demo and a real analysis. Before writing confident prose about a finding, confirm the\n   finding actually exists: that the model converged, the cascade spread, the correlation is\n   real, the clusters separate, the fit tracks the data. If the result is degenerate \u2014 a\n   simulation that fizzles, an R\u00b2 near zero, one cluster swallowing everything, a flat curve\n   \u2014 **change the setup until there is real signal**, then narrate the true result. Never\n   write a confident story over noise. If a result genuinely is null, say so plainly and\n   show why; a clear negative result is honest, a fake positive is not.\n5. **Assemble a valid `.ipynb`** with the bundled script \u2014 never hand-write notebook JSON.\n   Write a cell spec (a JSON list) and run:\n   ```bash\n   python scripts/build_notebook.py cells.json output.ipynb \"Notebook Title\"\n   ```\n   The script emits nbformat 4.5 the runtime imports cleanly. See the script header for the\n   spec format.\n6. **Sanity-check the runtime fit.** Re-read every import and chart against\n   `references/runtime.md` \u2014 no `requests`, no ipywidgets, no LaTeX in markdown, correct\n   `%pip` vs. plain import. A notebook that errors on cell 1 is worthless. When you can run\n   code, execute the cells in order (with `display_*` stubbed) to catch breakage before\n   delivery.\n\n## Working live, in the loop\n\nWhen you are driving a *running* kernel turn by turn rather than assembling a finished file,\nthe job is exploratory analysis with a human watching. The rhythm is a loop, not a one-shot:\n\n1. **Propose one coherent step** \u2014 a markdown framing cell and the code cell it sets up, not\n   ten cells you haven't seen run. Small steps keep you and the human oriented.\n2. **Run it and read what comes back.** Outputs return *in execution order* as a mix of:\n   stream text (stdout/stderr), **figures as PNG images you can actually see**, rich\n   tables/HTML rendered to text, and tracebacks. Look before you leap.\n3. **Interpret, then decide the next step from the evidence** \u2014 not from what you assumed the\n   data would say. Drop a one-sentence takeaway in a markdown cell, then propose the next move.\n4. **Loop with the human.** Surface forks (\"we could model this two ways\u2026\"), pause before\n   expensive or destructive steps, and let them redirect. You are a pair-analyst, not an\n   autopilot. The pressure-test rule (step 4 of the workflow) still holds: confirm a finding\n   is real before you narrate it.\n\n### Reading outputs so you can actually see\n\nYou only \"see\" what a cell emits, so emit deliberately \u2014 the output *is* your sensory input:\n\n- **To judge a distribution, shape, fit, or trend, draw it.** A matplotlib / `display_plotly`\n  figure comes back to you as an image; that is how you inspect a result visually. If you\n  need to see it, plot it \u2014 then interpret what the picture shows.\n- **To reason over data, summarize it as text:** `df.head()`, `df.describe()`, `df.dtypes`,\n  `value_counts()`, `df.shape`. **Never end a cell on a 10,000-row frame** \u2014 the whole thing\n  streams back into your context and tells you little; a 10-row head tells you more.\n- **Read tracebacks and repair the cell** before continuing. A run that errors and barrels\n  onward is worse than one that stops and fixes itself.\n- **Build on persistent state.** The kernel keeps everything in scope across cells (the\n  Variables panel shows what's live) \u2014 reuse a frame you built three steps ago instead of\n  recomputing it, and inspect an unfamiliar object before you assume its shape.\n\n## Working from existing code or data\n\nOften the input is not a blank prompt but **existing workbench code** or **a dataset** that\nshould become a notebook. Do not dump it into one cell. Convert it into a narrated notebook:\n\n- **Read it for intent first.** Identify the steps the code performs (load, transform,\n  model, plot) and the story the data tells. The notebook's structure should follow that\n  intent, not the original line order.\n- **Split into rerunnable steps**, one idea per cell, in the section arc above. Hoist\n  imports to a single early cell. Pull magic numbers into named constants.\n- **Add the narration the code lacks**: a framing cell, a sentence of setup before each\n  step, and a takeaway after each result. This is most of the value you add.\n- **Upgrade the outputs to the runtime.** Replace `print(df)` with a rendered DataFrame;\n  turn a static chart into `display_plotly` when interactivity helps; typeset equations with\n  `$\u2026$` / `$$\u2026$$` (KaTeX) and make a pipeline or state machine legible with a ```mermaid\n  diagram instead of a paragraph describing it.\n- **Preserve behavior.** Don't silently change logic or results while restructuring; if you\n  fix a real bug, call it out in prose.\n\n## Structure that reads well\n\n- **Open with a title cell**: an `#` H1, one or two sentences of framing, and a short\n  bulleted list of what the reader will see. No code yet.\n- **One imports cell, early.** Group all imports there so first-run package loading happens\n  once and later cells are fast. Set display options here too (`pd.set_option`, a seeded\n  `np.random.default_rng`, matplotlib style).\n- **Section by section**: each analytical step gets a `##`/`###` header, 1\u20133 sentences of\n  setup, the code, and then \u2014 crucially \u2014 a sentence of *takeaway* after the output. The\n  takeaway is what separates a notebook from a transcript.\n- **Close with a conclusion cell** that states what was found, the caveats, and one or two\n  next steps. This is the part readers remember.\n\n### The rhythm, concretely\n\nThree consecutive cells showing the markdown \u2192 code \u2192 takeaway beat:\n\n> **(markdown)** `## 2. Does engagement predict retention?` <br>\n> We regress 30-day retention on first-week engagement, controlling for cohort size.\n>\n> **(code)** ```...fit model...; coef_table``` &nbsp;(cell ends on the rich table, not `print`)\n>\n> **(markdown)** Engagement is the dominant signal (\u03b2 = 0.41, p < 0.001); cohort size\n> barely matters once it's included \u2014 so onboarding, not scale, is the lever.\n\nEvery section repeats that beat. No orphan code cells, no walls of prose.\n\n## Output discipline (this is where ordering matters)\n\nThe runtime builds each cell's output as a single ordered stream: prints, figures,\n`display_*` calls, and the cell's final value appear in the exact order they were produced.\nUse that.\n\n- **Let the last expression render.** End a cell on `df.head()`, a `Series`, a metrics\n  table, or a fitted-model summary \u2014 the runtime shows its rich `_repr_html_` (DataFrames\n  become real tables). Do **not** wrap it in `print()`, which collapses it to plain text.\n- **`print()` for narration of values mid-cell** (shapes, counts, chosen parameters); the\n  rich result for the headline object at the end.\n- **`display(a, b, c)`** when you need to show several objects in order within one cell.\n- **Figures auto-display.** Just build the figure; it's captured inline. `plt.show()` is\n  optional and harmless \u2014 figures created before the final value appear before it.\n- A cell that both plots and returns a table renders **plot then table**, matching execution\n  order \u2014 put the plot code before the final expression if that's the order you want.\n\n## Visualization\n\nDefault to **static matplotlib** for clarity and print-fidelity; reach for **interactive**\nwhen hovering, zooming, or panning genuinely helps the reader explore.\n\n- Every chart: a title, axis labels **with units**, a legend when there is more than one\n  series, a sensible `figsize`, and `fig.tight_layout()`. A chart without labels is a\n  failure regardless of how pretty it is.\n- One idea per chart. If you're tempted to put five series on one axis, ask whether two\n  small-multiples would read better.\n- **Interactive Plotly** is a one-liner: `%pip install plotly` once, then\n  `display_plotly(fig, height=520)` \u2014 a fully interactive chart (zoom, pan, hover, lasso) in\n  a sandboxed frame.\n- **Custom interactive HTML/JS** (d3, a hand-built widget, a Bokeh/Altair export):\n  `display_html(html_string, height=520)` drops trusted HTML into a sandboxed iframe.\n- See `references/chartsmanship.md` for concrete recipes, a matplotlib house style, and the\n  Plotly / `display_html` patterns.\n\n## Code craftsmanship\n\n- Idiomatic, readable Python: clear names, small functions, vectorized pandas/numpy over\n  Python loops. A notebook is read more than it is run.\n- Seed every random process (`np.random.default_rng(SEED)`) so the narrative is reproducible\n  across reruns.\n- Comment the *why*, not the *what*. The prose cell already said what; the comment explains a\n  non-obvious choice.\n- Prefer composing state across cells (the kernel is persistent) over recomputing \u2014 but keep\n  each cell independently rerunnable given the cells above it.\n\n## Hard runtime facts (do not violate)\n\nThese come from how the Pyodide runtime actually behaves. Full detail in\n`references/runtime.md`.\n\n- **Bundled scientific stack \u2014 just `import`:** numpy, pandas, scipy, scikit-learn,\n  matplotlib, sympy, networkx, statsmodels, Pillow, beautifulsoup4, lxml, regex. The runtime\n  auto-loads these on first import (the heavy ones \u2014 scipy/sklearn/statsmodels \u2014 take a\n  moment the first time).\n- **Pure-Python extras \u2014 `%pip install <name>` first:** e.g. plotly, altair, humanize.\n  micropip pulls them from PyPI.\n- **Will NOT work:** `requests` and raw sockets/threads/`subprocess` (no real OS/network\n  layer); ipywidgets and `%matplotlib widget` (no widget comm \u2014 use `display_html` /\n  `display_plotly` instead); any C-extension package Pyodide hasn't built (torch, tensorflow,\n  polars, etc.).\n- **Markdown renders:** headings, **flat** bullet/numbered lists, GFM tables, blockquotes,\n  fenced code (Python is syntax-highlighted), inline\n  `code`/**bold**/*italic*/~~strike~~/links/images, **LaTeX math via KaTeX** (`$\u2026$` inline,\n  `$$\u2026$$` display), and **Mermaid diagrams** inside a ```mermaid fenced block. It does **NOT**\n  nest lists. Use `$\u2026$` / `$$\u2026$$` freely for equations, and reach for ```mermaid for\n  flowcharts, sequence/state/ER diagrams, and pipeline schematics. (Reserve matplotlib\n  mathtext for labels *inside* a chart, where KaTeX can't reach \u2014 use `\\frac`, not `\\dfrac`,\n  there.)\n- **Data files** mounted via **+Data** land in the working directory; read them with\n  `open(\"name\")` / `pd.read_csv(\"name\")`.\n\n## Anti-patterns (rewrite if you catch these)\n\n- One giant cell doing everything \u2192 split into rerunnable steps.\n- `print(df)` for a DataFrame \u2192 end the cell on the DataFrame so it renders as a table.\n- A chart with no title/labels \u2192 add them; state units.\n- Narrating a result you never checked \u2192 a fizzled sim or near-zero R\u00b2 dressed up as a\n  finding. Pressure-test first; fix the setup or report the null honestly.\n- `import requests` / network calls that assume a server \u2192 generate or mount the data.\n- `$\\sum_i x_i$` rendered as a matplotlib *figure* when the markdown cell would typeset it \u2192\n  use `$\u2026$` / `$$\u2026$$` directly; reserve mathtext for labels inside a chart.\n- Walls of markdown with no code, or walls of code with no narration \u2192 alternate.\n- Skipping the takeaway sentence after a result \u2192 always interpret what was just shown.\n\n## Reference files\n\n- `references/runtime.md` \u2014 the full runtime/Pyodide contract: display helpers (exact\n  signatures), output ordering, the `%pip` vs import rule, package availability, the markdown\n  feature matrix, and gotchas.\n- `references/chartsmanship.md` \u2014 a matplotlib house style, small-multiples and twin-axis\n  recipes, the `display_plotly` and `display_html` patterns with complete examples, and how\n  to choose static vs. interactive.\n- `scripts/build_notebook.py` \u2014 assembles a valid nbformat 4.5 `.ipynb` from a JSON cell\n  spec. Always build notebooks with this rather than emitting JSON by hand.\n\n## Chart house style (condensed)\n- Every chart: title, axis labels WITH units, legend when >1 series, sensible figsize (~8x4.5), fig.tight_layout().\n- One idea per chart; prefer two small multiples over five series on one axis.\n- Seed RNGs; annotate the takeaway point rather than describing it only in prose.\n- Light grid only when it aids reading; no chartjunk; colorblind-safe default cycle.\n- Interactivity only when hover/zoom genuinely helps: %pip install plotly once, then display_plotly(fig, height=520).\n- Custom HTML/JS output goes through display_html(html, height) \u2014 sandboxed iframe.\n- matplotlib mathtext only for math inside a chart; markdown KaTeX ($\u2026$/$$\u2026$$) for narrative equations.\n\n# In-browser Python runtime contract\n\nEverything a notebook author needs to know about how the runtime executes code and renders\noutput. The runtime is CPython on WebAssembly (Pyodide) running entirely in the browser, with\none persistent kernel shared across all cells. (KERNEL is the reference implementation; the\nnames below \u2014 `display_html`, `display_plotly`, the ordering rules \u2014 are the contract any\ncompatible runtime should honor.)\n\n## Table of contents\n1. Execution model\n2. Output ordering\n3. Display helpers (exact signatures)\n4. matplotlib\n5. Packages: import vs `%pip`\n6. The markdown feature matrix\n7. Data files\n8. Things that don't exist here\n9. Performance notes\n\n## 1. Execution model\n\n- **One persistent namespace.** Variables, imports, and functions defined in one cell are\n  available in every later cell, exactly like Jupyter. Build state up incrementally.\n- **Top-level `await` is allowed.** Cells run with `eval_code_async`, so\n  `await something()` works at cell top level.\n- **Last-expression echo.** If a cell's final statement is an expression, its value is\n  displayed: rich HTML via `_repr_html_` when the object provides it (pandas DataFrame,\n  Series, styled objects), otherwise `repr()`. A trailing `;` or ending on an assignment\n  suppresses the echo.\n- **`_`** holds the last echoed value, as in a REPL.\n- **Errors** show a trimmed traceback starting at the user's cell frame.\n\n## 2. Output ordering\n\nEach cell's outputs are emitted as a single **ordered** stream in execution order:\nstdout/stderr fragments, figures, `display_*` calls, and finally the cell's return value.\n\nPractical consequences:\n- `print(\"loading...\")` then a plot then a returned table renders as: text, figure, table.\n- Figures created without an explicit `show()` are captured **right before** the cell's\n  final value, so they appear above a returned table.\n- `plt.show()` / `fig.show()` are intercepted to flush pending text and capture the figure\n  *at that point* in the stream \u2014 so multiple show() calls interleaved with prints render\n  in the right order. They never emit the Agg \"non-interactive\" warning.\n\n## 3. Display helpers (exact signatures)\n\nThese are injected into every cell's namespace \u2014 no import needed.\n\n```python\ndisplay(*objs)\n# Render one or more objects inline, in order. Uses _repr_html_ when available,\n# else repr(). Use when you want to show several things from one cell.\n\ndisplay_html(html: str, height: int = 480)\n# Render a trusted HTML string in a sandboxed <iframe srcdoc> (scripts allowed,\n# no same-origin access to the parent). height is clamped to [140, 1400].\n# This is the path for any custom interactive output: d3, hand-written JS,\n# a Bokeh/Altair standalone export, a Plotly doc, an HTML table you built, etc.\n\ndisplay_iframe(html: str, height: int = 480)\n# Alias for display_html.\n\ndisplay_plotly(fig, height: int = 520)\n# Convenience for Plotly figures. Internally calls\n# fig.to_html(include_plotlyjs=\"cdn\", full_html=True, config=...) and shows it via\n# display_html. Requires `%pip install plotly` earlier in the notebook. Raises a clear\n# TypeError if passed a non-Plotly object.\n```\n\nSecurity/behavior note: `display_html` content runs in a sandboxed iframe and may load\nscripts from a CDN (that's how Plotly renders), but cannot reach the parent page. The\nlast-expression and `display()` HTML path is sanitized (scripts/`on*=` stripped) and\nrendered inline \u2014 so use `display_html` when you genuinely need scripts to run.\n\n## 4. matplotlib\n\n- Backend is Agg (non-interactive); figures are rasterized to PNG and shown inline.\n- Just build figures \u2014 they are auto-captured. `plt.show()` is optional.\n- For crisp output use a reasonable `figsize` and `fig.tight_layout()`. KERNEL renders at\n  ~110 dpi with `bbox_inches=\"tight\"`.\n- `import matplotlib.pyplot as plt` triggers a one-time package load on first use; put it\n  in the early imports cell.\n- LaTeX-style math is available inside matplotlib via mathtext (`r\"$\\alpha$\"` in\n  titles/labels/`ax.text`) \u2014 use it for math that must live on a chart. For equations in the\n  narrative, markdown cells now typeset KaTeX directly (see \u00a76), so prefer `$\u2026$` / `$$\u2026$$`\n  there.\n\n## 5. Packages: import vs `%pip`\n\n**Bundled with Pyodide \u2014 import directly, KERNEL auto-loads them:**\nnumpy, pandas, scipy, scikit-learn (`sklearn`), matplotlib, sympy, networkx, statsmodels,\nPillow (`PIL`), beautifulsoup4 (`bs4`), lxml, regex, pyyaml (`yaml`), and more.\n\n**Pure-Python packages from PyPI \u2014 install once with the magic, then import:**\n```python\n%pip install plotly altair humanize\n```\n`%pip install` (or `!pip install`) is handled before the rest of the cell runs; it uses\nmicropip, which can install any pure-Python wheel on PyPI plus anything Pyodide has\npre-built. Good candidates: plotly, altair, humanize, tabulate, python-dateutil extras.\n\n**Not installable** (C/native extensions Pyodide hasn't built, or needs an OS): torch,\ntensorflow, polars, duckdb (varies), psycopg2, anything needing CUDA/threads/sockets.\n\nThe authoritative, current list of pre-built packages is at\n`https://pyodide.org/en/stable/usage/packages-in-pyodide.html` \u2014 when unsure whether a\nspecific package is available, prefer one from the bundled scientific stack, or generate\nthe data synthetically rather than reaching for an unavailable dependency.\n\n## 6. The markdown feature matrix\n\nKERNEL's markdown renderer supports:\n\n| Feature | Supported | Notes |\n|---|---|---|\n| Headings `#`\u2013`######` | yes | |\n| Paragraphs | yes | |\n| Bullet lists `- * +` | yes | **flat only \u2014 no nesting** |\n| Numbered lists `1.` | yes | flat only |\n| GFM tables `\\| a \\| b \\|` | yes | needs the `---` separator row |\n| Blockquotes `>` | yes | can contain nested markdown |\n| Fenced code ```` ``` ```` | yes | ` ```python ` is syntax-highlighted |\n| Inline `code` | yes | |\n| **bold** / *italic* / ~~strike~~ | yes | `**`/`__`, `*`/`_`, `~~` |\n| Links `[t](url)` / images `![a](url)` | yes | links open in a new tab |\n| LaTeX math `$...$` / `$$...$$` | **yes** | KaTeX: `$\u2026$` inline, `$$\u2026$$` display |\n| Mermaid diagrams ```` ```mermaid ```` | **yes** | fl/sequence/state/ER/gantt etc. |\n| Nested lists / task lists / footnotes | **NO** | flatten the structure instead |\n\nEquations typeset with KaTeX, so write them directly in the narrative: `$\u2026$` inline,\n`$$\u2026$$` (or `\\[ \u2026 \\]`) for display. Diagrams render from a ```mermaid fenced block. Reserve\nmatplotlib mathtext for math that must live *inside* a chart (axis labels, annotations),\nwhere KaTeX cannot reach \u2014 and there, use `\\frac`, not `\\dfrac`.\n\n## 7. Data files\n\nThe **+Data** button mounts uploaded files into the Pyodide working directory. Read them\nwith ordinary file APIs:\n```python\ndf = pd.read_csv(\"uploaded.csv\")\ntext = open(\"notes.txt\").read()\n```\nIf the notebook is meant to be self-contained (no upload), generate a realistic synthetic\ndataset with a seeded RNG and say so in the prose.\n\n## 8. Things that don't exist here\n\n- **Networking:** no `requests`, `urllib` to arbitrary hosts, or raw sockets. Don't fetch\n  remote data at runtime; mount it or synthesize it. (A `display_html` iframe may load a\n  charting library from a CDN, but Python-side network calls are not reliable.)\n- **ipywidgets / `%matplotlib widget` / `%matplotlib notebook`:** no widget comm protocol.\n  For interactivity use `display_plotly` or `display_html`.\n- **Threads, multiprocessing, subprocess:** single-threaded WASM; design accordingly.\n- **GPU / CUDA:** none.\n- **Other Jupyter magics:** only `%pip` / `!pip install` are special-cased. Don't rely on\n  `%matplotlib inline` (it's the default), `%timeit`, `%%bash`, etc.\n\n## 9. Performance notes\n\n- First import of a heavy package (pandas, matplotlib, scikit-learn) downloads and\n  initializes it once; subsequent cells are fast. Front-load imports.\n- Keep individual outputs reasonable \u2014 a 50k-row DataFrame repr or a 4000-point Plotly\n  scatter is fine; a million points will be slow. Sample or aggregate for display.\n- Big base64 PNGs and large iframes inflate the notebook; prefer one clear chart over ten.\n\n## Operating note (KERNEL agent)\nYou drive a LIVE KERNEL notebook through the tools provided. The human watches the notebook build in real time and can edit or run cells between your turns.\n- Work in small steps: add a short markdown framing cell plus the code cell it sets up (add_cells), then run_cell and READ the result before deciding the next move.\n- Figures come back to you as images \u2014 look at them. Tables/text come back as text. Interactive (iframe) output is invisible to you: print a text summary alongside if you must reason about it.\n- On a traceback: read it, edit_cell the failing cell, run it again. Do not barrel onward past an error.\n- Use inspect_namespace / inspect_variable / list_data_files before assuming what exists.\n- Narrate briefly between tool calls (one or two tight sentences). When the request is satisfied, stop calling tools and hand back with a short summary and suggested next steps.\n- Never fabricate outputs you did not see. Pressure-test findings before narrating them.";
 
-const AG_KEY='kernel.anthropic.key', AG_MODEL='kernel.agent.model', AG_AUTO='kernel.agent.autonomy', AG_MAX='kernel.agent.maxsteps';
-let agKey=localStorage.getItem(AG_KEY)||'';
-let agModel=localStorage.getItem(AG_MODEL)||'claude-sonnet-4-6';
-let agAutonomy=localStorage.getItem(AG_AUTO)||'auto';
-let agMaxSteps=parseInt(localStorage.getItem(AG_MAX)||'24',10);
-const AG_MAX_TEXT=4000, AG_MAX_ERR=6000, AG_MAX_IMG=4, AG_OLD_TEXT=1500;
-let agMsgs=[], agRunning=false, agStop=false, agSteps=0, agTxNb=null, agAbort=null;
-let agImgs=[], agUseIn=0, agUseOut=0, agUseCw=0, agUseCr=0, agTurnSeq=0;
-let agUseTurnNb=null;
-const AG_PRICES=[['opus',5,25],['sonnet',3,15],['haiku',1,5]];   /* $/Mtok in,out — estimates (Jun 2026) */
-const AG_QUICK=['claude-sonnet-4-6','claude-opus-4-8'];   /* model quick-cycle ring */
-function usageKey(){return 'kernel.agent.usage.'+(nbId||'anon')}
-function agLoadUsage(){try{const r=localStorage.getItem(usageKey());const u=r?JSON.parse(r):null;agUseIn=u&&u.i||0;agUseOut=u&&u.o||0;agUseCw=u&&u.cw||0;agUseCr=u&&u.cr||0}catch(e){agUseIn=0;agUseOut=0;agUseCw=0;agUseCr=0}}
-function agSaveUsage(){try{localStorage.setItem(usageKey(),JSON.stringify({i:agUseIn,o:agUseOut,cw:agUseCw,cr:agUseCr}))}catch(e){}}
-function agCost(){
-  let pin=3,pout=15;
-  for(const p of AG_PRICES)if(agModel.indexOf(p[0])>=0){pin=p[1];pout=p[2];break}
-  /* cache writes bill ~1.25x input, cache reads ~0.1x */
-  return (agUseIn+agUseCw*1.25+agUseCr*0.1)/1e6*pin+agUseOut/1e6*pout;
+const AG_PROVIDER_KEY='kernel.agent.provider.v2',AG_CONFIG_KEY='kernel.agent.providers.v2',AG_AUTO='kernel.agent.autonomy',AG_MAX='kernel.agent.maxsteps';
+const AG_PROVIDER_DEFS={
+  anthropic:{label:'Anthropic',base:'https://api.anthropic.com',model:'claude-sonnet-4-6',placeholder:'sk-ant-…'},
+  openai:{label:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-5.6',placeholder:'sk-proj-…'},
+  xai:{label:'xAI',base:'https://api.x.ai/v1',model:'grok-4.6',placeholder:'xai-…'}
+};
+let agProvider=localStorage.getItem(AG_PROVIDER_KEY)||'anthropic';if(!AG_PROVIDER_DEFS[agProvider])agProvider='anthropic';
+let agConfigs={};try{agConfigs=JSON.parse(localStorage.getItem(AG_CONFIG_KEY)||'{}')||{}}catch(e){}
+if(!agConfigs.anthropic)agConfigs.anthropic={};
+if(!agConfigs.anthropic.key&&localStorage.getItem('kernel.anthropic.key'))agConfigs.anthropic.key=localStorage.getItem('kernel.anthropic.key');
+if(!agConfigs.anthropic.model&&localStorage.getItem('kernel.agent.model'))agConfigs.anthropic.model=localStorage.getItem('kernel.agent.model');
+let agKey='',agModel='',agBase='',agCtxOverride=0,agCompactAt=82,agMaxOut=8192,agReasoning='off';
+let agAutonomy=localStorage.getItem(AG_AUTO)||'auto',agMaxSteps=parseInt(localStorage.getItem(AG_MAX)||'24',10);
+const AG_MAX_TEXT=4000,AG_MAX_ERR=6000,AG_MAX_IMG=4,AG_OLD_TEXT=1500;
+let agMsgs=[],agRunning=false,agStop=false,agSteps=0,agTxNb=null,agAbort=null,agThreadId=null,agThreadTimer=null,agLoadingThread=false;
+let agImgs=[],agUseIn=0,agUseOut=0,agUseCw=0,agUseCr=0,agUseReason=0,agTurnSeq=0,agModelInfo=null,agLastContext=null;
+function agApplyProvider(provider){
+  agProvider=AG_PROVIDER_DEFS[provider]?provider:'anthropic';const d=AG_PROVIDER_DEFS[agProvider],c=agConfigs[agProvider]||{};
+  agKey=c.key||'';agModel=c.model||d.model;agBase=(c.base||d.base).replace(/\/+$/,'');agCtxOverride=Math.max(0,Math.min(4000000,parseInt(c.ctxOverride||0,10)||0));agCompactAt=Math.max(50,Math.min(95,parseInt(c.compactAt||82,10)||82));agMaxOut=Math.max(512,Math.min(128000,parseInt(c.maxOut||8192,10)||8192));agReasoning=c.reasoning||'off';agModelInfo=null;
 }
-function fmtTok(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':String(n)}
+function agSaveProvider(){agConfigs[agProvider]={key:agKey,model:agModel,base:agBase,ctxOverride:agCtxOverride,compactAt:agCompactAt,maxOut:agMaxOut,reasoning:agReasoning};try{localStorage.setItem(AG_PROVIDER_KEY,agProvider);localStorage.setItem(AG_CONFIG_KEY,JSON.stringify(agConfigs));localStorage.setItem(AG_AUTO,agAutonomy);localStorage.setItem(AG_MAX,String(agMaxSteps))}catch(e){}}
+agApplyProvider(agProvider);
+function fmtTok(n){n=Math.max(0,Number(n)||0);return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':String(Math.round(n))}
+function agUsage(){return {input:agUseIn,output:agUseOut,cached:agUseCr,cacheWrite:agUseCw,reasoning:agUseReason}}
+function agLoadUsage(u){u=u||{};agUseCr=u.cached||u.cr||0;agUseCw=u.cacheWrite||u.cw||0;agUseIn=u.input||u.i||0;if(u.input==null&&u.i!=null)agUseIn+=agUseCr+agUseCw;agUseOut=u.output||u.o||0;agUseReason=u.reasoning||0}
+function agSaveUsage(){scheduleThreadSave()}
 function meterUi(){
-  const el=document.getElementById('agUsage');if(!el)return;
-  if(!agUseIn&&!agUseOut&&!agUseCr&&!agUseCw){el.textContent='';el.title='session tokens · estimated cost (click to reset)';return}
-  const tin=agUseIn+agUseCw+agUseCr;
-  const pct=tin?Math.round(agUseCr/tin*100):0;
-  el.textContent=fmtTok(tin)+'↑'+(pct?(' ('+pct+'% cached)'):'')+' '+fmtTok(agUseOut)+'↓ · ≈$'+agCost().toFixed(agCost()<0.1?3:2);
-  try{el.title='session tokens · est cost (click to reset)\ncontext now ~'+fmtTok(agEstCtx(prunedMessages()))+' / '+fmtTok(agCtxLimit())+' ('+agModel+(agModelInfo&&agModelInfo.max_input_tokens?' · live from Models API':' · fallback estimate')+')'}catch(e){}
+  const el=$('#agUsage');if(!el)return;
+  el.textContent=(agUseIn||agUseOut)?(fmtTok(agUseIn)+' IN · '+fmtTok(agUseOut)+' OUT'+(agUseReason?' · '+fmtTok(agUseReason)+' REASON':'')):'';
+  const active=agLastContext?agLastContext.active:agEstCtx(agMsgs),limit=agCtxLimit();el.title='Input '+fmtTok(agUseIn)+' · output '+fmtTok(agUseOut)+' · cached '+fmtTok(agUseCr)+' · active context ~'+fmtTok(active)+' / '+fmtTok(limit)+'\nClick for context details';
 }
 function agEsc(x){return String(x==null?'':x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 
-/* surface anything that would otherwise die silently */
-window.addEventListener('unhandledrejection',e=>{
-  try{ if(agRunning){ txDom('e','internal: '+String(e.reason&&e.reason.message?e.reason.message:e.reason)); agRunning=false; agStateUi(); progressOff(); } }catch(_){}
-});
+window.addEventListener('unhandledrejection',e=>{try{if(agRunning){txDom('e','internal: '+String(e.reason&&e.reason.message?e.reason.message:e.reason));agRunning=false;agStateUi();progressOff()}}catch(_){}});
 
-/* ── transcript & message persistence ── */
-function txKey(){return 'kernel.agent.tx.'+(nbId||'anon')}
-function msgsKey(){return 'kernel.agent.msgs.'+(nbId||'anon')}
-function agStripMsgs(msgs){
-  return msgs.map(m=>{
-    if(!Array.isArray(m.content))return m;
-    return {role:m.role,content:m.content.map(b=>{
-      if(b.type==='image')return {type:'text',text:'[image from the human]'};
-      if(b.type==='tool_result'){
-        const inner=(Array.isArray(b.content)?b.content:[]).map(c=>{
-          if(c.type==='image')return {type:'text',text:'[figure from an earlier step]'};
-          if(c.type==='text')return {type:'text',text:agTrunc(c.text,4000)};
-          return c;
-        });
-        return {type:'tool_result',tool_use_id:b.tool_use_id,content:inner};
-      }
-      return b;
-    })};
-  });
+/* ── full-fidelity per-notebook threads ── */
+function threadIndexKey(id){return 'kernel.agent.threadindex.'+(id||nbId||'anon')}
+function threadKey(id,notebook){return (notebook||nbId)+':'+id}
+function readThreadIndex(id){
+  try{const x=JSON.parse(localStorage.getItem(threadIndexKey(id))||'null');if(x&&Array.isArray(x.threads))return x}catch(e){}
+  return {v:2,active:null,threads:[]};
 }
-function agSaveMsgs(){
-  try{
-    let lite=agStripMsgs(agMsgs);
-    let out=JSON.stringify(lite);
-    while(out.length>1500000&&lite.length>4){lite=lite.slice(2);out=JSON.stringify(lite)}
-    localStorage.setItem(msgsKey(),out);
-  }catch(e){}
+function writeThreadIndex(idx,id){try{localStorage.setItem(threadIndexKey(id),JSON.stringify(idx))}catch(e){}}
+function newThreadMeta(name){const id='t_'+uid(),now=Date.now();return {id,name:name||'Thread',created:now,updated:now}}
+async function ensureThreadIndex(id){
+  let idx=readThreadIndex(id);
+  if(!idx.threads.length){
+    const meta=newThreadMeta('Main thread');idx={v:2,active:meta.id,threads:[meta]};writeThreadIndex(idx,id);
+    let msgs=[],transcript=[],usage={};
+    try{msgs=JSON.parse(localStorage.getItem('kernel.agent.msgs.'+id)||'[]');transcript=JSON.parse(localStorage.getItem('kernel.agent.tx.'+id)||'[]');usage=JSON.parse(localStorage.getItem('kernel.agent.usage.'+id)||'{}')}catch(e){}
+    await kdbPut('threads',{key:threadKey(meta.id,id),notebookId:id,id:meta.id,name:meta.name,created:meta.created,updated:meta.updated,messages:Array.isArray(msgs)?msgs:[],transcript:Array.isArray(transcript)?transcript:[],usage});
+  }
+  if(!idx.active||!idx.threads.some(t=>t.id===idx.active)){idx.active=idx.threads[0].id;writeThreadIndex(idx,id)}
+  return idx;
 }
-function agLoadMsgs(){
-  try{const r=localStorage.getItem(msgsKey());const a=r?JSON.parse(r):[];return Array.isArray(a)?a:[]}catch(e){return []}
-}
+function renderThreadSelect(){const sel=$('#agThreadSelect'),idx=readThreadIndex(nbId);if(!sel)return;sel.replaceChildren(...idx.threads.map(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;o.selected=t.id===agThreadId;return o}))}
 function txEntries(){
-  const out=[];$("#agTx").querySelectorAll('[data-k]').forEach(el=>{
-    out.push({k:el.dataset.k,t:el.dataset.k==='c'?el.innerHTML:el.textContent})});
-  return out.filter(e=>e.k!=='s'&&e.k!=='w'&&e.k!=='img').slice(-300);
+  const out=[];$('#agTx').querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;if(k==='w'||k==='s')return;out.push({k,t:k==='c'?el.innerHTML:(el.dataset.raw!=null?el.dataset.raw:(k==='img'?el.src:el.textContent))})});return out;
 }
-function agExportBundle(){
-  const tx=txEntries();
-  if(!tx.length&&!agMsgs.length)return null;
-  return {v:1,saved:new Date().toISOString(),notebook:nbName,transcript:tx,messages:agStripMsgs(agMsgs)};
+async function saveActiveThreadNow(){
+  if(agLoadingThread||!agThreadId||!agTxNb)return;clearTimeout(agThreadTimer);const idx=readThreadIndex(agTxNb),meta=idx.threads.find(t=>t.id===agThreadId);if(!meta)return;
+  meta.updated=Date.now();writeThreadIndex(idx,agTxNb);await kdbPut('threads',{key:threadKey(agThreadId,agTxNb),notebookId:agTxNb,id:agThreadId,name:meta.name,created:meta.created,updated:meta.updated,messages:clonePlain(agMsgs),transcript:txEntries(),usage:agUsage(),provider:agProvider,model:agModel});
 }
-function agImportMeta(meta){
-  if(!meta||typeof meta!=='object')return;
-  try{
-    localStorage.setItem(txKey(),JSON.stringify(meta.transcript||[]));
-    localStorage.setItem(msgsKey(),JSON.stringify(meta.messages||[]));
-  }catch(e){}
-  agMsgs=Array.isArray(meta.messages)?meta.messages:[];
-  txLoad();txDom('s','conversation restored from notebook');agStateUi();
+function scheduleThreadSave(){if(agLoadingThread)return;clearTimeout(agThreadTimer);agThreadTimer=setTimeout(()=>saveActiveThreadNow(),650)}
+function agSaveMsgs(){scheduleThreadSave()}
+function txPersist(){scheduleThreadSave()}
+function agStripMsgs(msgs){return clonePlain(msgs||[])}
+async function activateNotebookAgent(id){
+  if(!id)return;agLoadingThread=true;
+  try{const idx=await ensureThreadIndex(id);agTxNb=id;agThreadId=idx.active;let rec=await kdbGet('threads',threadKey(agThreadId,id));if(!rec){const m=idx.threads.find(t=>t.id===agThreadId);rec={messages:[],transcript:[],usage:{},name:m&&m.name}}
+    if(rec.provider&&AG_PROVIDER_DEFS[rec.provider]){agApplyProvider(rec.provider);if(rec.model)agModel=rec.model}
+    agMsgs=Array.isArray(rec.messages)?rec.messages:[];agLoadUsage(rec.usage);txLoad(rec.transcript||[]);renderThreadSelect();agLastContext=null;agStateUi();meterUi();agFetchModelInfo();
+  }finally{agLoadingThread=false}
 }
+async function switchAgentThread(id){if(agRunning||id===agThreadId)return;await saveActiveThreadNow();const idx=readThreadIndex(nbId);if(!idx.threads.some(t=>t.id===id))return;idx.active=id;writeThreadIndex(idx,nbId);await activateNotebookAgent(nbId)}
+async function createAgentThread(){if(agRunning)return;await saveActiveThreadNow();const idx=await ensureThreadIndex(nbId),m=newThreadMeta('Thread '+(idx.threads.length+1));idx.threads.push(m);idx.active=m.id;writeThreadIndex(idx,nbId);await kdbPut('threads',{key:threadKey(m.id),notebookId:nbId,id:m.id,name:m.name,created:m.created,updated:m.updated,messages:[],transcript:[],usage:{}});await activateNotebookAgent(nbId);$('#agIn').focus()}
+async function renameAgentThread(){const idx=readThreadIndex(nbId),m=idx.threads.find(t=>t.id===agThreadId);if(!m)return;const name=await appPrompt('Rename chat thread',m.name,'Rename');if(name==null)return;m.name=name.trim().slice(0,80)||'Thread';m.updated=Date.now();writeThreadIndex(idx,nbId);renderThreadSelect();await saveActiveThreadNow()}
+async function deleteAgentThread(){if(agRunning)return;let idx=readThreadIndex(nbId);if(idx.threads.length===1){toast("Keep at least one thread.","err");return}const m=idx.threads.find(t=>t.id===agThreadId);if(!m||!confirm('Delete thread "'+m.name+'"?'))return;await kdbDelete('threads',threadKey(m.id));idx.threads=idx.threads.filter(t=>t.id!==m.id);idx.active=idx.threads[0].id;writeThreadIndex(idx,nbId);await activateNotebookAgent(nbId)}
+function agExportBundle(){const tx=txEntries();if(!tx.length&&!agMsgs.length)return null;return {v:2,saved:new Date().toISOString(),notebook:nbName,thread:{id:agThreadId,name:(readThreadIndex(nbId).threads.find(t=>t.id===agThreadId)||{}).name},transcript:tx,messages:clonePlain(agMsgs),usage:agUsage()}}
+function agImportMeta(meta){if(!meta||typeof meta!=='object')return;queueMicrotask(async()=>{const idx=await ensureThreadIndex(nbId),m=newThreadMeta((meta.thread&&meta.thread.name)||'Imported thread');idx.threads.push(m);idx.active=m.id;writeThreadIndex(idx,nbId);await kdbPut('threads',{key:threadKey(m.id),notebookId:nbId,id:m.id,name:m.name,created:m.created,updated:m.updated,messages:clonePlain(meta.messages||[]),transcript:clonePlain(meta.transcript||[]),usage:clonePlain(meta.usage||{})});await activateNotebookAgent(nbId);txDom('s','conversation restored from notebook',true)})}
 function agSlug(){return (nbName||'kernel-notebook').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'kernel-notebook'}
-function agExportMd(){
-  const e=txEntries();
-  if(!e.length){toast('Nothing to export yet.');return}
-  let md='# KERNEL·A conversation — '+nbName+'\n\n_'+new Date().toISOString()+'_\n\n';
-  const tmp=document.createElement('div');
-  e.forEach(x=>{
-    if(x.k==='u')md+='**You:** '+x.t+'\n\n';
-    else if(x.k==='a')md+=x.t+'\n\n';
-    else if(x.k==='c'){tmp.innerHTML=x.t;md+='`'+tmp.textContent.trim()+'`\n\n'}
-    else if(x.k==='e')md+='> ERROR: '+x.t+'\n\n';
-  });
-  const blob=new Blob([md],{type:'text/markdown'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=agSlug()+'-conversation.md';
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-  toast('Conversation exported.');
+function agExportMd(){const e=txEntries();if(!e.length){toast('Nothing to export yet.');return}let md='# KERNEL·A conversation — '+nbName+'\n\n_'+new Date().toISOString()+'_\n\n';const tmp=document.createElement('div');for(const x of e){if(x.k==='u')md+='**You:** '+x.t+'\n\n';else if(x.k==='a')md+=x.t+'\n\n';else if(x.k==='r')md+='> Reasoning summary: '+x.t+'\n\n';else if(x.k==='c'){tmp.innerHTML=x.t;md+='`'+tmp.textContent.trim()+'`\n\n'}else if(x.k==='e')md+='> ERROR: '+x.t+'\n\n'}downloadBlob(new Blob([md],{type:'text/markdown'}),agSlug()+'-conversation.md');toast('Conversation exported.')}
+function closeLiveFence(text){const n=(String(text).match(/```/g)||[]).length;return n%2?text+'\n```':text}
+function renderAgentMarkdown(el,text,live){
+  el.dataset.raw=text;
+  if(live){el._agPending=text;if(!el._agFrame)el._agFrame=requestAnimationFrame(()=>{el._agFrame=null;el.innerHTML=renderMarkdown(closeLiveFence(el._agPending||''))});return}
+  if(el._agFrame){cancelAnimationFrame(el._agFrame);el._agFrame=null}el.innerHTML=renderMarkdown(text);typesetMarkdown(el);
 }
-function txLoad(){
-  agTurnSeq=0;
-  try{const r=localStorage.getItem(txKey());const arr=r?JSON.parse(r):[];
-    $("#agTx").innerHTML='';
-    if(arr.length){arr.forEach(e=>txDom(e.k,e.t,true));txDom('s','earlier session',true)}
-    else{txDom('s','new conversation',true);
-      txDom('a','I write, run, and read notebook cells with you. Arm a key (⋯ above), mount data with + Data, then describe an analysis — or just ask what I can do.',true)}
-  }catch(e){$("#agTx").innerHTML=''}
-}
-function txPersist(){
-  try{localStorage.setItem(txKey(),JSON.stringify(txEntries()))}catch(e){}
-}
+function txLoad(arr){agTurnSeq=0;$('#agTx').replaceChildren();if(arr&&arr.length){arr.forEach(e=>txDom(e.k,e.t,true));txDom('s','earlier session',true)}else{txDom('s','new conversation',true);txDom('a','I write, run, and read notebook cells with you. Choose a provider, mount data with + Data, then describe an analysis — or ask what I can do.',true)}}
 function txDom(kind,content,restoring){
-  const tx=$("#agTx");let el;
-  if(kind==='u'){el=document.createElement('div');el.className='ag-u';el.textContent=content;
-    el.dataset.turn=String(++agTurnSeq);
-    const fk=document.createElement('button');fk.className='ag-fork';fk.textContent='⑂';
-    fk.title='Fork from here — duplicates the notebook, rewinds the conversation to before this message';
-    el.appendChild(fk)}
-  else if(kind==='a'){el=document.createElement('div');el.className='ag-a';el.textContent=content}
+  const tx=$('#agTx');let el;
+  if(kind==='u'){el=document.createElement('div');el.className='ag-u';el.textContent=content;el.dataset.raw=content;el.dataset.turn=String(++agTurnSeq);const fk=document.createElement('button');fk.className='ag-fork';fk.textContent='⑂';fk.title='Fork from here — duplicate the notebook and rewind this thread';el.appendChild(fk)}
+  else if(kind==='a'){el=document.createElement('div');el.className='ag-a';renderAgentMarkdown(el,content,false)}
+  else if(kind==='r'){el=document.createElement('details');el.className='ag-reason';const s=document.createElement('summary');s.textContent='Reasoning summary';const b=document.createElement('div');b.className='ag-reason-body';renderAgentMarkdown(b,content,false);el.dataset.raw=content;el.append(s,b)}
   else if(kind==='c'){el=document.createElement('div');el.className='ag-chips';el.innerHTML=content}
-  else if(kind==='e'){el=document.createElement('div');el.className='ag-chips';el.innerHTML='<span class="ag-chip err">'+agEsc(content)+'</span>'}
+  else if(kind==='e'){el=document.createElement('div');el.className='ag-chips';el.dataset.raw=content;el.innerHTML='<span class="ag-chip err">'+agEsc(content)+'</span>'}
   else if(kind==='w'){el=document.createElement('div');el.className='ag-working';el.innerHTML='<span class="dotp"></span>'+agEsc(content)}
-  else if(kind==='img'){el=document.createElement('img');el.className='ag-img';el.src=content}
+  else if(kind==='img'){el=document.createElement('img');el.className='ag-img';el.src=content;el.dataset.raw=content}
   else{el=document.createElement('div');el.className='ag-sys';el.textContent='— '+content+' —'}
-  el.dataset.k=kind;
-  tx.appendChild(el);tx.scrollTop=tx.scrollHeight;
-  if(!restoring)txPersist();
-  return el;
+  el.dataset.k=kind;tx.appendChild(el);tx.scrollTop=tx.scrollHeight;if(!restoring)txPersist();return el;
 }
 function chip(label,cls,cellId){
   return '<span class="ag-chip '+(cls||'')+(cellId?' click':'')+(cellId?'" data-cell="'+cellId:'')+'">'+agEsc(label)+'</span>';
@@ -2823,14 +3057,14 @@ $("#agTx").addEventListener('click',e=>{
 /* ── state chip ── */
 function agStateUi(){
   const st=$("#agState");
-  if(agRunning){st.textContent='RUNNING';st.className='ag-state run'}
-  else if(agKey){st.textContent='ARMED · '+agModel.replace(/^claude-/,'');st.className='ag-state armed'}
+  if(agRunning){st.textContent='RUNNING · '+AG_PROVIDER_DEFS[agProvider].label.toUpperCase();st.className='ag-state run'}
+  else if(agKey){st.textContent='ARMED · '+AG_PROVIDER_DEFS[agProvider].label.toUpperCase();st.className='ag-state armed'}
   else{st.textContent='OFFLINE';st.className='ag-state'}
   $("#agMode").textContent=agAutonomy.toUpperCase();
   $("#agMode").classList.toggle('step',agAutonomy==='step');
   const mc=$("#agModelChip");
-  if(mc){mc.textContent=agModel.replace(/^claude-/,'').replace(/-\d{8}$/,'');
-    mc.classList.toggle('step',agModel.indexOf('opus')>=0)}
+  if(mc){mc.textContent=AG_PROVIDER_DEFS[agProvider].label+' · '+agModel.replace(/^claude-/,'').replace(/-\d{8}$/,'');
+    mc.classList.toggle('step',/opus|reason/i.test(agModel))}
   $("#agSteps").textContent=agRunning?('STEP '+agSteps+'/'+agMaxSteps):'';
   $("#agStop").style.display=agRunning?'':'none';
   $("#agSend").disabled=agRunning;
@@ -3046,10 +3280,10 @@ async function execTool(tu){
         const buf=pyodide.FS.readFile(fname);
         let preview='';
         try{preview=new TextDecoder('utf-8',{fatal:false}).decode(buf.slice(0,8192)).slice(0,4000)}catch(e){}
-        const rec={name:fname,size:buf.length,type:'',preview};
+        const rec={name:fname,size:buf.length,type:'',preview,origin:'result',bytes:buf.slice()};
         const ent=dataFiles.find(d=>d.name===fname);
         if(ent)Object.assign(ent,rec);else dataFiles.push(rec);
-        renderDataChips();renderDataList();
+        renderDataChips();renderDataList();scheduleWorkspacePersist();
         txDom('c',chip('⤴ published '+fname+' · '+buf.length+' bytes'));
         return [{type:'text',text:JSON.stringify({ok:true,filename:fname,size:buf.length})}];
       }catch(err){
@@ -3100,185 +3334,106 @@ function agOutline(){
     return '['+i+'] '+c.id+' '+c.type+(c.execCount!=null?' · ran['+c.execCount+']':'')+' "'+first+'"';
   }).join('\n');
 }
-function buildSystem(){
-  /* two blocks: the big static doc gets a cache breakpoint (read at ~10% price on
-     every subsequent loop step); the per-turn state rides uncached behind it */
-  const dyn='## Live notebook outline (current — the human may have edited)\n'+agOutline()+
-    '\n\n## Runtime state\nkernelReady: '+kernelReady+
-    '\nloaded python packages: '+((typeof pyodide!=='undefined'&&pyodide&&pyodide.loadedPackages)?(Object.keys(pyodide.loadedPackages).join(', ')||'(none yet)'):'(kernel booting)')+
-    '\nmounted data files: '+(dataFiles.length?dataFiles.map(d=>d.name).join(', '):'(none)')+
-    '\nnotebook name: '+nbName+
-    '\nHouse habits: name the notebook with set_notebook_name once the topic is clear; publish result tables (cluster assignments, summaries, cleaned data) with save_data_file so the human keeps them.';
-  return [{type:'text',text:DOCS,cache_control:{type:'ephemeral'}},{type:'text',text:dyn}];
-}
-AG_TOOLS[AG_TOOLS.length-1].cache_control={type:'ephemeral'};
+function agDynamicSystem(summary){return '## Live notebook outline\n'+agOutline()+'\n\n## Runtime state\nkernelReady: '+kernelReady+'\nloaded python packages: '+((pyodide&&pyodide.loadedPackages)?(Object.keys(pyodide.loadedPackages).join(', ')||'(none yet)'):'(kernel booting)')+'\nmounted data files: '+(dataFiles.length?dataFiles.map(d=>d.name+' ('+(d.origin||'upload')+')').join(', '):'(none)')+'\nnotebook name: '+nbName+(summary?'\n\n## Earlier-thread checkpoint\n'+summary:'')+'\n\nHouse habits: name the notebook once the topic is clear; publish result tables with save_data_file; never invent outputs.'}
+function buildSystem(summary,blocks){const dyn=agDynamicSystem(summary);return blocks?[{type:'text',text:DOCS,cache_control:{type:'ephemeral'}},{type:'text',text:dyn}]:(DOCS+'\n\n'+dyn)}
 
-/* ── context budget (per model) ── */
-/* fallbacks if the Models API is unreachable (Jun 2026: opus-4-8 & sonnet-4-6 are 1M) */
-const AG_CTX=[['opus-4-8',1000000],['sonnet-4-6',1000000],['opus',200000],['sonnet',200000],['haiku',200000]];
-let agModelInfo=null;
-function agInfoKey(){return 'kernel.agent.modelinfo.'+agModel}
-async function agFetchModelInfo(){
-  if(!agKey)return;
-  try{const r=localStorage.getItem(agInfoKey());if(r){agModelInfo=JSON.parse(r);meterUi();return}}catch(e){}
+/* ── provider discovery and context budget ── */
+function agEndpoint(path){const base=agBase.replace(/\/+$/,'');if(agProvider==='anthropic'&&!/\/v1$/i.test(base))return base+'/v1'+path;return base+path}
+function agHeaders(json){const h={};if(json)h['content-type']='application/json';if(agProvider==='anthropic'){h['x-api-key']=agKey;h['anthropic-version']='2023-06-01';h['anthropic-dangerous-direct-browser-access']='true'}else h.authorization='Bearer '+agKey;return h}
+function agInfoKey(){return 'kernel.agent.modelinfo.v2.'+agProvider+'.'+encodeURIComponent(agBase)+'.'+agModel}
+function contextFromModel(d){return Number(d&&((d.capabilities&&d.capabilities.context_window)||d.context_window||d.max_input_tokens||d.max_prompt_length||d.max_tokens))||0}
+async function discoverModels(announce){
+  const note=$('#agDiscovery');if(note)note.textContent='discovering…';if(!agKey){if(note)note.textContent='Add a key first.';return []}
   try{
-    const res=await fetch('https://api.anthropic.com/v1/models/'+encodeURIComponent(agModel),{
-      headers:{'x-api-key':agKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});
-    if(!res.ok)return;
-    const d=await res.json();
-    if(d&&(d.max_input_tokens||d.max_tokens)){
-      agModelInfo={max_input_tokens:d.max_input_tokens||null,max_tokens:d.max_tokens||null};
-      try{localStorage.setItem(agInfoKey(),JSON.stringify(agModelInfo))}catch(e){}
-      meterUi();
+    let url=agProvider==='xai'?agEndpoint('/language-models'):(agEndpoint('/models')+(agProvider==='anthropic'?'?limit=1000':'')),rows=[],d=null;
+    for(let page=0;page<10;page++){
+      let res=await fetch(url,{headers:agHeaders(false),cache:'no-store',referrerPolicy:'no-referrer'});if(!res.ok&&agProvider==='xai'&&page===0){url=agEndpoint('/models');res=await fetch(url,{headers:agHeaders(false),cache:'no-store',referrerPolicy:'no-referrer'})}
+      if(!res.ok)throw new Error('Models API '+res.status);d=await res.json();rows.push(...(Array.isArray(d.data)?d.data:(Array.isArray(d.models)?d.models:[])));
+      if(agProvider!=='anthropic'||!d.has_more||!d.last_id)break;url=agEndpoint('/models')+'?limit=1000&after_id='+encodeURIComponent(d.last_id);
     }
-  }catch(e){}
+    const models=rows.map(x=>({id:x.id||x.name||x.model,context:contextFromModel(x),raw:x})).filter(x=>x.id).sort((a,b)=>a.id.localeCompare(b.id));
+    const list=$('#agModelList');if(list)list.replaceChildren(...models.map(x=>{const o=document.createElement('option');o.value=x.id;o.label=x.context?fmtTok(x.context)+' context':'';return o}));
+    const selected=models.find(x=>x.id===agModel);if(selected&&selected.context){agModelInfo={max_input_tokens:selected.context,source:'Models API',fetched:Date.now()};localStorage.setItem(agInfoKey(),JSON.stringify(agModelInfo))}
+    if(note)note.textContent=models.length?(models.length+' models · '+(selected&&selected.context?fmtTok(selected.context)+' context for selection':'choose one, then save')):'No compatible models returned.';if(announce)toast(models.length+' '+AG_PROVIDER_DEFS[agProvider].label+' models discovered');meterUi();return models;
+  }catch(e){if(note)note.textContent='Discovery failed · '+(e.message||e);if(announce)toast('Model discovery failed · '+agEsc(e.message||e),'err');return []}
 }
-function agCtxLimit(){
-  if(agModelInfo&&agModelInfo.max_input_tokens)return agModelInfo.max_input_tokens;
-  for(const c of AG_CTX)if(agModel.indexOf(c[0])>=0)return c[1];
-  return 200000;
+async function agFetchModelInfo(){
+  if(agCtxOverride){agModelInfo={max_input_tokens:agCtxOverride,source:'manual override'};meterUi();return}
+  try{const x=JSON.parse(localStorage.getItem(agInfoKey())||'null');if(x&&x.fetched&&Date.now()-x.fetched<21600000){agModelInfo=x;meterUi();return}}catch(e){}
+  if(!agKey)return;const rows=await discoverModels(false),hit=rows.find(x=>x.id===agModel);if(hit&&hit.context){agModelInfo={max_input_tokens:hit.context,source:'Models API',fetched:Date.now()};meterUi()}
 }
-function estBlocks(content){
-  let t=0;
-  for(const b of (Array.isArray(content)?content:[])){
-    if(b.type==='text')t+=Math.ceil((b.text||'').length/3.6);
-    else if(b.type==='image')t+=1500;
-    else if(b.type==='tool_use')t+=Math.ceil(JSON.stringify(b.input||{}).length/3.6)+30;
-    else if(b.type==='tool_result'){t+=estBlocks(b.content)+20}
-  }
-  return t;
-}
-function agEstCtx(msgs){
-  let t=Math.ceil(DOCS.length/3.6)+1200; /* system + tools overhead */
-  for(const m of msgs)t+=estBlocks(m.content)+10;
-  return t;
-}
-
-/* ── history pruning ── */
+function agCtxLimit(){if(agCtxOverride)return agCtxOverride;if(agModelInfo&&agModelInfo.max_input_tokens)return agModelInfo.max_input_tokens;if(agProvider==='xai')return /4\.6/.test(agModel)?500000:256000;if(agProvider==='openai')return /gpt-5|o[134]/i.test(agModel)?400000:128000;if(/opus-4-8|sonnet-4-6/.test(agModel))return 1000000;return 200000}
+function estBlocks(content){let t=0;for(const b of (Array.isArray(content)?content:[])){if(b.type==='text'||b.type==='reasoning')t+=Math.ceil((b.text||'').length/3.6);else if(b.type==='image')t+=1500;else if(b.type==='tool_use')t+=Math.ceil(JSON.stringify(b.input||{}).length/3.6)+30;else if(b.type==='tool_result')t+=estBlocks(b.content)+20;else if(b.type==='provider_item')t+=Math.ceil(JSON.stringify(b.item||{}).length/3.6)}return t}
+function agEstCtx(msgs,summary){let t=Math.ceil((DOCS.length+(summary||'').length)/3.6)+Math.ceil(JSON.stringify(AG_TOOLS).length/3.6)+300;for(const m of (msgs||[]))t+=estBlocks(m.content)+10;return t}
+function isHumanMessage(m){return m&&m.role==='user'&&Array.isArray(m.content)&&!m.content.some(b=>b.type==='tool_result')}
 function prunedMessages(){
-  const resultIdx=[];
-  agMsgs.forEach((m,i)=>{
-    if(m.role==='user'&&Array.isArray(m.content)&&m.content.some(b=>b.type==='tool_result'))resultIdx.push(i);
-  });
-  const keep=new Set(resultIdx.slice(-2));
-  let lastUserIdx=-1;
-  agMsgs.forEach((m,i)=>{
-    if(m.role==='user'&&Array.isArray(m.content)&&!m.content.some(b=>b.type==='tool_result'))lastUserIdx=i;
-  });
-  return agMsgs.map((m,i)=>{
-    if(!Array.isArray(m.content))return m;
-    const fresh=keep.has(i);
-    const content=m.content.map(b=>{
-      if(b.type==='image'&&i!==lastUserIdx)return {type:'text',text:'[image from an earlier message]'};
-      if(b.type==='tool_result'&&!fresh){
-        const inner=(Array.isArray(b.content)?b.content:[]).map(c=>{
-          if(c.type==='image')return {type:'text',text:'[figure from an earlier step]'};
-          if(c.type==='text')return {type:'text',text:agTrunc(c.text,AG_OLD_TEXT)};
-          return c;
-        });
-        return {type:'tool_result',tool_use_id:b.tool_use_id,content:inner};
-      }
-      if(b.type==='tool_use'&&!fresh&&b.input&&typeof b.input.source==='string'&&b.input.source.length>2000){
-        const inp={};for(const k in b.input)inp[k]=b.input[k];
-        inp.source=agTrunc(inp.source,2000);
-        return {type:'tool_use',id:b.id,name:b.name,input:inp};
-      }
-      return b;
-    });
-    return {role:m.role,content};
-  });
+  const copied=clonePlain(agMsgs),resultIdx=[];copied.forEach((m,i)=>{if(m.role==='user'&&Array.isArray(m.content)&&m.content.some(b=>b.type==='tool_result'))resultIdx.push(i)});const fresh=new Set(resultIdx.slice(-3));let lastHuman=-1;copied.forEach((m,i)=>{if(isHumanMessage(m))lastHuman=i});
+  return copied.map((m,i)=>({role:m.role,content:(m.content||[]).map(b=>{if(b.type==='image'&&i!==lastHuman)return {type:'text',text:'[earlier user image retained in the full thread archive]'};if(b.type==='tool_result'&&!fresh.has(i))return {type:'tool_result',tool_use_id:b.tool_use_id,content:(b.content||[]).map(x=>x.type==='image'?{type:'text',text:'[earlier figure retained in the full thread archive]'}:x.type==='text'?{type:'text',text:agTrunc(x.text,AG_OLD_TEXT)}:x)};if(b.type==='tool_use'&&!fresh.has(i)&&b.input&&typeof b.input.source==='string'&&b.input.source.length>2400){b.input.source=agTrunc(b.input.source,2400)}return b})}));
 }
-function agCompact(msgs){
-  /* drop oldest assistant+tool_result pairs until the estimate fits the window */
-  const limit=Math.floor(agCtxLimit()*0.85);
-  let est=agEstCtx(msgs);
-  if(est<=limit)return msgs;
-  msgs=msgs.slice();
-  let dropped=0;
-  while(est>limit){
-    let idx=-1;
-    for(let i=1;i<msgs.length-2;i++){
-      const a=msgs[i],b=msgs[i+1];
-      if(a.role==='assistant'&&b&&b.role==='user'&&Array.isArray(b.content)&&b.content.some(x=>x.type==='tool_result')){idx=i;break}
-    }
-    if(idx<0)break;
-    msgs.splice(idx,2);dropped++;
-    est=agEstCtx(msgs);
-  }
-  if(dropped){
-    msgs.splice(1,0,{role:'assistant',content:[{type:'text',text:'[context compacted: '+dropped+' earlier tool exchanges removed to fit the model window — the notebook outline above is current]'}]},
-                    {role:'user',content:[{type:'text',text:'(noted — continue)'}]});
-  }
-  return msgs;
+function summarizeSegments(segs){const lines=[];for(const seg of segs){for(const m of seg){for(const b of (m.content||[])){if(b.type==='text'){const s=String(b.text||'').replace(/\s+/g,' ').trim();if(s)lines.push((m.role==='user'?'User: ':'Agent: ')+agTrunc(s,360))}else if(b.type==='tool_use')lines.push('Tool: '+b.name+' '+agTrunc(JSON.stringify(b.input||{}),260));else if(b.type==='tool_result')lines.push('Result: '+agTrunc((b.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(' '),300))}}}return agTrunc(lines.join('\n'),10000)}
+function prepareContext(){
+  const all=prunedMessages(),full=agEstCtx(all),target=Math.floor(agCtxLimit()*agCompactAt/100);if(full<=target){agLastContext={full,active:full,limit:agCtxLimit(),compacted:0,summary:''};meterUi();return {messages:all,summary:'',stats:agLastContext}}
+  const segs=[];let cur=[];for(const m of all){if(isHumanMessage(m)&&cur.length){segs.push(cur);cur=[]}cur.push(m)}if(cur.length)segs.push(cur);const dropped=[];while(segs.length>2&&agEstCtx(segs.flat(),summarizeSegments(dropped))>target)dropped.push(segs.shift());const summary=summarizeSegments(dropped),messages=segs.flat(),active=agEstCtx(messages,summary);agLastContext={full,active,limit:agCtxLimit(),compacted:dropped.length,summary};meterUi();return {messages,summary,stats:agLastContext};
 }
+function agCompact(msgs){return msgs||prepareContext().messages}
 
-/* ── streaming call (SSE) — live narration, visible progress ── */
-async function apiStream(){
-  agAbort=new AbortController();
-  let idleTimer=null;
-  const armIdle=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>{try{agAbort.abort()}catch(_){}}, 120000)};
-  armIdle();
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',signal:agAbort.signal,
-    headers:{'content-type':'application/json','x-api-key':agKey,
-      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:agModel,max_tokens:4096,temperature:0.4,stream:true,
-      system:buildSystem(),tools:AG_TOOLS,tool_choice:{type:'auto'},messages:agCompact(prunedMessages())})
-  });
-  if(!res.ok){clearTimeout(idleTimer);let t='';try{t=await res.text()}catch(e){}
-    throw new Error('API '+res.status+(t?' — '+agTrunc(t,400):''))}
-  const reader=res.body.getReader(),dec=new TextDecoder();
-  let buf='',content=[],liveEl=null,liveText='',jsonBuf={};
-  let outTok=0,outBase=agUseOut;
-  const meterUi2=(o)=>{agUseOut=outBase+o;meterUi()};
-  const finishLive=()=>{if(liveEl){liveEl.classList.remove('live');liveEl=null;txPersist()}};
+/* ── canonical messages → provider wire formats ── */
+function anthropicMessages(msgs){return msgs.map(m=>({role:m.role,content:(m.content||[]).map(b=>{if(b.type==='text')return {type:'text',text:b.text||''};if(b.type==='image')return {type:'image',source:clonePlain(b.source)};if(b.type==='tool_use')return {type:'tool_use',id:b.id,name:b.name,input:clonePlain(b.input||{})};if(b.type==='tool_result')return {type:'tool_result',tool_use_id:b.tool_use_id,content:(b.content||[]).filter(x=>x.type==='text'||x.type==='image').map(x=>x.type==='image'?{type:'image',source:clonePlain(x.source)}:{type:'text',text:x.text||''})};return null}).filter(Boolean)})).filter(m=>m.content.length)}
+function responseInput(msgs){const out=[];for(const m of msgs){let parts=[];const flush=()=>{if(parts.length){out.push({role:m.role,content:parts});parts=[]}};for(const b of (m.content||[])){
+    if(b.type==='provider_item'&&b.provider===agProvider){flush();out.push(clonePlain(b.item));continue}
+    if(b.type==='text')parts.push({type:m.role==='assistant'?'output_text':'input_text',text:b.text||''});
+    else if(b.type==='image'&&m.role==='user')parts.push({type:'input_image',image_url:'data:'+b.source.media_type+';base64,'+b.source.data});
+    else if(b.type==='tool_use'){flush();out.push(b.provider===agProvider&&b.provider_item?clonePlain(b.provider_item):{type:'function_call',call_id:b.id,name:b.name,arguments:JSON.stringify(b.input||{})})}
+    else if(b.type==='tool_result'){flush();const text=(b.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('\n');const imgs=(b.content||[]).filter(x=>x.type==='image').map(x=>({type:'input_image',image_url:'data:'+x.source.media_type+';base64,'+x.source.data}));out.push({type:'function_call_output',call_id:b.tool_use_id,output:imgs.length?[{type:'input_text',text},...imgs]:text})}
+  }flush()}return out}
+function responseTools(){return AG_TOOLS.map(t=>({type:'function',name:t.name,description:t.description,parameters:t.input_schema,strict:false}))}
+function sseDataLines(buffer){const events=[],chunks=buffer.split(/\r?\n\r?\n/),rest=chunks.pop()||'';for(const chunk of chunks){const data=chunk.split(/\r?\n/).filter(x=>x.startsWith('data:')).map(x=>x.slice(5).trim()).join('\n');if(data&&data!=='[DONE]')events.push(data)}return {events,rest}}
+function finishMarkdown(el,text){if(el){renderAgentMarkdown(el,text,false);el.classList.remove('live');txPersist()}}
+async function checkedStream(url,body){agAbort=new AbortController();const res=await fetch(url,{method:'POST',signal:agAbort.signal,headers:agHeaders(true),body:JSON.stringify(body),cache:'no-store',referrerPolicy:'no-referrer'});if(!res.ok){let t='';try{t=await res.text()}catch(e){}throw new Error(AG_PROVIDER_DEFS[agProvider].label+' API '+res.status+(t?' — '+agTrunc(t,500):''))}if(!res.body)throw new Error('Streaming response body unavailable');return res}
+async function streamAnthropic(ctx){
+  const request={model:agModel,max_tokens:agMaxOut,stream:true,system:buildSystem(ctx.summary,true),tools:AG_TOOLS.map((t,i)=>i===AG_TOOLS.length-1?Object.assign({},t,{cache_control:{type:'ephemeral'}}):t),tool_choice:{type:'auto'},messages:anthropicMessages(ctx.messages)};
+  const res=await checkedStream(agEndpoint('/messages'),request),reader=res.body.getReader(),dec=new TextDecoder();
+  let buf='',content=[],jsonBuf={},liveEl=null,liveText='',outTok=0,idleTimer;
+  const arm=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>{try{agAbort.abort()}catch(e){}},120000)};arm();
   try{
     for(;;){
-      const {done,value}=await reader.read();
-      if(done)break;
-      armIdle();
-      buf+=dec.decode(value,{stream:true});
-      const lines=buf.split('\n');buf=lines.pop();
-      for(const ln of lines){
-        if(!ln.startsWith('data:'))continue;
-        const payload=ln.slice(5).trim();
-        if(!payload||payload==='[DONE]')continue;
+      const {done,value}=await reader.read();if(done)break;arm();buf+=dec.decode(value,{stream:true});
+      const parsed=sseDataLines(buf);buf=parsed.rest;
+      for(const payload of parsed.events){
         let ev;try{ev=JSON.parse(payload)}catch(e){continue}
         if(ev.type==='message_start'){
           const u=ev.message&&ev.message.usage;
-          if(u){agUseIn+=u.input_tokens||0;agUseCw+=u.cache_creation_input_tokens||0;agUseCr+=u.cache_read_input_tokens||0;meterUi()}
-        }
-        else if(ev.type==='message_delta'){
-          if(ev.usage&&ev.usage.output_tokens!=null){outTok=ev.usage.output_tokens;meterUi2(outTok)}
-        }
+          if(u){const cw=u.cache_creation_input_tokens||0,cr=u.cache_read_input_tokens||0;agUseIn+=(u.input_tokens||0)+cw+cr;agUseCw+=cw;agUseCr+=cr;meterUi()}
+        }else if(ev.type==='message_delta'&&ev.usage){outTok=ev.usage.output_tokens||outTok;meterUi()}
         else if(ev.type==='content_block_start'){
           const b=ev.content_block;
-          if(b.type==='text'){content[ev.index]={type:'text',text:b.text||''};liveText=b.text||'';
-            liveEl=txDom('a',liveText,true);liveEl.classList.add('live')}
-          else if(b.type==='tool_use'){content[ev.index]={type:'tool_use',id:b.id,name:b.name,input:{}};jsonBuf[ev.index]='';
-            finishLive()}
-        }
-        else if(ev.type==='content_block_delta'){
-          if(ev.delta.type==='text_delta'&&content[ev.index]){
-            content[ev.index].text+=ev.delta.text;
-            if(liveEl){liveText+=ev.delta.text;liveEl.textContent=liveText;
-              const tx=$("#agTx");tx.scrollTop=tx.scrollHeight}
-          }
-          else if(ev.delta.type==='input_json_delta'&&content[ev.index]!=null){
-            jsonBuf[ev.index]+=ev.delta.partial_json||'';
-          }
-        }
-        else if(ev.type==='content_block_stop'){
-          const c=content[ev.index];
-          if(c&&c.type==='tool_use'){try{c.input=jsonBuf[ev.index]?JSON.parse(jsonBuf[ev.index]):{}}catch(e){c.input={}}}
-          if(c&&c.type==='text')finishLive();
-        }
-        else if(ev.type==='error'){throw new Error('API stream: '+(ev.error&&ev.error.message||'unknown'))}
+          if(b.type==='text'){content[ev.index]={type:'text',text:b.text||''};liveText=b.text||'';liveEl=txDom('a',liveText,true);liveEl.classList.add('live')}
+          else if(b.type==='tool_use'){finishMarkdown(liveEl,liveText);liveEl=null;content[ev.index]={type:'tool_use',id:b.id,name:b.name,input:{}};jsonBuf[ev.index]=''}
+        }else if(ev.type==='content_block_delta'){
+          if(ev.delta.type==='text_delta'&&content[ev.index]){content[ev.index].text+=ev.delta.text;liveText+=ev.delta.text;if(liveEl)renderAgentMarkdown(liveEl,liveText,true)}
+          else if(ev.delta.type==='input_json_delta')jsonBuf[ev.index]=(jsonBuf[ev.index]||'')+(ev.delta.partial_json||'')
+        }else if(ev.type==='content_block_stop'){
+          const c=content[ev.index];if(c&&c.type==='tool_use'){try{c.input=JSON.parse(jsonBuf[ev.index]||'{}')}catch(e){c.input={}}}if(c&&c.type==='text'){finishMarkdown(liveEl,liveText);liveEl=null}
+        }else if(ev.type==='error')throw new Error(ev.error&&ev.error.message||'Anthropic stream error')
       }
     }
-  }finally{clearTimeout(idleTimer);finishLive();agUseOut=outBase+outTok;meterUi();agSaveUsage()}
+  }finally{clearTimeout(idleTimer);finishMarkdown(liveEl,liveText);agUseOut+=outTok;meterUi();agSaveUsage()}
   return content.filter(Boolean);
 }
+function canonicalResponseOutput(items){const out=[];for(const item of (items||[])){if(item.type==='message'){const text=(item.content||[]).filter(x=>x.type==='output_text').map(x=>x.text||'').join('');if(text)out.push({type:'text',text})}else if(item.type==='function_call'){let input={};try{input=JSON.parse(item.arguments||'{}')}catch(e){}out.push({type:'tool_use',id:item.call_id||item.id,name:item.name,input,provider:agProvider,provider_item:clonePlain(item)})}else if(item.type==='reasoning'){out.push({type:'provider_item',provider:agProvider,item:clonePlain(item)});const summary=(item.summary||[]).map(x=>x.text||'').join('');if(summary)out.push({type:'reasoning',text:summary})}}return out}
+async function streamResponses(ctx){
+  const body={model:agModel,instructions:buildSystem(ctx.summary,false),input:responseInput(ctx.messages),tools:responseTools(),tool_choice:'auto',stream:true,store:false,max_output_tokens:agMaxOut};if(agReasoning!=='off')body.reasoning={effort:agReasoning,summary:'auto'};if(agProvider==='openai')body.include=['reasoning.encrypted_content'];
+  const res=await checkedStream(agEndpoint('/responses'),body),reader=res.body.getReader(),dec=new TextDecoder();let buf='',finalResponse=null,liveEl=null,liveText='',reasonEl=null,reasonText='',idleTimer;const arm=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>{try{agAbort.abort()}catch(e){}},120000)};arm();
+  try{for(;;){const {done,value}=await reader.read();if(done)break;arm();buf+=dec.decode(value,{stream:true});const parsed=sseDataLines(buf);buf=parsed.rest;for(const payload of parsed.events){let ev;try{ev=JSON.parse(payload)}catch(e){continue}if(ev.type==='response.output_text.delta'){if(!liveEl){liveEl=txDom('a','',true);liveEl.classList.add('live')}liveText+=ev.delta||'';renderAgentMarkdown(liveEl,liveText,true)}else if(ev.type==='response.reasoning_summary_text.delta'){if(!reasonEl)reasonEl=txDom('r','',true);reasonText+=ev.delta||'';reasonEl.dataset.raw=reasonText;const b=reasonEl.lastElementChild;if(b)renderAgentMarkdown(b,reasonText,true)}else if(ev.type==='response.completed'||ev.type==='response.incomplete'){finalResponse=ev.response}else if(ev.type==='response.failed'||ev.type==='error')throw new Error((ev.response&&ev.response.error&&ev.response.error.message)||(ev.error&&ev.error.message)||ev.message||'Responses stream failed')}}}
+  finally{clearTimeout(idleTimer);finishMarkdown(liveEl,liveText);if(reasonEl){reasonEl.dataset.raw=reasonText;const b=reasonEl.lastElementChild;if(b)renderAgentMarkdown(b,reasonText,false)}if(finalResponse&&finalResponse.usage){const u=finalResponse.usage;agUseIn+=u.input_tokens||0;agUseOut+=u.output_tokens||0;agUseCr+=(u.input_tokens_details&&u.input_tokens_details.cached_tokens)||0;agUseReason+=(u.output_tokens_details&&u.output_tokens_details.reasoning_tokens)||0}meterUi();agSaveUsage()}
+  if(!finalResponse)throw new Error('Responses stream ended before completion');
+  if(finalResponse.status==='incomplete')txDom('s','response incomplete · '+((finalResponse.incomplete_details&&finalResponse.incomplete_details.reason)||'limit reached'));
+  const canonical=canonicalResponseOutput(finalResponse.output||[]);
+  if(!liveText){const text=canonical.filter(x=>x.type==='text').map(x=>x.text).join('\n');if(text)txDom('a',text)}
+  if(!reasonText){const reason=canonical.filter(x=>x.type==='reasoning').map(x=>x.text).join('\n');if(reason)txDom('r',reason)}
+  return canonical;
+}
+async function apiStream(){const ctx=prepareContext();return agProvider==='anthropic'?streamAnthropic(ctx):streamResponses(ctx)}
 
 /* ── the loop ── */
 async function agentTurn(text){
@@ -3336,31 +3491,30 @@ async function agentTurn(text){
 }
 
 /* ── settings ── */
-function openAgSettings(){
-  $("#agKey").value=agKey;$("#agModel").value=agModel;$("#agMax").value=agMaxSteps;
-  syncAgAuto();$("#agScrim").classList.add('show');$("#agKey").focus();
-}
+function fillAgSettings(){const d=AG_PROVIDER_DEFS[agProvider],reason=$('#agReasoning');$('#agProvider').value=agProvider;reason.value=agReasoning;reason.disabled=agProvider==='anthropic';reason.title=reason.disabled?'Anthropic keeps its native provider-default reasoning behavior.':'';$('#agKeyLabel').textContent=d.label.toUpperCase()+' API KEY';$('#agKey').placeholder=d.placeholder;$('#agKey').value=agKey;$('#agBase').value=agBase;$('#agModel').value=agModel;$('#agOut').value=agMaxOut;$('#agCtxOverride').value=agCtxOverride||'';$('#agCompactAt').value=agCompactAt;$('#agMax').value=agMaxSteps;$('#agDiscovery').textContent=''}
+function captureAgSettings(){agKey=$('#agKey').value.trim();agBase=($('#agBase').value.trim()||AG_PROVIDER_DEFS[agProvider].base).replace(/\/+$/,'');agModel=$('#agModel').value.trim()||AG_PROVIDER_DEFS[agProvider].model;agMaxOut=Math.max(512,Math.min(128000,parseInt($('#agOut').value,10)||8192));const rawCtx=parseInt($('#agCtxOverride').value,10)||0;agCtxOverride=rawCtx?Math.max(8192,Math.min(4000000,rawCtx)):0;agCompactAt=Math.max(50,Math.min(95,parseInt($('#agCompactAt').value,10)||82));agMaxSteps=Math.max(4,Math.min(80,parseInt($('#agMax').value,10)||24));agReasoning=$('#agReasoning').value||'off';agConfigs[agProvider]={key:agKey,base:agBase,model:agModel,maxOut:agMaxOut,ctxOverride:agCtxOverride,compactAt:agCompactAt,reasoning:agReasoning}}
+function openAgSettings(){fillAgSettings();syncAgAuto();$('#agScrim').classList.add('show');$('#agKey').focus()}
 function closeAgSettings(){$("#agScrim").classList.remove('show')}
 function syncAgAuto(){
   $("#agAutoBtn").classList.toggle('active',agAutonomy==='auto');
   $("#agStepBtn").classList.toggle('active',agAutonomy==='step');
 }
-$("#agSettings").addEventListener('click',openAgSettings);
+$("#agSettings").addEventListener('click',()=>{if(agRunning){toast("Finish or stop the current turn first.","err");return}openAgSettings()});
 $("#agExport").addEventListener('click',agExportMd);
 $("#agX").addEventListener('click',closeAgSettings);
 $("#agAutoBtn").addEventListener('click',()=>{agAutonomy='auto';syncAgAuto()});
 $("#agStepBtn").addEventListener('click',()=>{agAutonomy='step';syncAgAuto()});
-$("#agSave").addEventListener('click',()=>{
-  agKey=$("#agKey").value.trim();
-  agModel=$("#agModel").value.trim()||'claude-sonnet-4-6';
-  agMaxSteps=Math.max(4,Math.min(80,parseInt($("#agMax").value,10)||24));
-  try{localStorage.setItem(AG_KEY,agKey);localStorage.setItem(AG_MODEL,agModel);
-      localStorage.setItem(AG_AUTO,agAutonomy);localStorage.setItem(AG_MAX,String(agMaxSteps))}catch(e){}
-  closeAgSettings();agModelInfo=null;agFetchModelInfo();agStateUi();meterUi();
-});
-$("#agClear").addEventListener('click',()=>{agKey='';try{localStorage.removeItem(AG_KEY)}catch(e){}$("#agKey").value='';agStateUi()});
+$('#agProvider').addEventListener('change',e=>{captureAgSettings();agSaveProvider();agApplyProvider(e.target.value);agSaveProvider();fillAgSettings();agStateUi();meterUi()});
+$('#agDiscover').addEventListener('click',async()=>{captureAgSettings();agSaveProvider();await discoverModels(true)});
+$("#agSave").addEventListener('click',()=>{captureAgSettings();agSaveProvider();closeAgSettings();agModelInfo=null;agFetchModelInfo();agStateUi();meterUi();scheduleThreadSave()});
+$("#agClear").addEventListener('click',()=>{agKey='';$('#agKey').value='';agSaveProvider();agStateUi()});
 $("#agScrim").addEventListener('mousedown',e=>{if(e.target===$("#agScrim"))closeAgSettings()});
-["agKey","agModel","agMax"].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>e.stopPropagation())});
+["agKey","agBase","agModel","agOut","agCtxOverride","agCompactAt","agMax"].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>e.stopPropagation())});
+
+function openContext(){const ctx=prepareContext(),s=ctx.stats,limit=s.limit||1,pct=Math.min(100,Math.round(s.active/limit*100));$('#ctxFull').textContent=fmtTok(s.full);$('#ctxActive').textContent=fmtTok(s.active);$('#ctxInput').textContent=fmtTok(agUseIn);$('#ctxOutput').textContent=fmtTok(agUseOut);$('#ctxBar').firstElementChild.style.width=pct+'%';$('#ctxBar').classList.toggle('warn',pct>=agCompactAt);$('#ctxNote').textContent=s.compacted?(s.compacted+' earlier turn'+(s.compacted===1?'':'s')+' checkpointed for the active request. Full local history is untouched.'):'The complete thread currently fits in the active model payload.';$('#ctxUsageDetail').textContent=AG_PROVIDER_DEFS[agProvider].label+' · '+agModel+' · '+fmtTok(agCtxLimit())+' context'+(agModelInfo&&agModelInfo.source?' · '+agModelInfo.source:' · conservative fallback')+' · '+fmtTok(agUseCr)+' cache read · '+fmtTok(agUseCw)+' cache write · '+fmtTok(agUseReason)+' reasoning';$('#ctxScrim').classList.add('show')}
+function closeContext(){$('#ctxScrim').classList.remove('show')}
+$('#agContext').addEventListener('click',openContext);$('#agUsage').addEventListener('click',openContext);$('#ctxX').addEventListener('click',closeContext);$('#ctxDone').addEventListener('click',closeContext);$('#ctxExport').addEventListener('click',agExportMd);$('#ctxReset').addEventListener('click',()=>{agUseIn=agUseOut=agUseCw=agUseCr=agUseReason=0;agSaveUsage();meterUi();openContext();toast('Usage counters reset.')});$('#ctxScrim').addEventListener('mousedown',e=>{if(e.target===$('#ctxScrim'))closeContext()});
+$('#agThreadSelect').addEventListener('change',e=>switchAgentThread(e.target.value));$('#agThreadNew').addEventListener('click',createAgentThread);$('#agThreadRename').addEventListener('click',renameAgentThread);$('#agThreadDelete').addEventListener('click',deleteAgentThread);
 
 /* ── composer ── */
 function agSendMsg(){
@@ -3371,16 +3525,8 @@ function agSendMsg(){
 }
 $("#agSend").addEventListener('click',agSendMsg);
 $("#agStop").addEventListener('click',()=>{agStop=true;if(agAbort){try{agAbort.abort()}catch(e){}}$("#agStop").textContent='STOPPING…';setTimeout(()=>{$("#agStop").textContent='STOP'},1500)});
-document.getElementById('agUsage').addEventListener('click',()=>{agUseIn=0;agUseOut=0;agUseCw=0;agUseCr=0;agSaveUsage();meterUi();toast('Usage meter reset.')});
 $("#agMode").addEventListener('click',()=>{agAutonomy=agAutonomy==='auto'?'step':'auto';try{localStorage.setItem(AG_AUTO,agAutonomy)}catch(e){}agStateUi()});
-$("#agModelChip").addEventListener('click',()=>{
-  if(agRunning){toast("Finish the current turn first.","err");return}
-  const ring=AG_QUICK.includes(agModel)?AG_QUICK:[agModel,...AG_QUICK];
-  agModel=ring[(ring.indexOf(agModel)+1)%ring.length];
-  try{localStorage.setItem(AG_MODEL,agModel)}catch(e){}
-  agModelInfo=null;agFetchModelInfo();agStateUi();meterUi();
-  toast('Model → '+agModel);
-});
+$("#agModelChip").addEventListener('click',()=>{if(agRunning){toast("Finish the current turn first.","err");return}openAgSettings()});
 $("#agIn").addEventListener('keydown',e=>{
   e.stopPropagation();
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();agSendMsg()}
@@ -3419,7 +3565,7 @@ agPanelEl.addEventListener('drop',e=>{
 });
 
 /* ── forking ── */
-function agFork(turn){
+async function agFork(turn){
   if(agRunning){toast("Wait for the current turn to finish.","err");return}
   if(!turn||turn<1)return;
   /* conversation: cut agMsgs before the turn-th plain user message */
@@ -3431,7 +3577,7 @@ function agFork(turn){
       if(seen===turn){cut=i;break}
     }
   }
-  const forkMsgs=agStripMsgs(agMsgs.slice(0,cut));
+  const forkMsgs=clonePlain(agMsgs.slice(0,cut));
   /* transcript: keep entries before the turn-th 'u' row */
   const ents=txEntries();let u=0;const keep=[];
   for(const e of ents){
@@ -3440,19 +3586,15 @@ function agFork(turn){
   }
   /* duplicate the notebook and switch */
   const srcName=nbName;
-  duplicateNotebook(nbId);
+  await saveActiveThreadNow();const newId=await duplicateNotebook(nbId);
   const lib=readLib();
-  const ent=lib.notebooks[0];
+  const ent=lib.notebooks.find(n=>n.id===newId);
   if(!ent){toast("Fork failed.","err");return}
   ent.name=srcName+" ⑂";ent.updated=Date.now();writeLib(lib);
   try{const d=loadCellsFor(ent.id)||{cells:[]};d.name=ent.name;localStorage.setItem(nbKey(ent.id),JSON.stringify(d));}catch(e){}
-  try{
-    localStorage.setItem('kernel.agent.tx.'+ent.id,JSON.stringify(keep));
-    localStorage.setItem('kernel.agent.msgs.'+ent.id,JSON.stringify(forkMsgs));
-    localStorage.setItem('kernel.agent.usage.'+ent.id,JSON.stringify({i:agUseIn,o:agUseOut}));
-  }catch(e){}
-  switchNotebook(ent.id);
-  agTxNb=null; /* force the follower to reload transcript + msgs for the fork */
+  const idx=readThreadIndex(newId),meta=idx.threads.find(t=>t.id===agThreadId)||idx.threads[0];
+  if(meta){idx.active=meta.id;meta.name=(meta.name||'Thread')+' · fork';writeThreadIndex(idx,newId);await kdbPut('threads',{key:threadKey(meta.id,newId),notebookId:newId,id:meta.id,name:meta.name,created:meta.created,updated:Date.now(),messages:forkMsgs,transcript:keep,usage:agUsage(),provider:agProvider,model:agModel})}
+  await switchNotebook(ent.id);
   toast('Forked — you are now on "'+ent.name+'". The original thread is untouched.');
 }
 
@@ -3472,15 +3614,7 @@ window.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&!e.altKey&&(e.key==='j'||e.key==='J')){e.preventDefault();openAgent()}
 });
 
-/* ── per-notebook transcript follow ── */
-setInterval(()=>{
-  if(nbId!==agTxNb){
-    if(agRunning){agStop=true;if(agAbort){try{agAbort.abort()}catch(e){}}}
-    agTxNb=nbId;agMsgs=agLoadMsgs();agLoadUsage();txLoad();agStateUi();meterUi();
-  }
-},800);
-
-txLoad();agStateUi();agFetchModelInfo();
+agStateUi();agFetchModelInfo();
 
 
 /* live theme: kernels flip without a reload (agent runs survive Alt+T) */
@@ -3501,6 +3635,7 @@ window.addEventListener('ut-theme',function(){
   if(cells[0]) selectCell(cells[0].id, "command");
   setNbTitle();
   initPanels();
+  activateNotebookAgent(nbId);
   bootKernel();
 })();
 

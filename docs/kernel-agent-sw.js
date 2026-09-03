@@ -2,8 +2,8 @@
    - App shell (same-origin): network-first, fall back to cache.
    - Heavy CDN assets (Pyodide wasm + wheels, mermaid, katex…): cache-first,
      so the app keeps working offline after the first online load.
-   - Anthropic API calls are never cached. */
-var CACHE='kernel-a-mobile-v1';
+   - Model-provider API calls are never cached. */
+var CACHE='kernel-a-mobile-v2';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 
@@ -18,11 +18,14 @@ self.addEventListener('activate', function(e){
 self.addEventListener('fetch', function(e){
   var req=e.request;
   if(req.method!=='GET') return;
+  if(req.cache==='no-store') return;
   var url;
   try{ url=new URL(req.url); }catch(err){ return; }
 
   /* never touch the model API */
-  if(url.hostname.indexOf('anthropic.com')>=0) return;
+  if(url.hostname.indexOf('anthropic.com')>=0 ||
+     url.hostname.indexOf('openai.com')>=0 ||
+     url.hostname.indexOf('x.ai')>=0) return;
 
   var sameOrigin=(url.origin===location.origin);
   var isCDN = url.hostname.indexOf('cdn.jsdelivr.net')>=0 ||
