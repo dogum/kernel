@@ -130,7 +130,8 @@ assert.equal(parsedSse.rest, "partial", "partial SSE frame is retained");
 const contextFactory = new Function(`
   const clonePlain=(value)=>JSON.parse(JSON.stringify(value));
   const agTrunc=(text,n)=>String(text).length>n?String(text).slice(0,n)+'…[truncated]':String(text);
-  const DOCS='system'; const AG_TOOLS=[]; let agMsgs=[],agLastContext=null; const agCompactAt=70;
+  const DOCS='system'; const AG_TOOLS=[]; let agMsgs=[],agLastContext=null; const agCompactAt=70,agMaxOut=512,cells=[],dataFiles=[];
+  const getCellContextPolicy=()=> 'auto',getArtifactContextPolicy=()=> 'auto';
   const agCtxLimit=()=>2500; const meterUi=()=>{};
   ${functionSource(desktop, "estBlocks")}
   ${functionSource(desktop, "agEstCtx")}

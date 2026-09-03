@@ -8,7 +8,7 @@ This repo bundles a few things that belong together:
 
 1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent v2** — a multi-provider, human-in-the-loop agent that builds notebooks from natural language (`docs/kernel-agent.html`; architecture in [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md)).
+3. **KERNEL Agent v2.3** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)).
 4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
 
 ## What KERNEL is
@@ -49,6 +49,7 @@ kernel.html ............... lives in docs/ (served live on GitHub Pages)
 kernel-notebooks.skill .... packaged skill, ready to upload to Claude.ai
 AGENT-SPEC.md ............. original Anthropic-only agent specification
 AGENT-V2-SPEC.md .......... provider, thread, context and workspace architecture
+AGENT-V23-SPEC.md ......... durable runs, lineage, artifacts and handoff architecture
 skill/
 ├── SKILL.md .............. runtime contract, the live-in-the-loop + multimodal sections,
 │                           narrative craft, output discipline
@@ -68,31 +69,45 @@ docs/
 scripts/
 └── sync_agent_builds.mjs ..... syncs the shared desktop/mobile runtime
 tests/
-└── verify_agent_v2.mjs ....... syntax, parity, contract and ZIP checks
+├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
+└── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
 ```
 
 `SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
 
-## KERNEL Agent v2
+## KERNEL Agent v2.3
 
 KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures), and iterates with you in the loop. It is a client-only, bring-your-own-key design with first-class adapters for Anthropic, OpenAI, and xAI/Grok. Keys remain in browser storage and requests go directly to the API base you select.
 
-Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider contract, persistence model, compaction rules, migration behavior, and acceptance gates; [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
+Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md) is the current release contract. [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider/thread foundation, and [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
 
 What it does today, beyond the core loop:
 
-- **Provider parity** — Anthropic uses the native Messages API; OpenAI and xAI use the Responses API with the same KERNEL tool loop, multimodal results, stop behavior, and token accounting. Responses calls set `store: false`, and OpenAI reasoning continuation items are preserved locally.
+- **Provider parity** — Anthropic uses the native Messages API; OpenAI and xAI use the Responses API with the same KERNEL tool loop, multimodal results, stop behavior, and token accounting. Responses calls set `store: false`, and encrypted reasoning continuation items are preserved locally when returned.
 - **Live Markdown transcript** — narration streams token-by-token and renders headings, tables, code, math, and Mermaid when complete. Reasoning summaries use a separate progressive-disclosure panel; tool calls remain compact, click-to-cell action chips.
 - **Multiple threads per notebook** — create, rename, switch, or delete independent threads without mixing notebooks. Full messages and transcripts live in IndexedDB rather than a size-capped localStorage string.
-- **Conversations that persist and travel** — `.ipynb` remains a standard notebook and embeds the active thread for compatibility. One-click `.kernel.zip` export carries the notebook, rendered outputs, every thread, uploaded inputs, promoted results, and active selection; open the ZIP on another device to resume. API keys are deliberately excluded.
+- **Durable runs and recovery** — every request has a persisted run, phase, event timeline, visible plan, token/tool/time budgets, safe pause/resume, and recovery after reload. An ambiguous interrupted mutation is never silently repeated.
+- **Notebook intelligence** — KERNEL tracks conservative Python dependencies, cell/file/environment provenance, and `fresh`, `stale`, or `historical` output state. Structured tracebacks navigate back to the exact cell and source line.
+- **Artifact workspace** — uploads, working files, and final results have stable IDs, safe folder paths, previews, lifecycle controls, provenance, and notebook isolation. Folder upload preserves relative paths and collisions never silently overwrite data.
+- **Exact checkpoints and forks** — runs checkpoint notebook cells, rendered outputs, artifacts, environment, and thread state. Restore in place or fork a new notebook from that exact point without changing the source.
+- **Conversations that persist and travel** — one-click `.kernel.zip` export carries the notebook, outputs, all threads, artifacts, durable runs, usage, environment, and checkpoints; open it elsewhere to resume. A separate share-safe ZIP strips chat/run history and inputs, scans copied text, and includes approved final results only.
 - **Multimodal input** — paste or drag images into the chat (sketch a chart, screenshot a figure); the agent sees them.
-- **Explicit context accounting** — input, output, cache, and reasoning token counters are exposed. Context limits come from provider model discovery when available, with editable conservative fallbacks. At the configured threshold, only the active API payload is checkpointed and compacted; the full local thread is never deleted.
-- **Forking** — hover any of your messages and press ⑂ to branch the conversation into a duplicated notebook; the original thread stays intact.
+- **Explicit context control** — input, output, cache, and reasoning tokens are exposed. Pin or exclude cells and artifacts; large results use bounded handles; compaction changes only the active API payload, never the full local thread. When shared runtime state cannot be isolated safely, agent execution/inspection stops rather than bypass an exclusion; human cell controls remain available.
+- **Read-only model comparison** — send the same notebook-grounded prompt to up to six configured provider/model profiles and compare answers, latency, and reported token use without giving contenders mutation tools.
 - **Notebook-isolated workspaces** — stable cell IDs, outputs, user uploads, and agent results are restored only with their notebook. Switching notebooks snapshots state and resets the Python namespace so data cannot leak across workspaces.
 - **Faster output and variable surfaces** — inline/panel output changes move existing DOM nodes instead of rebuilding rich output; the variable panel adds deterministic name/type/memory sorting and explicit refresh.
 - **Autonomy modes** — AUTO runs free with a Stop button; STEP gates execution behind Approve/Skip. Every cell has an *ai* button that drops a stable cell reference into the composer.
+- **Redacted diagnostics** — export an allowlisted support bundle with versions, counters, and sanitized run events, never prompts, source, file contents, tool payloads, or provider credentials.
 
 Provider model discovery is available from settings. Custom API base URLs are supported for compatible gateways; if a provider blocks direct browser CORS, use a gateway you control and trust.
+
+Release checks:
+
+```bash
+node scripts/sync_agent_builds.mjs --check
+node tests/verify_agent_v2.mjs
+node tests/verify_agent_v23.mjs
+```
 
 ## Mobile / PWA (KERNEL·M)
 
@@ -102,7 +117,7 @@ Open it from the [live page](https://dogum.github.io/kernel/) or [`docs/kernel-a
 
 ## Privacy
 
-The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page unless you use the agent. The agent sends the active prompt, notebook state, and relevant outputs directly to the provider/API base you select (Anthropic, OpenAI, xAI, or a compatible gateway) using a key stored in this browser. Responses requests explicitly disable provider-side response storage where the protocol supports it. Workspace ZIPs never include API keys.
+The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page unless you use the agent. The agent sends the selected active context directly to the provider/API base you choose (Anthropic, OpenAI, xAI, or a compatible gateway) using a key stored in this browser. Responses requests explicitly disable provider-side response storage where the protocol supports it. Exports never serialize provider configuration or stored keys; because a full workspace is intentionally lossless, user-authored prompts/cells/files are preserved verbatim. Inspect a share-safe archive's redaction report before redistributing it.
 
 ## License
 

@@ -3,14 +3,14 @@
    - Heavy CDN assets (Pyodide wasm + wheels, mermaid, katex…): cache-first,
      so the app keeps working offline after the first online load.
    - Model-provider API calls are never cached. */
-var CACHE='kernel-a-mobile-v2';
+var CACHE='kernel-a-mobile-v23-1';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 
 self.addEventListener('activate', function(e){
   e.waitUntil((async function(){
     var keys=await caches.keys();
-    await Promise.all(keys.map(function(k){ return (k!==CACHE) ? caches.delete(k) : null; }));
+    await Promise.all(keys.map(function(k){ return (k!==CACHE && k.indexOf('kernel-a-mobile-')===0) ? caches.delete(k) : null; }));
     await self.clients.claim();
   })());
 });
