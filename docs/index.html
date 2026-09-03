@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>KERNEL — a Python notebook in a single HTML file</title>
-<meta name="description" content="KERNEL is a complete Python notebook that runs entirely in your browser from one self-contained HTML file — Pyodide under the hood, no install, no server, your data never leaves the page. Plus a Claude skill for authoring notebooks and an agentic build in progress."/>
+<meta name="description" content="KERNEL is a complete in-browser Python notebook with a multi-provider agent for Anthropic, OpenAI, and xAI — no install, no build step, and portable notebook workspaces."/>
 <meta property="og:title" content="KERNEL — a Python notebook in a single HTML file"/>
 <meta property="og:description" content="A complete Python notebook in one HTML file. Runs in the browser via Pyodide. No install, no server, nothing leaves your machine."/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,7 +116,7 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
   <p class="eyebrow">Open source · Single file · Runs in your browser</p>
   <h1>A Python notebook that lives in <em>one HTML file</em>.</h1>
   <p class="lead">KERNEL is a complete notebook — cells, real Python, plots, DataFrames, a variable inspector, data mounting, <code>.ipynb</code> round-trip — built on <em>Pyodide</em> and packed into a single self-contained <code>.html</code>. No install, no build step, no server.</p>
-  <p class="lead">Open the file and you have a kernel. <em>Nothing leaves your machine</em> — the Python runs in your tab, your data stays in the page.</p>
+  <p class="lead">Open the file and you have a kernel. <em>The core notebook stays local</em> — Python runs in your tab. When you use the Agent, its active context goes directly to the model provider you select.</p>
   <div class="actions">
     <a class="primary" href="kernel.html">Launch KERNEL →</a>
     <a class="primary" href="kernel-agent.html">Launch the Agent →</a>
@@ -135,10 +135,10 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
       <p class="keynote">No account, no key, nothing to configure.</p>
     </div>
     <div class="card">
-      <h3>KERNEL Agent <span class="chip live">Live</span></h3>
-      <p>A natural-language, human-in-the-loop analyst that builds the notebook for you — writing cells, running them, and <em>seeing</em> the results (text and figures) to iterate. Bring your own Anthropic API key; it's stored in your browser and sent only to Anthropic.</p>
+      <h3>KERNEL Agent v2 <span class="chip live">Live</span></h3>
+      <p>A natural-language, human-in-the-loop analyst that builds the notebook for you — writing cells, running them, and <em>seeing</em> the results to iterate. Bring an Anthropic, OpenAI, or xAI key; threads, files, outputs, and token context remain notebook-scoped and export as one portable workspace.</p>
       <a class="go primary" href="kernel-agent.html">Launch the Agent →</a>
-      <p class="keynote">Bring your own key · stored locally · <a href="https://github.com/dogum/kernel/blob/main/AGENT-SPEC.md">read the spec</a></p>
+      <p class="keynote">Bring your own key · Anthropic / OpenAI / xAI · <a href="https://github.com/dogum/kernel/blob/main/AGENT-V2-SPEC.md">read the spec</a></p>
     </div>
     <div class="card">
       <h3>KERNEL·M <span class="chip live">Live</span></h3>
@@ -159,7 +159,8 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
     <li><span class="k">Data workspace</span><span class="v">drop in CSV / JSON / files, preview them, insert a read snippet in a click.</span></li>
     <li><span class="k">Variable inspector</span><span class="v">live namespace with types, sizes, and click-to-expand detail (head, dtypes, stats).</span></li>
     <li><span class="k">Composable panels</span><span class="v">notebooks, data, variables and split outputs dock, resize, and collapse to a calm center.</span></li>
-    <li><span class="k">Portable</span><span class="v">round-trips to <code>.ipynb</code>, exports to <code>.py</code>, persists locally — one file you can host anywhere.</span></li>
+    <li><span class="k">Portable</span><span class="v">round-trips to <code>.ipynb</code> and <code>.py</code>; Agent workspaces bundle every thread, input, result, and output into one resumable <code>.kernel.zip</code>.</span></li>
+    <li><span class="k">Provider choice</span><span class="v">one notebook tool loop across Anthropic Messages and OpenAI/xAI Responses, with model discovery and explicit token/context accounting.</span></li>
   </ul>
 </div></section>
 

@@ -8,7 +8,7 @@ This repo bundles a few things that belong together:
 
 1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent** — a human-in-the-loop agent that builds notebooks from natural language (`docs/kernel-agent.html`; design in [`AGENT-SPEC.md`](AGENT-SPEC.md)).
+3. **KERNEL Agent v2** — a multi-provider, human-in-the-loop agent that builds notebooks from natural language (`docs/kernel-agent.html`; architecture in [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md)).
 4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
 
 ## What KERNEL is
@@ -47,7 +47,8 @@ The folder containing `SKILL.md` is what Claude Code loads.
 ```
 kernel.html ............... lives in docs/ (served live on GitHub Pages)
 kernel-notebooks.skill .... packaged skill, ready to upload to Claude.ai
-AGENT-SPEC.md ............. implementation spec for the agentic build
+AGENT-SPEC.md ............. original Anthropic-only agent specification
+AGENT-V2-SPEC.md .......... provider, thread, context and workspace architecture
 skill/
 ├── SKILL.md .............. runtime contract, the live-in-the-loop + multimodal sections,
 │                           narrative craft, output discipline
@@ -64,27 +65,34 @@ docs/
 ├── kernel-agent-mobile.html ... the mobile / PWA build of the agent
 ├── kernel-agent-sw.js ......... service worker (offline cache for the PWA)
 └── .nojekyll
+scripts/
+└── sync_agent_builds.mjs ..... syncs the shared desktop/mobile runtime
+tests/
+└── verify_agent_v2.mjs ....... syntax, parity, contract and ZIP checks
 ```
 
 `SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
 
-## The agentic version
+## KERNEL Agent v2
 
-KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures) and iterates — with you in the loop to steer. It's a client-only, bring-your-own-key design (the key lives in your browser and is sent only to Anthropic), and its system prompt is the `kernel-notebooks` skill in this repo.
+KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures), and iterates with you in the loop. It is a client-only, bring-your-own-key design with first-class adapters for Anthropic, OpenAI, and xAI/Grok. Keys remain in browser storage and requests go directly to the API base you select.
 
-It's here. Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). The full design (the agent loop, the tool contract that binds to KERNEL's real functions, how outputs including base64 figures are marshaled back so the model can see, context management, the UI, and the build phasing) is written up in [`AGENT-SPEC.md`](AGENT-SPEC.md).
+Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider contract, persistence model, compaction rules, migration behavior, and acceptance gates; [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
 
 What it does today, beyond the core loop:
 
-- **Streaming transcript** — narration arrives token-by-token, with every tool call logged as a compact action chip that click-scrolls to its cell.
-- **Conversations that persist and travel** — the full agent context survives reloads per notebook, and *saving the `.ipynb` embeds the conversation in the notebook's metadata*: open the file anywhere and pick the thread back up. The transcript also exports as standalone markdown.
+- **Provider parity** — Anthropic uses the native Messages API; OpenAI and xAI use the Responses API with the same KERNEL tool loop, multimodal results, stop behavior, and token accounting. Responses calls set `store: false`, and OpenAI reasoning continuation items are preserved locally.
+- **Live Markdown transcript** — narration streams token-by-token and renders headings, tables, code, math, and Mermaid when complete. Reasoning summaries use a separate progressive-disclosure panel; tool calls remain compact, click-to-cell action chips.
+- **Multiple threads per notebook** — create, rename, switch, or delete independent threads without mixing notebooks. Full messages and transcripts live in IndexedDB rather than a size-capped localStorage string.
+- **Conversations that persist and travel** — `.ipynb` remains a standard notebook and embeds the active thread for compatibility. One-click `.kernel.zip` export carries the notebook, rendered outputs, every thread, uploaded inputs, promoted results, and active selection; open the ZIP on another device to resume. API keys are deliberately excluded.
 - **Multimodal input** — paste or drag images into the chat (sketch a chart, screenshot a figure); the agent sees them.
-- **Token/cost meter** — live in/out token counts and an estimated cost per notebook; the context ceiling is read from Anthropic's Models API for whatever model id you're running, and long sessions self-compact to fit the window.
+- **Explicit context accounting** — input, output, cache, and reasoning token counters are exposed. Context limits come from provider model discovery when available, with editable conservative fallbacks. At the configured threshold, only the active API payload is checkpointed and compacted; the full local thread is never deleted.
 - **Forking** — hover any of your messages and press ⑂ to branch the conversation into a duplicated notebook; the original thread stays intact.
-- **Promote results** — a `save_data_file` tool publishes computed tables into the Data panel (and every data file has a *save* action to download it locally); `set_notebook_name` keeps notebooks titled.
-- **Autonomy modes** — AUTO runs free with a Stop button; STEP gates every execution behind Approve/Skip. A model chip switches Sonnet ↔ Opus mid-session, and every cell has an *ai* button that drops it into the agent's composer.
+- **Notebook-isolated workspaces** — stable cell IDs, outputs, user uploads, and agent results are restored only with their notebook. Switching notebooks snapshots state and resets the Python namespace so data cannot leak across workspaces.
+- **Faster output and variable surfaces** — inline/panel output changes move existing DOM nodes instead of rebuilding rich output; the variable panel adds deterministic name/type/memory sorting and explicit refresh.
+- **Autonomy modes** — AUTO runs free with a Stop button; STEP gates execution behind Approve/Skip. Every cell has an *ai* button that drops a stable cell reference into the composer.
 
-It's a client-only, bring-your-own-key design — the key lives in your browser and is sent only to Anthropic — and its system prompt is the `kernel-notebooks` skill in this repo.
+Provider model discovery is available from settings. Custom API base URLs are supported for compatible gateways; if a provider blocks direct browser CORS, use a gateway you control and trust.
 
 ## Mobile / PWA (KERNEL·M)
 
@@ -94,7 +102,7 @@ Open it from the [live page](https://dogum.github.io/kernel/) or [`docs/kernel-a
 
 ## Privacy
 
-The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page (aside from the one-time Pyodide and font downloads from CDN). The agent, when present, sends your prompts, notebook contents, and outputs only to the Anthropic API using a key you provide and that stays in your browser's local storage.
+The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page unless you use the agent. The agent sends the active prompt, notebook state, and relevant outputs directly to the provider/API base you select (Anthropic, OpenAI, xAI, or a compatible gateway) using a key stored in this browser. Responses requests explicitly disable provider-side response storage where the protocol supports it. Workspace ZIPs never include API keys.
 
 ## License
 
