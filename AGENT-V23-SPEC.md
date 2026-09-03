@@ -145,6 +145,11 @@ Cell and artifact context policy is `auto`, `pinned`, or `excluded` and is saved
 - Pinned sends bounded source/output or artifact preview plus freshness/provenance.
 - Excluded is omitted from the prompt and cannot be read through an agent read tool.
 
+Because Pyodide uses one live namespace and mounted filesystem, KERNEL blocks agent execution,
+namespace inspection, and filesystem-backed save tools while any code cell or artifact is
+excluded. This conservative barrier prevents an indirect tool bypass when runtime values
+cannot be attributed safely; human-run cells remain available.
+
 Pinned content is counted before ordinary history. It is never silently discarded by thread
 compaction. If pins alone exceed the active budget, sending stops with an actionable omission
 report. The context dialog lists pinned, excluded, pruned, checkpointed, and lazy-handled
@@ -186,10 +191,15 @@ metadata carries the latest environment summary.
 
 ## 8. Checkpoints and forks
 
-KERNEL creates a point-in-time checkpoint at run start and after mutating tool batches, and
+KERNEL creates a point-in-time checkpoint at run start and after committed mutating tool batches, and
 users may create a named checkpoint manually. A checkpoint captures cells, rendered outputs,
 files, active-thread messages/transcript/usage/plan, provider/model identity, and environment
 metadata. It never contains provider keys.
+
+A tool-batch checkpoint is created only after every corresponding `tool_result` has entered
+canonical history and been persisted. Manual checkpoints are unavailable while a paused tool
+batch is pending; ending that run first commits completed and skipped results so no checkpoint
+or continuing thread can contain unmatched tool calls.
 
 Forking from a human turn resolves to the checkpoint created immediately before that turn.
 The new notebook restores that point-in-time state and records its parent notebook/checkpoint.

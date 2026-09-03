@@ -126,6 +126,9 @@ const depsFactory = new Function(`
 `);
 const deps = depsFactory();
 assert.equal(deps.analyzeCellSource('exec("x=1")').uncertain, true, "dynamic execution is marked uncertain");
+assert.ok(deps.analyzeCellSource("df = df.dropna()").uses.includes("df"), "self-referential assignment keeps its upstream read");
+assert.ok(deps.analyzeCellSource("x += 1").uses.includes("x"), "augmented assignment keeps its upstream read");
+assert.ok(!deps.analyzeCellSource("x = 1").uses.includes("x"), "a plain assignment does not invent an upstream read");
 const graph = deps.setCells([
   { id: "c1", type: "code", source: "x = 1", outputs: [{}], el: null },
   { id: "c2", type: "code", source: "y = x + 1", outputs: [{}], el: null },
@@ -149,6 +152,9 @@ graph[0].source = "x = 99";
 deps.recomputeDependencies();
 assert.equal(graph[0].freshness, "stale", "editing executed source marks its output stale");
 assert.equal(graph[2].freshness, "stale", "staleness propagates transitively");
+const reassignmentGraph=deps.setCells([{id:"seed",type:"code",source:"df = raw",outputs:[],el:null},{id:"clean",type:"code",source:"df = df.dropna()",outputs:[],el:null}]);
+deps.recomputeDependencies();
+assert.deepEqual(reassignmentGraph[1].dependencies,["seed"],"a read-then-write cell depends on the preceding definition");
 const imported = deps.setCells([{ id: "old", type: "code", source: "1", outputs: [{}], provenance: null, el: null }]);
 deps.recomputeDependencies();
 assert.equal(imported[0].freshness, "historical", "outputs without lineage are historical, not falsely fresh");
@@ -192,6 +198,32 @@ const repaired = recovered.messages.at(-1).content;
 assert.equal(repaired[0].content[0].text, "done", "durably completed results are restored");
 assert.match(repaired[1].content[0].text, /not durably confirmed/, "ambiguous tools are not silently repeated");
 
+const checkpointBoundaryFactory=new Function(`
+  const MUTATING_TOOLS=new Set(["edit_cell"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
+  let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0;
+  let checkpoints=[],order=[];
+  const runBudgetReason=()=>"",redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
+  async function runEvent(){}
+  async function pauseRun(){}
+  async function askApproval(){return true}
+  async function execTool(){return [{type:"text",text:"ok"}]}
+  async function saveWorkspaceState(){order.push("workspace")}
+  async function saveActiveThreadNow(){order.push("thread")}
+  async function createCheckpoint(label,reason,run){order.push("checkpoint");checkpoints.push({label,pending:clonePlain(run.pendingTools),messages:clonePlain(agMsgs),mutations:clonePlain(run.pendingMutations)});return {id:"cp"}}
+  async function saveRun(){}
+  async function finalizeRun(){}
+  ${functionSource(desktop,"completePendingTools")}
+  return {run:async(resumed)=>{checkpoints=[];order=[];agStop=false;const tool={id:"call_1",name:"edit_cell",input:{cell_id:"c1"}};agMsgs=[{role:"assistant",content:[{type:"tool_use",...tool}]}];agRun={id:"run",pendingTools:[tool],pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{}};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs}}};
+`)();
+for(const resumed of [false,true]){
+  const committed=await checkpointBoundaryFactory.run(resumed),cp=committed.checkpoints[0];
+  assert.equal(cp.pending.length,0,"a checkpoint never captures an executable pending cursor");
+  assert.equal(cp.messages.at(-1).content[0].type,"tool_result","a mutation checkpoint includes its canonical tool result");
+  assert.ok(committed.order.indexOf("thread")<committed.order.indexOf("checkpoint"),"tool results persist before mutation checkpoint capture");
+}
+assert.ok(functionSource(desktop,"createCheckpoint").includes("run.pendingTools&&run.pendingTools.length"),"manual checkpoints refuse an unmatched pending tool batch");
+assert.ok(functionSource(desktop,"agentTurn").includes("Resume or end the current run"),"a new prompt cannot orphan an unfinished run boundary");
+
 const adapterFactory = new Function(`
   ${functionSource(desktop, "sseDataLines")}
   return {sseDataLines};
@@ -230,6 +262,23 @@ assert.ok(tracebackFormatter.includes('startswith("kernel://")') && tracebackFor
 assert.ok(desktop.includes('linecache.cache[str(filename)]') && desktop.includes('"kernel://"+nbId+"/"+cell.id'), "cell source and stable virtual filename are registered before execution");
 const tracebackRenderer = functionSource(desktop,"renderOutputs"),tracebackNavigator=functionSource(desktop,"focusCellLine");
 assert.ok(tracebackRenderer.includes('focusCellLine(fr.cellId,fr.line)') && tracebackNavigator.includes('setSelectionRange'), "traceback actions navigate to the exact cell and source line");
+
+const exclusionFactory=new Function(`
+  let cells=[],dataFiles=[],agContextPolicies={cells:{},artifacts:{}};
+  ${functionSource(desktop,"getCellContextPolicy")}
+  ${functionSource(desktop,"getArtifactContextPolicy")}
+  ${functionSource(desktop,"agentStateExclusionReason")}
+  return {reason:agentStateExclusionReason,set:(nextCells,nextFiles,policies)=>{cells=nextCells;dataFiles=nextFiles;agContextPolicies=policies}};
+`);
+const exclusions=exclusionFactory();
+exclusions.set([{id:"hidden",type:"code"}],[],{cells:{hidden:"excluded"},artifacts:{}});
+for(const tool of ["run_cell","run_all","inspect_namespace","inspect_variable"])assert.match(exclusions.reason(tool,{}),/BLOCKED: 1 excluded code cell/,`${tool} cannot bypass an excluded cell through shared runtime state`);
+assert.match(exclusions.reason("save_data_file",{}),/BLOCKED:/,"filesystem-backed save cannot copy hidden shared state");
+assert.equal(exclusions.reason("save_data_file",{content:"model-owned"}),"","model-owned save content does not read shared runtime state");
+exclusions.set([{id:"note",type:"markdown"}],[{id:"private"}],{cells:{note:"excluded"},artifacts:{private:"excluded"}});
+assert.match(exclusions.reason("inspect_namespace",{}),/excluded artifact/,"namespace inspection cannot bypass an excluded mounted artifact");
+const execToolSource=functionSource(desktop,"execTool");
+assert.ok(execToolSource.includes("agentStateExclusionReason(name,inp)") && execToolSource.includes("getCellContextPolicy(ce.id)==='excluded'") && execToolSource.includes("getArtifactContextPolicy(existing.id)==='excluded'"),"runtime and direct mutation tools enforce exclusion at execution time");
 
 const contextFactory = new Function(`
   const clonePlain=(value)=>JSON.parse(JSON.stringify(value)),AG_OLD_TEXT=18000,agTrunc=(value,n)=>String(value||"").slice(0,n);
