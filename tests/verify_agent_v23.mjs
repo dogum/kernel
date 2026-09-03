@@ -309,28 +309,34 @@ assert.equal(repaired[0].content[0].text, "done", "durably completed results are
 assert.match(repaired[1].content[0].text, /not durably confirmed/, "ambiguous tools are not silently repeated");
 
 const checkpointBoundaryFactory=new Function(`
-  const MUTATING_TOOLS=new Set(["edit_cell"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
-  let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0,rejectedFinish=false;
+  const MUTATING_TOOLS=new Set(["edit_cell","add_cells"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
+  let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0,rejectedFinish=false,noOpTool=false,stateVersion=0,progressCalls=0;
   let checkpoints=[],order=[],paused=null,executed=[];
-  const runBudgetReason=()=>"",enforceRunBudget=async()=>false,noteRunProgress=()=>{},redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
+  const runBudgetReason=()=>"",enforceRunBudget=async()=>false,durableStateSignature=()=>String(stateVersion),redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
+  function noteRunProgress(){progressCalls++}
   async function runEvent(){}
   async function pauseRun(reason,phase){paused={reason,phase};agRun.status="paused"}
   async function askApproval(){return true}
-  async function execTool(tool){executed.push(tool.name);if(rejectedFinish)agRun.completionPauseReason="invalid completion evidence";return [{type:"text",text:rejectedFinish?"Completion rejected":"ok"}]}
+  async function execTool(tool){executed.push(tool.name);if(rejectedFinish)agRun.completionPauseReason="invalid completion evidence";else if(!noOpTool&&tool.name==="edit_cell")stateVersion++;return [{type:"text",text:rejectedFinish?"Completion rejected":noOpTool?"No cells given.":"ok"}]}
   async function saveWorkspaceState(){order.push("workspace")}
   async function saveActiveThreadNow(){order.push("thread")}
   async function createCheckpoint(label,reason,run){order.push("checkpoint");checkpoints.push({label,pending:clonePlain(run.pendingTools),messages:clonePlain(agMsgs),mutations:clonePlain(run.pendingMutations)});return {id:"cp"}}
   async function saveRun(){}
   async function finalizeRun(){}
   ${functionSource(desktop,"completePendingTools")}
-  return {run:async(resumed,rejected=false)=>{checkpoints=[];order=[];paused=null;executed=[];agStop=false;rejectedFinish=rejected;const first={id:"call_1",name:rejected?"finish_run":"edit_cell",input:rejected?{}:{cell_id:"c1"}},tools=rejected?[first,{id:"call_2",name:"edit_cell",input:{cell_id:"must_not_run"}}]:[first];agMsgs=[{role:"assistant",content:tools.map(tool=>({type:"tool_use",...tool}))}];agRun={id:"run",pendingTools:tools,pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed&&!rejected?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{},completionPauseReason:""};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs,paused,executed}}};
+  return {run:async(resumed,rejected=false,noOp=false)=>{checkpoints=[];order=[];paused=null;executed=[];stateVersion=0;progressCalls=0;agStop=false;rejectedFinish=rejected;noOpTool=noOp;const first={id:"call_1",name:rejected?"finish_run":noOp?"add_cells":"edit_cell",input:rejected?{}:noOp?{cells:[]}:{cell_id:"c1"}},tools=rejected?[first,{id:"call_2",name:"edit_cell",input:{cell_id:"must_not_run"}}]:[first];agMsgs=[{role:"assistant",content:tools.map(tool=>({type:"tool_use",...tool}))}];agRun={id:"run",pendingTools:tools,pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed&&!rejected&&!noOp?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{},completionPauseReason:""};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs,paused,executed,progressCalls}}};
 `)();
 for(const resumed of [false,true]){
   const committed=await checkpointBoundaryFactory.run(resumed),cp=committed.checkpoints[0];
   assert.equal(cp.pending.length,0,"a checkpoint never captures an executable pending cursor");
   assert.equal(cp.messages.at(-1).content[0].type,"tool_result","a mutation checkpoint includes its canonical tool result");
   assert.ok(committed.order.indexOf("thread")<committed.order.indexOf("checkpoint"),"tool results persist before mutation checkpoint capture");
+  if(!resumed)assert.equal(committed.progressCalls,1,"an actual before/after state change records durable progress");
 }
+const noOpMutation=await checkpointBoundaryFactory.run(false,false,true);
+assert.equal(noOpMutation.ok,true,"a successful no-op tool result remains usable by the model");
+assert.equal(noOpMutation.progressCalls,0,"a nominally mutating no-op does not reset completion or budget guards");
+assert.equal(noOpMutation.checkpoints.length,0,"a nominally mutating no-op does not create a mutation checkpoint");
 const rejectedCompletionBatch=await checkpointBoundaryFactory.run(false,true);
 assert.equal(rejectedCompletionBatch.ok,false,"a third rejected finish_run stops the automatic model loop");
 assert.equal(rejectedCompletionBatch.paused.phase,"completion","the rejected finish_run pauses at the authoritative completion boundary");
@@ -352,6 +358,7 @@ assert.ok(responseStream.includes("finalResponse.status==='incomplete'"), "incom
 assert.ok(responseStream.includes("finalEvent==='response.completed'") && responseStream.includes("delete el.dataset.ephemeral"), "only authoritative Responses output becomes durable transcript content");
 assert.ok(anthropicStream.includes("ev.type==='message_stop'") && anthropicStream.includes("!messageComplete"), "Anthropic requires its authoritative message stop before committing output");
 assert.ok(toolLoop.includes("tool_'+outcome") && toolLoop.includes("outcome='failed'") && toolLoop.includes("inspect current notebook state before repeating"), "unexpected tool failures are committed as inspect-before-retry results");
+assert.ok(toolLoop.includes("beforeState!==durableStateSignature()") && toolLoop.includes("stateChanged:mutated"),"progress and mutation events use actual durable before/after state rather than the tool name");
 
 const securityFactory = new Function(`
   let agConfigs={openai:{key:"sk-proj-THIS_IS_A_FAKE_SECRET_123"}};

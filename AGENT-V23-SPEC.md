@@ -325,6 +325,11 @@ immediately before the synchronous terminal transition. The candidate checkpoint
 completion is rejected if any reference disappeared, became excluded, went stale, errored, or
 changed since acceptance.
 
+Progress accounting compares an application-owned durable-state fingerprint immediately before
+and after nominally mutating tools. A successful tool name alone is not progress: empty cell adds,
+ineffective runs, same-position moves, identical edits, and unchanged artifacts do not reset the
+completion guard, create mutation checkpoints, or qualify a run for automatic budget extension.
+
 The active system context contains an authoritative run-control block with remaining tool, active
 time, and token capacity plus the exact active boundary reason. Models are explicitly forbidden to
 invent a timeout, pause, stop, or budget condition. Those states are emitted only by KERNEL.
