@@ -2,9 +2,12 @@
 
 Status: implemented on `feat/kernel-agent-v2` (September 2026).
 
-This is the active design contract for `docs/kernel-agent.html` and
+This is the compatibility foundation retained by v2.3. The current durability, lineage,
+artifact, checkpoint, comparison, and handoff contract is [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md).
+
+This remains the provider/thread foundation for `docs/kernel-agent.html` and
 `docs/kernel-agent-mobile.html`. The original [`AGENT-SPEC.md`](AGENT-SPEC.md) still explains
-the notebook tool contract and human-in-the-loop philosophy; this document supersedes its
+the notebook tool contract and human-in-the-loop philosophy; this document superseded its
 Anthropic-only, single-thread, and localStorage persistence assumptions.
 
 ## 1. Product invariants
@@ -286,4 +289,3 @@ Checked September 3, 2026:
 - [xAI text generation / Responses compatibility](https://docs.x.ai/developers/model-capabilities/text/generate-text)
 - [xAI Models API](https://docs.x.ai/developers/rest-api-reference/inference/models)
 - [xAI tools overview](https://docs.x.ai/developers/tools/overview)
-

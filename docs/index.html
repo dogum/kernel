@@ -135,10 +135,10 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
       <p class="keynote">No account, no key, nothing to configure.</p>
     </div>
     <div class="card">
-      <h3>KERNEL Agent v2 <span class="chip live">Live</span></h3>
-      <p>A natural-language, human-in-the-loop analyst that builds the notebook for you — writing cells, running them, and <em>seeing</em> the results to iterate. Bring an Anthropic, OpenAI, or xAI key; threads, files, outputs, and token context remain notebook-scoped and export as one portable workspace.</p>
+      <h3>KERNEL Agent v2.3 <span class="chip live">Live</span></h3>
+      <p>A durable notebook agent that plans, writes and runs cells, <em>sees</em> results, tracks lineage, and recovers safely after interruption. Bring an Anthropic, OpenAI, or xAI key; threads, artifacts, runs, checkpoints, outputs, and environment travel as one portable workspace.</p>
       <a class="go primary" href="kernel-agent.html">Launch the Agent →</a>
-      <p class="keynote">Bring your own key · Anthropic / OpenAI / xAI · <a href="https://github.com/dogum/kernel/blob/main/AGENT-V2-SPEC.md">read the spec</a></p>
+      <p class="keynote">Bring your own key · Anthropic / OpenAI / xAI · <a href="https://github.com/dogum/kernel/blob/main/AGENT-V23-SPEC.md">read the spec</a></p>
     </div>
     <div class="card">
       <h3>KERNEL·M <span class="chip live">Live</span></h3>
@@ -156,11 +156,12 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
     <li><span class="k">Ordered output</span><span class="v">stdout, figures, rich displays and results stream back in true execution order.</span></li>
     <li><span class="k">Rich markdown</span><span class="v">GFM tables, fenced code, KaTeX math (<code>$…$</code>) and Mermaid diagrams.</span></li>
     <li><span class="k">Display helpers</span><span class="v"><code>display</code>, <code>display_html</code>, <code>display_plotly</code> for interactive output.</span></li>
-    <li><span class="k">Data workspace</span><span class="v">drop in CSV / JSON / files, preview them, insert a read snippet in a click.</span></li>
+    <li><span class="k">Artifact workspace</span><span class="v">upload files or folders, preview them, track inputs/working/final lifecycle and preserve provenance.</span></li>
     <li><span class="k">Variable inspector</span><span class="v">live namespace with types, sizes, and click-to-expand detail (head, dtypes, stats).</span></li>
     <li><span class="k">Composable panels</span><span class="v">notebooks, data, variables and split outputs dock, resize, and collapse to a calm center.</span></li>
-    <li><span class="k">Portable</span><span class="v">round-trips to <code>.ipynb</code> and <code>.py</code>; Agent workspaces bundle every thread, input, result, and output into one resumable <code>.kernel.zip</code>.</span></li>
+    <li><span class="k">Durable + portable</span><span class="v">pause and recover agent runs; bundle threads, artifacts, outputs, environment, usage and checkpoints into one resumable <code>.kernel.zip</code>.</span></li>
     <li><span class="k">Provider choice</span><span class="v">one notebook tool loop across Anthropic Messages and OpenAI/xAI Responses, with model discovery and explicit token/context accounting.</span></li>
+    <li><span class="k">Context control</span><span class="v">pin or exclude cells and artifacts, compact only the outbound request, and compare configured models in read-only mode.</span></li>
   </ul>
 </div></section>
 
