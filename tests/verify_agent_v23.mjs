@@ -48,7 +48,9 @@ for (const id of [
   "agRunBar", "agRuns", "agCheckpoint", "agPause", "agRecovery", "agResume", "agAbandon",
   "runScrim", "runPlan", "runTimeline", "runCheckpoints", "runNotebook", "compareProfiles",
   "comparePrompt", "compareResults", "ctxSelection", "dataFolderUpload", "fileFolder",
+  "agAutoExtensions", "runPrivateZip",
 ]) assert.ok(desktop.includes(`id="${id}"`) && mobile.includes(`id="${id}"`), `${id} exists in both builds`);
+assert.ok(desktop.includes('data-mi="runZip"') && mobile.includes('data-mi="runZip"'), "private run ZIP is available in both More menus");
 
 for (const [label, needle] of [
   ["v2.3 contract", "AGENT-V23-SPEC.md"],
@@ -69,6 +71,8 @@ for (const [label, needle] of [
   ["read-only comparison", "compareProfile"],
   ["share-safe archive", "kernel-share"],
   ["diagnostics allowlist", "kernel-diagnostics"],
+  ["completion contract", "finish_run"],
+  ["adaptive AUTO budgets", "budget_auto_extended"],
 ]) assert.ok(desktop.includes(needle), `includes ${label}`);
 
 const discoveryFactory=new Function(`
@@ -163,6 +167,7 @@ const runFactory = new Function(`
   let agUseIn=0,agUseOut=0,agRun=null;const saved=[];
   ${functionSource(desktop, "runElapsed")}
   ${functionSource(desktop, "runTokens")}
+  ${functionSource(desktop, "runBudgetReasons")}
   ${functionSource(desktop, "runBudgetReason")}
   async function saveRun(run){saved.push(JSON.parse(JSON.stringify(run)))}
   ${functionSource(desktop, "runEvent")}
@@ -178,6 +183,111 @@ const ev1 = await run.event(eventRun, "one", { seq: 99, type: "tamper" });
 const ev2 = await run.event(eventRun, "two", {});
 assert.deepEqual([ev1.seq, ev2.seq], [1, 2], "event sequence is monotonic and cannot be overridden");
 assert.deepEqual([ev1.type, ev2.type], ["one", "two"], "event type cannot be overridden");
+
+const adaptiveBudgetFactory = new Function(`
+  let agUseIn=0,agUseOut=0,agRun=null,agAutonomy="auto",agMaxSteps=10,agMaxMinutes=30,agTokenBudget=500000;const events=[];
+  const fmtTok=(n)=>String(n);
+  ${functionSource(desktop, "runElapsed")}
+  ${functionSource(desktop, "runTokens")}
+  ${functionSource(desktop, "runBudgetReasons")}
+  ${functionSource(desktop, "runBudgetReason")}
+  ${functionSource(desktop, "extendRunBudgets")}
+  async function runEvent(type,summary){events.push({type,summary})}
+  ${functionSource(desktop, "maybeAutoExtendBudgets")}
+  return {run:async(r,usage)=>{agRun=r;agUseIn=usage.input||0;agUseOut=usage.output||0;const reasons=runBudgetReasons(r),extended=await maybeAutoExtendBudgets(reasons);return {r,reasons,extended,events:[...events]}}};
+` )();
+const healthyExtension = await adaptiveBudgetFactory.run({autonomy:"auto",toolCalls:10,progressVersion:2,lastAutoExtensionProgress:1,autoExtensionsUsed:0,consecutiveToolFailures:0,usageStart:{input:0,output:0},budgets:{maxToolCalls:10,maxElapsedMs:600000,maxTotalTokens:500000,toolSegment:10,maxAutoExtensions:2}}, {input:10,output:1});
+assert.equal(healthyExtension.extended,true,"AUTO extends a reached tool checkpoint when notebook progress continued");
+assert.equal(healthyExtension.r.budgets.maxToolCalls,20,"AUTO extends only the reached tool checkpoint by its configured segment");
+assert.equal(healthyExtension.r.autoExtensionsUsed,1,"automatic extensions are durable and bounded");
+const hardToken = await adaptiveBudgetFactory.run({autonomy:"auto",toolCalls:0,progressVersion:2,lastAutoExtensionProgress:1,autoExtensionsUsed:0,usageStart:{input:0,output:0},budgets:{maxToolCalls:10,maxElapsedMs:600000,maxTotalTokens:100,maxAutoExtensions:3}}, {input:100,output:1});
+assert.equal(hardToken.extended,false,"the explicit token budget remains a hard human boundary");
+const stalledExtension = await adaptiveBudgetFactory.run({autonomy:"auto",toolCalls:10,progressVersion:1,lastAutoExtensionProgress:1,autoExtensionsUsed:0,usageStart:{input:0,output:0},budgets:{maxToolCalls:10,maxElapsedMs:600000,maxTotalTokens:500000,toolSegment:10,maxAutoExtensions:3}}, {input:1,output:1});
+assert.equal(stalledExtension.extended,false,"AUTO does not extend a tool loop with no new progress");
+
+const completionFactory = new Function(`
+  let agRun=null,agPlan=[],agMsgs=[],paused=null,saves=0,evidenceMode="valid";const events=[],notices=[];
+  ${functionSource(desktop, "runPlanSignature")}
+  ${functionSource(desktop, "completionEvidenceSignature")}
+  function validateCompletionEvidence(items){
+    if(evidenceMode==="missing")return {evidence:[],errors:["cell proof no longer exists"]};
+    const evidence=JSON.parse(JSON.stringify(items||[]));
+    if(evidenceMode==="changed"&&evidence[0])evidence[0].sourceHash="changed-after-acceptance";
+    return {evidence,errors:[]};
+  }
+  async function runEvent(type,summary){events.push({type,summary})}
+  async function pauseRun(reason,phase){paused={reason,phase};agRun.status="paused"}
+  function txDom(kind,text){notices.push({kind,text})}
+  async function saveActiveThreadNow(){saves++}
+  ${functionSource(desktop, "recordCompletionRejection")}
+  ${functionSource(desktop, "completionContractReason")}
+  ${functionSource(desktop, "enforceCompletionContract")}
+  return {check:async(r,plan)=>{agRun=r;agPlan=plan;agMsgs=[];paused=null;const result=await enforceCompletionContract();return {result,r,messages:agMsgs,paused,events:[...events],notices:[...notices],saves}},signature:(plan)=>{agPlan=plan;return runPlanSignature()},evidenceSignature:completionEvidenceSignature,setEvidenceMode:(mode)=>{evidenceMode=mode}};
+`)();
+assert.equal((await completionFactory.check({toolCalls:0},[])).result,"accepted","a simple no-tool answer remains lightweight");
+const pendingPlan=[{id:"build",title:"Build",status:"in_progress"},{id:"report",title:"Report",status:"pending"}];
+const guardedRun={toolCalls:4,completionGuardCount:0};
+const firstGuard=await completionFactory.check(guardedRun,pendingPlan);
+assert.equal(firstGuard.result,"continue","an unfinished planned run is continued rather than falsely completed");
+assert.match(firstGuard.messages[0].content[0].text,/Do not summarize or claim a pause\/limit/,"the continuation explicitly rejects invented limits");
+await completionFactory.check(guardedRun,pendingPlan);
+const thirdGuard=await completionFactory.check(guardedRun,pendingPlan);
+assert.equal(thirdGuard.result,"paused","repeated no-progress completion attempts pause safely instead of looping forever");
+assert.equal(thirdGuard.paused.phase,"completion","the pause exposes completion as the authoritative reason");
+const donePlan=[{id:"build",title:"Build",status:"completed"}];
+const doneSignature=completionFactory.signature(donePlan);
+const acceptedEvidence=[{kind:"cell",id:"proof",claim:"Verification passed",cellType:"code",executionCount:3,freshness:"fresh",sourceHash:"source-v1"}];
+const acceptedRun={toolCalls:4,completionAccepted:{planSignature:doneSignature,evidence:acceptedEvidence,evidenceSignature:completionFactory.evidenceSignature(acceptedEvidence)}};
+assert.equal((await completionFactory.check(structuredClone(acceptedRun),donePlan)).result,"accepted","finish evidence matching the completed plan unlocks successful completion");
+completionFactory.setEvidenceMode("missing");
+const missingEvidence=await completionFactory.check(structuredClone(acceptedRun),donePlan);
+assert.equal(missingEvidence.result,"continue","deleted accepted evidence blocks finalization");
+assert.match(missingEvidence.messages[0].content[0].text,/no longer valid/,"the continuation explains that accepted evidence disappeared");
+completionFactory.setEvidenceMode("changed");
+assert.equal((await completionFactory.check(structuredClone(acceptedRun),donePlan)).result,"continue","changed accepted evidence blocks finalization");
+completionFactory.setEvidenceMode("valid");
+assert.equal((await completionFactory.check({toolCalls:4},donePlan)).result,"continue","a completed plan still requires the explicit finish contract");
+const evidenceFactory = new Function(`
+  let cells=[],dataFiles=[],cellPolicies={},artifactPolicies={};
+  function findCell(id){return cells.find((c)=>c.id===id)}
+  function dataEntry(ref){return dataFiles.find((d)=>d.id===ref||d.path===ref||d.name===ref)}
+  function getCellContextPolicy(id){return cellPolicies[id]||"auto"}
+  function getArtifactContextPolicy(id){return artifactPolicies[id]||"auto"}
+  function cellFreshness(cell){return {state:cell.freshness||"never"}}
+  function sourceHash(source){return "hash:"+String(source||"")}
+  function artifactStage(artifact){return artifact.stage||"scratch"}
+  function artifactFingerprint(artifact){return "fingerprint:"+artifact.id}
+  ${functionSource(desktop,"validateCompletionEvidence")}
+  return {
+    validate:validateCompletionEvidence,
+    set:(nextCells,nextFiles,nextCellPolicies={},nextArtifactPolicies={})=>{cells=nextCells;dataFiles=nextFiles;cellPolicies=nextCellPolicies;artifactPolicies=nextArtifactPolicies},
+  };
+`)();
+const freshCell={id:"cell_fresh",type:"code",source:"print(1)",execCount:7,freshness:"fresh",outputs:[{kind:"stream",text:"1"}]};
+const finalArtifact={id:"artifact_final",path:"results/report.csv",name:"report.csv",stage:"final",size:42};
+evidenceFactory.set([freshCell],[finalArtifact]);
+const validEvidence=evidenceFactory.validate([{kind:"cell",id:"cell_fresh",claim:"The verification cell passed"},{kind:"artifact",id:"artifact_final",claim:"The final report exists"}]);
+assert.equal(validEvidence.errors.length,0,"fresh cells and present artifacts form valid completion evidence");
+assert.deepEqual(validEvidence.evidence.map((item)=>item.kind),["cell","artifact"],"validated evidence is normalized and application-owned");
+assert.match(evidenceFactory.validate([{kind:"artifact",id:"results/report.csv",claim:"Path alias"}]).errors[0],/stable ID/,"artifact evidence cannot substitute a mutable path for its stable ID");
+for(const cell of [
+  {...freshCell,id:"cell_never",execCount:null,freshness:"never"},
+  {...freshCell,id:"cell_stale",freshness:"stale"},
+  {...freshCell,id:"cell_error",outputs:[{kind:"error",ename:"AssertionError"}]},
+]){
+  evidenceFactory.set([cell],[finalArtifact]);
+  assert.equal(evidenceFactory.validate([{kind:"cell",id:cell.id,claim:"Unsupported claim"}]).evidence.length,0,`${cell.id} cannot prove completion`);
+}
+evidenceFactory.set([freshCell],[finalArtifact],{cell_fresh:"excluded"},{artifact_final:"excluded"});
+assert.equal(evidenceFactory.validate([{kind:"cell",id:"cell_fresh",claim:"Hidden"},{kind:"artifact",id:"artifact_final",claim:"Hidden"}]).evidence.length,0,"excluded state cannot be cited as completion evidence");
+assert.ok(desktop.includes("enum:['cell','artifact']"),"finish_run exposes structured stable-ID evidence to providers");
+assert.ok(functionSource(desktop,"execTool").includes("validateCompletionEvidence(inp.evidence)") && functionSource(desktop,"execTool").includes("recordCompletionRejection(reason)") && functionSource(desktop,"execTool").includes("completionAccepted") && functionSource(desktop,"execTool").includes("Completion rejected"),"finish_run is application-validated and rejected calls enter the bounded completion guard");
+assert.ok(functionSource(desktop,"completionContractReason").includes("completionEvidenceSignature(checked.evidence)"),"accepted evidence is revalidated immediately before finalization");
+const agentTurnSource=functionSource(desktop,"agentTurn"),completionCandidateAt=agentTurnSource.indexOf("createCheckpoint('Completion candidate'"),postCheckpointValidationAt=agentTurnSource.indexOf("completionContractReason()",completionCandidateAt),terminalCompletionAt=agentTurnSource.indexOf("finalizeRun('completed'",postCheckpointValidationAt);
+assert.ok(completionCandidateAt>=0&&completionCandidateAt<postCheckpointValidationAt&&postCheckpointValidationAt<terminalCompletionAt,"completion evidence is revalidated after checkpoint persistence and immediately before the terminal transition");
+assert.ok(agentTurnSource.includes("discardCompletionCheckpoint") && agentTurnSource.includes("Run completed after completion contract"),"a failed post-checkpoint validation discards its candidate and cannot bypass the completion contract");
+assert.ok(functionSource(desktop,"agRunControlContext").includes("Only KERNEL may report"),"the model receives authoritative run-state and anti-hallucination guidance");
+assert.ok(!functionSource(desktop,"checkedStream").includes("runElapsed"),"a soft active-time checkpoint cannot masquerade as a connection timeout");
 
 const recoveryFactory = new Function(`
   const clonePlain=(value)=>JSON.parse(JSON.stringify(value));let agMsgs=[],agRun=null,saves=0;
@@ -199,28 +309,40 @@ assert.equal(repaired[0].content[0].text, "done", "durably completed results are
 assert.match(repaired[1].content[0].text, /not durably confirmed/, "ambiguous tools are not silently repeated");
 
 const checkpointBoundaryFactory=new Function(`
-  const MUTATING_TOOLS=new Set(["edit_cell"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
-  let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0;
-  let checkpoints=[],order=[];
-  const runBudgetReason=()=>"",redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
+  const MUTATING_TOOLS=new Set(["edit_cell","add_cells"]),clonePlain=(value)=>JSON.parse(JSON.stringify(value));
+  let agRun=null,agMsgs=[],agStop=false,agPauseRequested=false,agAutonomy="auto",activeToolContext=null,agThreadId="thread",nbId="notebook",agSteps=0,rejectedFinish=false,noOpTool=false,stateVersion=0,progressCalls=0;
+  let checkpoints=[],order=[],paused=null,executed=[];
+  const runBudgetReason=()=>"",enforceRunBudget=async()=>false,durableStateSignature=()=>String(stateVersion),redactText=String,agStateUi=()=>{},txDom=()=>{},persist=()=>{};
+  function noteRunProgress(){progressCalls++}
   async function runEvent(){}
-  async function pauseRun(){}
+  async function pauseRun(reason,phase){paused={reason,phase};agRun.status="paused"}
   async function askApproval(){return true}
-  async function execTool(){return [{type:"text",text:"ok"}]}
+  async function execTool(tool){executed.push(tool.name);if(rejectedFinish)agRun.completionPauseReason="invalid completion evidence";else if(!noOpTool&&tool.name==="edit_cell")stateVersion++;return [{type:"text",text:rejectedFinish?"Completion rejected":noOpTool?"No cells given.":"ok"}]}
   async function saveWorkspaceState(){order.push("workspace")}
   async function saveActiveThreadNow(){order.push("thread")}
   async function createCheckpoint(label,reason,run){order.push("checkpoint");checkpoints.push({label,pending:clonePlain(run.pendingTools),messages:clonePlain(agMsgs),mutations:clonePlain(run.pendingMutations)});return {id:"cp"}}
   async function saveRun(){}
   async function finalizeRun(){}
   ${functionSource(desktop,"completePendingTools")}
-  return {run:async(resumed)=>{checkpoints=[];order=[];agStop=false;const tool={id:"call_1",name:"edit_cell",input:{cell_id:"c1"}};agMsgs=[{role:"assistant",content:[{type:"tool_use",...tool}]}];agRun={id:"run",pendingTools:[tool],pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{}};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs}}};
+  return {run:async(resumed,rejected=false,noOp=false)=>{checkpoints=[];order=[];paused=null;executed=[];stateVersion=0;progressCalls=0;agStop=false;rejectedFinish=rejected;noOpTool=noOp;const first={id:"call_1",name:rejected?"finish_run":noOp?"add_cells":"edit_cell",input:rejected?{}:noOp?{cells:[]}:{cell_id:"c1"}},tools=rejected?[first,{id:"call_2",name:"edit_cell",input:{cell_id:"must_not_run"}}]:[first];agMsgs=[{role:"assistant",content:tools.map(tool=>({type:"tool_use",...tool}))}];agRun={id:"run",pendingTools:tools,pendingToolResults:resumed?{call_1:[{type:"text",text:"ok"}]}:{},pendingMutations:resumed&&!rejected&&!noOp?["edit_cell"]:[],nextToolIndex:resumed?1:0,toolCalls:resumed?1:0,completedToolResults:{},completionPauseReason:""};const ok=await completePendingTools(nbId);return {ok,checkpoints,order,messages:agMsgs,paused,executed,progressCalls}}};
 `)();
 for(const resumed of [false,true]){
   const committed=await checkpointBoundaryFactory.run(resumed),cp=committed.checkpoints[0];
   assert.equal(cp.pending.length,0,"a checkpoint never captures an executable pending cursor");
   assert.equal(cp.messages.at(-1).content[0].type,"tool_result","a mutation checkpoint includes its canonical tool result");
   assert.ok(committed.order.indexOf("thread")<committed.order.indexOf("checkpoint"),"tool results persist before mutation checkpoint capture");
+  if(!resumed)assert.equal(committed.progressCalls,1,"an actual before/after state change records durable progress");
 }
+const noOpMutation=await checkpointBoundaryFactory.run(false,false,true);
+assert.equal(noOpMutation.ok,true,"a successful no-op tool result remains usable by the model");
+assert.equal(noOpMutation.progressCalls,0,"a nominally mutating no-op does not reset completion or budget guards");
+assert.equal(noOpMutation.checkpoints.length,0,"a nominally mutating no-op does not create a mutation checkpoint");
+const rejectedCompletionBatch=await checkpointBoundaryFactory.run(false,true);
+assert.equal(rejectedCompletionBatch.ok,false,"a third rejected finish_run stops the automatic model loop");
+assert.equal(rejectedCompletionBatch.paused.phase,"completion","the rejected finish_run pauses at the authoritative completion boundary");
+assert.deepEqual(rejectedCompletionBatch.executed,["finish_run"],"tools after a terminal finish_run rejection are never executed");
+assert.equal(rejectedCompletionBatch.messages.at(-1).content.length,2,"the rejected call and every skipped remainder receive canonical tool results");
+assert.match(rejectedCompletionBatch.messages.at(-1).content[1].content[0].text,/Not executed because KERNEL reached the terminal completion-retry guard/,"the skipped remainder explains the terminal batch boundary");
 assert.ok(functionSource(desktop,"createCheckpoint").includes("run.pendingTools&&run.pendingTools.length"),"manual checkpoints refuse an unmatched pending tool batch");
 assert.ok(functionSource(desktop,"agentTurn").includes("Resume or end the current run"),"a new prompt cannot orphan an unfinished run boundary");
 
@@ -236,6 +358,7 @@ assert.ok(responseStream.includes("finalResponse.status==='incomplete'"), "incom
 assert.ok(responseStream.includes("finalEvent==='response.completed'") && responseStream.includes("delete el.dataset.ephemeral"), "only authoritative Responses output becomes durable transcript content");
 assert.ok(anthropicStream.includes("ev.type==='message_stop'") && anthropicStream.includes("!messageComplete"), "Anthropic requires its authoritative message stop before committing output");
 assert.ok(toolLoop.includes("tool_'+outcome") && toolLoop.includes("outcome='failed'") && toolLoop.includes("inspect current notebook state before repeating"), "unexpected tool failures are committed as inspect-before-retry results");
+assert.ok(toolLoop.includes("beforeState!==durableStateSignature()") && toolLoop.includes("stateChanged:mutated"),"progress and mutation events use actual durable before/after state rather than the tool name");
 
 const securityFactory = new Function(`
   let agConfigs={openai:{key:"sk-proj-THIS_IS_A_FAKE_SECRET_123"}};
@@ -320,9 +443,12 @@ assert.equal(pinOverflow.unfit,true,"oversized pinned context refuses to send in
 assert.match(pinOverflow.reason,/lower max output|Exclude content/,"pin overflow returns an actionable remedy");
 
 const fullExport = functionSource(desktop, "downloadWorkspaceZip");
+const privateRunExport = functionSource(desktop, "downloadPrivateRunZip");
 const shareExport = functionSource(desktop, "downloadShareSafeZip");
 const diagnostics = functionSource(desktop, "diagnosticSnapshot");
 assert.ok(fullExport.includes('version:3') && fullExport.includes('runs/') && fullExport.includes('checkpoints/'), "full export contains the v3 durable state");
+assert.ok(fullExport.includes('includeCheckpoints?await kdbCheckpoints(nbId):[]') && fullExport.includes('export_profile:includeCheckpoints?"full":"private-run"'), "private run export omits checkpoint reads while preserving notebook, thread, run, and artifact state");
+assert.ok(privateRunExport.includes('includeCheckpoints:false'), "private run ZIP requests the checkpoint-free review profile");
 const workspaceImport = functionSource(desktop, "importWorkspaceZip");
 assert.ok(workspaceImport.includes("![2,3].includes"), "workspace import remains compatible with v2 and v3");
 assert.ok(workspaceImport.includes("checkpointMap.get(r.checkpointId)"), "import remaps run/checkpoint links instead of severing them");
@@ -336,8 +462,8 @@ const compare = functionSource(desktop, "compareProfile");
 assert.ok(compare.includes("read-only comparison mode") && !/\btools\s*:/.test(compare), "comparison profiles receive no mutation tools");
 
 const sw = fs.readFileSync("docs/kernel-agent-sw.js", "utf8");
-assert.ok(sw.includes("kernel-a-mobile-v23-1"), "service-worker cache is versioned for v2.3");
+assert.ok(sw.includes("kernel-a-mobile-v231-1"), "service-worker cache is versioned for v2.3.1");
 assert.ok(sw.includes("k.indexOf('kernel-a-mobile-')===0"), "activation deletes only KERNEL-owned caches");
 assert.ok(fs.readFileSync("AGENT-V23-SPEC.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
 
-console.log("KERNEL Agent v2.3 verification passed (durability, notebook lineage, portability, security, and desktop/mobile parity).");
+console.log("KERNEL Agent v2.3.1 verification passed (completion integrity, adaptive budgets, durability, lineage, portability, security, and desktop/mobile parity).");
