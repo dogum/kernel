@@ -1,0 +1,90 @@
+parameter,unit,low,base,high,rationale,status
+crew_size,people,4.0,4.0,4.0,Fixed settlement complement,known input
+strict_duration,days,180.0,180.0,180.0,Required no-resupply occupancy,known input
+reserve_days,days,20.0,30.0,45.0,Consumable reserve beyond strict case,engineering assumption
+food_rate,kg/person-day,1.7,1.9,2.2,Food plus edible packaging allowance,engineering assumption
+water_makeup_rate,kg/person-day,3.0,4.5,7.0,Net potable/hygiene makeup after recycling,engineering assumption
+oxygen_makeup_rate,kg/person-day,0.65,0.84,1.0,Metabolic oxygen and operational loss makeup,engineering assumption
+nitrogen_makeup_rate,kg/person-day,0.08,0.15,0.3,Cabin leakage and repressurization allowance,engineering assumption
+hygiene_medical_rate,kg/person-day,0.35,0.55,0.8,"Hygiene, medical, clothing, and waste consumables",engineering assumption
+consumables_fixed,t,2.0,3.0,5.0,"Contingency gases, filters, salts, and communal stores",engineering assumption
+surface_payload_cargo,t/Starship,80.0,100.0,125.0,Usable landed cargo after mission-specific accommodations,engineering assumption
+surface_payload_crew,t/Starship,10.0,15.0,20.0,Settlement cargo carried with crew and crew systems,engineering assumption
+tanker_net_propellant,t/tanker,100.0,125.0,150.0,Transferable propellant arriving at depot before campaign losses,engineering assumption
+propellant_per_lunar_ship,t,1050.0,1200.0,1400.0,Nominal on-orbit load allocated per lunar-bound Starship,engineering assumption
+transfer_loss,fraction,0.04,0.08,0.13,Aggregate docking and transfer loss,engineering assumption
+boiloff,fraction,0.02,0.04,0.08,Storage and campaign boiloff,engineering assumption
+propellant_reserve,fraction,0.08,0.12,0.18,Mission propellant reserve above nominal requirement,engineering assumption
+depot_capacity,t,1200.0,1600.0,2200.0,Working propellant capacity per launched depot,engineering assumption
+depot_reuse_cycles,lunar ships/depot,3.0,8.0,16.0,Sequential lunar campaigns supported by one depot,engineering assumption
+crew_starships,launches,1.0,1.0,1.0,One direct crew landing vehicle,architecture choice
+launch_success_probability,fraction,0.94,0.97,0.99,Optional expected-attempt calculation only,engineering assumption
+integration_margin,fraction,0.1,0.15,0.22,System-level growth after packaging,engineering assumption
+packaging_fraction,fraction,0.06,0.08,0.12,"Crates, restraints, landing deployment interfaces",engineering assumption
+general_spares_fraction,fraction,0.1,0.15,0.22,Cross-cutting replacement units and repair stock,engineering assumption
+design_contingency,fraction,0.05,0.08,0.12,Early-design mass growth before packaging and integration,engineering assumption
+pressurized_habitat_module_unit_mass,t/unit,23.8,28.0,33.6,Two independently isolatable volumes,engineering assumption
+pressurized_habitat_module_quantity,units,2.0,2.0,2.0,Two independently isolatable volumes,architecture choice
+radiation_storm_shelter_kit_unit_mass,t/unit,17.0,20.0,24.0,Water/polymer shielding; shelter remains usable after module isolation,engineering assumption
+radiation_storm_shelter_kit_quantity,units,1.0,1.0,1.0,Water/polymer shielding; shelter remains usable after module isolation,architecture choice
+airlock_and_dust_control_module_unit_mass,t/unit,6.8,8.0,9.6,N+1 airlock path,engineering assumption
+airlock_and_dust_control_module_quantity,units,2.0,2.0,2.0,N+1 airlock path,architecture choice
+thermal_control_train_unit_mass,t/unit,3.825,4.5,5.4,2 required + 1 spare,engineering assumption
+thermal_control_train_quantity,units,3.0,3.0,3.0,2 required + 1 spare,architecture choice
+life_support_processing_train_unit_mass,t/unit,6.8,8.0,9.6,2 required + 1 spare,engineering assumption
+life_support_processing_train_quantity,units,3.0,3.0,3.0,2 required + 1 spare,architecture choice
+water_recovery_train_unit_mass,t/unit,4.25,5.0,6.0,2 required + 1 spare,engineering assumption
+water_recovery_train_quantity,units,3.0,3.0,3.0,2 required + 1 spare,architecture choice
+atmosphere_storage_control_skid_unit_mass,t/unit,3.4,4.0,4.8,N+1 control and isolation,engineering assumption
+atmosphere_storage_control_skid_quantity,units,2.0,2.0,2.0,N+1 control and isolation,architecture choice
+waste_stabilization_unit_unit_mass,t/unit,2.975,3.5,4.2,N+1 waste path,engineering assumption
+waste_stabilization_unit_quantity,units,2.0,2.0,2.0,N+1 waste path,architecture choice
+solar_generation_wing_unit_mass,t/unit,10.2,12.0,14.4,Multiple independently switched wings,engineering assumption
+solar_generation_wing_quantity,units,4.0,4.0,4.0,Multiple independently switched wings,architecture choice
+battery_storage_bank_unit_mass,t/unit,12.75,15.0,18.0,2 required + 1 spare bank,engineering assumption
+battery_storage_bank_quantity,units,3.0,3.0,3.0,2 required + 1 spare bank,architecture choice
+emergency_fission_power_unit_unit_mass,t/unit,17.0,20.0,24.0,N+1 emergency units; conceptual mass allowance,engineering assumption
+emergency_fission_power_unit_quantity,units,2.0,2.0,2.0,N+1 emergency units; conceptual mass allowance,architecture choice
+power_distribution_microgrid_skid_unit_mass,t/unit,6.8,8.0,9.6,N+1 distribution paths,engineering assumption
+power_distribution_microgrid_skid_quantity,units,2.0,2.0,2.0,N+1 distribution paths,architecture choice
+high_gain_earth_communications_terminal_unit_mass,t/unit,3.4,4.0,4.8,N+1 Earth links,engineering assumption
+high_gain_earth_communications_terminal_quantity,units,2.0,2.0,2.0,N+1 Earth links,architecture choice
+local_navigation_relay_beacon_set_unit_mass,t/unit,2.125,2.5,3.0,Redundant local positioning,engineering assumption
+local_navigation_relay_beacon_set_quantity,units,2.0,2.0,2.0,Redundant local positioning,architecture choice
+"compute,_control,_and_timing_rack_unit_mass",t/unit,1.275,1.5,1.8,2 active + 1 cold spare,engineering assumption
+"compute,_control,_and_timing_rack_quantity",units,3.0,3.0,3.0,2 active + 1 cold spare,architecture choice
+isru_volatile_processing_train_unit_mass,t/unit,15.3,18.0,21.6,One production train plus full spare,engineering assumption
+isru_volatile_processing_train_quantity,units,2.0,2.0,2.0,One production train plus full spare,architecture choice
+regolith_excavator_unit_mass,t/unit,9.35,11.0,13.2,N+1 feedstock handling,engineering assumption
+regolith_excavator_quantity,units,2.0,2.0,2.0,N+1 feedstock handling,architecture choice
+isru_product_storage_skid_unit_mass,t/unit,4.25,5.0,6.0,Isolatable duplicate storage,engineering assumption
+isru_product_storage_skid_quantity,units,2.0,2.0,2.0,Isolatable duplicate storage,architecture choice
+pressurized_surface_rover_unit_mass,t/unit,10.2,12.0,14.4,Rescue capability if one rover fails,engineering assumption
+pressurized_surface_rover_quantity,units,2.0,2.0,2.0,Rescue capability if one rover fails,architecture choice
+unpressurized_utility_rover_unit_mass,t/unit,4.25,5.0,6.0,N+1 local hauling,engineering assumption
+unpressurized_utility_rover_quantity,units,2.0,2.0,2.0,N+1 local hauling,architecture choice
+cargo_handler_teleloader_unit_mass,t/unit,7.65,9.0,10.8,N+1 unloading and construction,engineering assumption
+cargo_handler_teleloader_quantity,units,2.0,2.0,2.0,N+1 unloading and construction,architecture choice
+deployable_crane_unit_mass,t/unit,5.95,7.0,8.4,N+1 lift capability,engineering assumption
+deployable_crane_quantity,units,2.0,2.0,2.0,N+1 lift capability,architecture choice
+berm_shielding_construction_dozer_unit_mass,t/unit,8.5,10.0,12.0,N+1 shielding construction,engineering assumption
+berm_shielding_construction_dozer_quantity,units,2.0,2.0,2.0,N+1 shielding construction,architecture choice
+eva_suit_package_unit_mass,t/unit,0.297,0.35,0.42,4 operational + 2 spares,engineering assumption
+eva_suit_package_quantity,units,6.0,6.0,6.0,4 operational + 2 spares,architecture choice
+suit_maintenance_charging_bench_unit_mass,t/unit,1.275,1.5,1.8,N+1 service benches,engineering assumption
+suit_maintenance_charging_bench_quantity,units,2.0,2.0,2.0,N+1 service benches,architecture choice
+workshop_and_additive_repair_cell_unit_mass,t/unit,4.25,5.0,6.0,N+1 repair paths,engineering assumption
+workshop_and_additive_repair_cell_quantity,units,2.0,2.0,2.0,N+1 repair paths,architecture choice
+science_medical_laboratory_module_unit_mass,t/unit,8.5,10.0,12.0,Includes isolation berth and diagnostics,engineering assumption
+science_medical_laboratory_module_quantity,units,1.0,1.0,1.0,Includes isolation berth and diagnostics,architecture choice
+medical_equipment_cache_unit_mass,t/unit,1.275,1.5,1.8,Split caches prevent single loss,engineering assumption
+medical_equipment_cache_quantity,units,2.0,2.0,2.0,Split caches prevent single loss,architecture choice
+fire_suppression_rescue_cache_unit_mass,t/unit,2.125,2.5,3.0,Split emergency caches,engineering assumption
+fire_suppression_rescue_cache_quantity,units,2.0,2.0,2.0,Split emergency caches,architecture choice
+landing_zone_and_cable_kit_unit_mass,t/unit,4.25,5.0,6.0,Two separated utility corridors,engineering assumption
+landing_zone_and_cable_kit_quantity,units,2.0,2.0,2.0,Two separated utility corridors,architecture choice
+partial_isru_commission_day,day,45.0,60.0,90.0,Credit starts only after demonstrated production,engineering assumption
+partial_isru_replacement,fraction,0.35,0.5,0.65,Water/oxygen makeup replaced after commissioning,engineering assumption
+mature_isru_commission_day,day,20.0,30.0,45.0,Optimistic established commissioning performance,engineering assumption
+mature_isru_replacement,fraction,0.7,0.8,0.9,Optimistic water/oxygen replacement,engineering assumption
+hardware_mass_factor,fraction,0.88,1.0,1.18,Correlated maturity/growth uncertainty across equipment,engineering assumption
