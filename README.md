@@ -10,6 +10,7 @@ This repo bundles a few things that belong together:
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
 3. **KERNEL Agent v2.3.1** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)).
 4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
+5. **Real agent runs** — four curated, reproducible examples spanning autonomous software construction, synthetic operations, uncertain systems modeling, and wide public-data analysis ([`examples/`](examples/)).
 
 ## What KERNEL is
 
@@ -70,7 +71,13 @@ scripts/
 └── sync_agent_builds.mjs ..... syncs the shared desktop/mobile runtime
 tests/
 ├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
-└── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
+├── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
+└── verify_examples.mjs ....... curated notebook shape, privacy and artifact checks
+examples/
+├── ares-station/ ............. 180-sol colony operations intelligence system
+├── regex-engine/ ............. from-scratch engine with differential testing
+├── lunar-settlement/ ......... mass, transport and Monte Carlo launch model
+└── fleet-dna/ ................ real public-data duty-cycle analysis
 ```
 
 `SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
@@ -109,7 +116,14 @@ Release checks:
 node scripts/sync_agent_builds.mjs --check
 node tests/verify_agent_v2.mjs
 node tests/verify_agent_v23.mjs
+node tests/verify_examples.mjs
 ```
+
+## Real-world examples
+
+[`examples/`](examples/) contains four captured KERNEL Agent 2.3.0 runs with their exact prompts, curated `.ipynb` results, representative figures, original final artifacts where recovered, provider-reported usage, and candid limitations. They include a 53-cell Mars-operations simulation, a self-repairing regex-engine build, a Monte Carlo lunar-settlement launch model, and a 61-cell Fleet DNA analysis over a 4,705 × 372 public dataset.
+
+The published notebooks retain visible cells and outputs while removing private chat/provider metadata, internal run identifiers, browser fingerprints, and checkpoint duplication. Full workspace ZIPs remain recovery artifacts rather than repository examples.
 
 ## Mobile / PWA (KERNEL·M)
 

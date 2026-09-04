@@ -1,0 +1,97 @@
+flight,flight_type,item,category,mass_t,divisible,unit_id,flight_total_mass_t,flight_capacity_t,flight_remaining_capacity_t
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 1/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 2/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 3/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 4/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 5/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,EVA suit package,EVA/tools,0.35,False,EVA suit package 6/6,12.6,15.0,2.4000000000000004
+Crew-1,crew,"Compute, control, and timing rack",Comms/navigation,1.5,False,"Compute, control, and timing rack 1/3",12.6,15.0,2.4000000000000004
+Crew-1,crew,"Compute, control, and timing rack",Comms/navigation,1.5,False,"Compute, control, and timing rack 2/3",12.6,15.0,2.4000000000000004
+Crew-1,crew,"Compute, control, and timing rack",Comms/navigation,1.5,False,"Compute, control, and timing rack 3/3",12.6,15.0,2.4000000000000004
+Crew-1,crew,Suit maintenance/charging bench,EVA/tools,1.5,False,Suit maintenance/charging bench 1/2,12.6,15.0,2.4000000000000004
+Crew-1,crew,Suit maintenance/charging bench,EVA/tools,1.5,False,Suit maintenance/charging bench 2/2,12.6,15.0,2.4000000000000004
+Crew-1,crew,Medical equipment cache,Medical/science,1.5,False,Medical equipment cache 1/2,12.6,15.0,2.4000000000000004
+Crew-1,crew,Medical equipment cache,Medical/science,1.5,False,Medical equipment cache 2/2,12.6,15.0,2.4000000000000004
+Cargo-1,cargo,Pressurized habitat module,Habitation,28.0,False,Pressurized habitat module 1/2,100.0,100.0,0.0
+Cargo-1,cargo,Pressurized habitat module,Habitation,28.0,False,Pressurized habitat module 2/2,100.0,100.0,0.0
+Cargo-1,cargo,Radiation storm-shelter kit,Habitation,20.0,False,Radiation storm-shelter kit 1/1,100.0,100.0,0.0
+Cargo-1,cargo,Emergency fission power unit,Power,20.0,False,Emergency fission power unit 1/2,100.0,100.0,0.0
+Cargo-1,cargo,Atmosphere storage/control skid,Life support,4.0,False,Atmosphere storage/control skid 1/2,100.0,100.0,0.0
+Cargo-2,cargo,Emergency fission power unit,Power,20.0,False,Emergency fission power unit 2/2,100.0,100.0,0.0
+Cargo-2,cargo,ISRU volatile-processing train,ISRU,18.0,False,ISRU volatile-processing train 1/2,100.0,100.0,0.0
+Cargo-2,cargo,ISRU volatile-processing train,ISRU,18.0,False,ISRU volatile-processing train 2/2,100.0,100.0,0.0
+Cargo-2,cargo,Battery storage bank,Power,15.0,False,Battery storage bank 1/3,100.0,100.0,0.0
+Cargo-2,cargo,Battery storage bank,Power,15.0,False,Battery storage bank 2/3,100.0,100.0,0.0
+Cargo-2,cargo,Solar generation wing,Power,12.0,False,Solar generation wing 1/4,100.0,100.0,0.0
+Cargo-2,cargo,Design contingency,Contingency,2.0,True,Design contingency parcel 1/3 part 3,100.0,100.0,0.0
+Cargo-3,cargo,Battery storage bank,Power,15.0,False,Battery storage bank 3/3,100.0,100.0,0.0
+Cargo-3,cargo,Solar generation wing,Power,12.0,False,Solar generation wing 2/4,100.0,100.0,0.0
+Cargo-3,cargo,Solar generation wing,Power,12.0,False,Solar generation wing 3/4,100.0,100.0,0.0
+Cargo-3,cargo,Solar generation wing,Power,12.0,False,Solar generation wing 4/4,100.0,100.0,0.0
+Cargo-3,cargo,Pressurized surface rover,Mobility/deployment,12.0,False,Pressurized surface rover 1/2,100.0,100.0,0.0
+Cargo-3,cargo,Pressurized surface rover,Mobility/deployment,12.0,False,Pressurized surface rover 2/2,100.0,100.0,0.0
+Cargo-3,cargo,Regolith excavator,ISRU,11.0,False,Regolith excavator 1/2,100.0,100.0,0.0
+Cargo-3,cargo,Regolith excavator,ISRU,11.0,False,Regolith excavator 2/2,100.0,100.0,0.0
+Cargo-3,cargo,Local navigation/relay beacon set,Comms/navigation,2.5,False,Local navigation/relay beacon set 1/2,100.0,100.0,0.0
+Cargo-3,cargo,Design contingency,Contingency,0.5,True,Design contingency parcel 1/3 part 1,100.0,100.0,0.0
+Cargo-4,cargo,Berm/shielding construction dozer,Mobility/deployment,10.0,False,Berm/shielding construction dozer 1/2,100.0,100.0,0.0
+Cargo-4,cargo,Berm/shielding construction dozer,Mobility/deployment,10.0,False,Berm/shielding construction dozer 2/2,100.0,100.0,0.0
+Cargo-4,cargo,Science/medical laboratory module,Medical/science,10.0,False,Science/medical laboratory module 1/1,100.0,100.0,0.0
+Cargo-4,cargo,Cargo handler/teleloader,Mobility/deployment,9.0,False,Cargo handler/teleloader 1/2,100.0,100.0,0.0
+Cargo-4,cargo,Cargo handler/teleloader,Mobility/deployment,9.0,False,Cargo handler/teleloader 2/2,100.0,100.0,0.0
+Cargo-4,cargo,Airlock and dust-control module,Habitation,8.0,False,Airlock and dust-control module 1/2,100.0,100.0,0.0
+Cargo-4,cargo,Airlock and dust-control module,Habitation,8.0,False,Airlock and dust-control module 2/2,100.0,100.0,0.0
+Cargo-4,cargo,Life-support processing train,Life support,8.0,False,Life-support processing train 1/3,100.0,100.0,0.0
+Cargo-4,cargo,Life-support processing train,Life support,8.0,False,Life-support processing train 2/3,100.0,100.0,0.0
+Cargo-4,cargo,Life-support processing train,Life support,8.0,False,Life-support processing train 3/3,100.0,100.0,0.0
+Cargo-4,cargo,Power distribution/microgrid skid,Power,8.0,False,Power distribution/microgrid skid 1/2,100.0,100.0,0.0
+Cargo-4,cargo,Atmosphere storage/control skid,Life support,4.0,False,Atmosphere storage/control skid 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Power distribution/microgrid skid,Power,8.0,False,Power distribution/microgrid skid 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Deployable crane,Mobility/deployment,7.0,False,Deployable crane 1/2,100.0,100.0,0.0
+Cargo-5,cargo,Deployable crane,Mobility/deployment,7.0,False,Deployable crane 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Water-recovery train,Life support,5.0,False,Water-recovery train 1/3,100.0,100.0,0.0
+Cargo-5,cargo,Water-recovery train,Life support,5.0,False,Water-recovery train 2/3,100.0,100.0,0.0
+Cargo-5,cargo,Water-recovery train,Life support,5.0,False,Water-recovery train 3/3,100.0,100.0,0.0
+Cargo-5,cargo,ISRU product storage skid,ISRU,5.0,False,ISRU product storage skid 1/2,100.0,100.0,0.0
+Cargo-5,cargo,ISRU product storage skid,ISRU,5.0,False,ISRU product storage skid 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Unpressurized utility rover,Mobility/deployment,5.0,False,Unpressurized utility rover 1/2,100.0,100.0,0.0
+Cargo-5,cargo,Unpressurized utility rover,Mobility/deployment,5.0,False,Unpressurized utility rover 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Workshop and additive repair cell,EVA/tools,5.0,False,Workshop and additive repair cell 1/2,100.0,100.0,0.0
+Cargo-5,cargo,Workshop and additive repair cell,EVA/tools,5.0,False,Workshop and additive repair cell 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Landing-zone and cable kit,Site infrastructure,5.0,False,Landing-zone and cable kit 1/2,100.0,100.0,0.0
+Cargo-5,cargo,Landing-zone and cable kit,Site infrastructure,5.0,False,Landing-zone and cable kit 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Thermal-control train,Habitation,4.5,False,Thermal-control train 1/3,100.0,100.0,0.0
+Cargo-5,cargo,Thermal-control train,Habitation,4.5,False,Thermal-control train 2/3,100.0,100.0,0.0
+Cargo-5,cargo,Thermal-control train,Habitation,4.5,False,Thermal-control train 3/3,100.0,100.0,0.0
+Cargo-5,cargo,High-gain Earth communications terminal,Comms/navigation,4.0,False,High-gain Earth communications terminal 1/2,100.0,100.0,0.0
+Cargo-5,cargo,High-gain Earth communications terminal,Comms/navigation,4.0,False,High-gain Earth communications terminal 2/2,100.0,100.0,0.0
+Cargo-5,cargo,Design contingency,Contingency,1.5,True,Design contingency parcel 1/3 part 2,100.0,100.0,0.0
+Cargo-6,cargo,Waste stabilization unit,Life support,3.5,False,Waste stabilization unit 1/2,100.0,100.0,0.0
+Cargo-6,cargo,Waste stabilization unit,Life support,3.5,False,Waste stabilization unit 2/2,100.0,100.0,0.0
+Cargo-6,cargo,Local navigation/relay beacon set,Comms/navigation,2.5,False,Local navigation/relay beacon set 2/2,100.0,100.0,0.0
+Cargo-6,cargo,Fire suppression/rescue cache,Safety,2.5,False,Fire suppression/rescue cache 1/2,100.0,100.0,0.0
+Cargo-6,cargo,Fire suppression/rescue cache,Safety,2.5,False,Fire suppression/rescue cache 2/2,100.0,100.0,0.0
+Cargo-6,cargo,Design contingency,Contingency,9.949333333333335,True,Design contingency parcel 1/3 part 4,100.0,100.0,0.0
+Cargo-6,cargo,Design contingency,Contingency,13.949333333333335,True,Design contingency parcel 2/3 part 1,100.0,100.0,0.0
+Cargo-6,cargo,Design contingency,Contingency,13.949333333333335,True,Design contingency parcel 3/3 part 1,100.0,100.0,0.0
+Cargo-6,cargo,Cross-cutting spares,Spares,19.61625,True,Cross-cutting spares parcel 1/4 part 1,100.0,100.0,0.0
+Cargo-6,cargo,Cross-cutting spares,Spares,19.61625,True,Cross-cutting spares parcel 2/4 part 1,100.0,100.0,0.0
+Cargo-6,cargo,Cross-cutting spares,Spares,8.4195,True,Cross-cutting spares parcel 3/4 part 1,100.0,100.0,0.0
+Cargo-7,cargo,Cross-cutting spares,Spares,11.196750000000002,True,Cross-cutting spares parcel 3/4 part 2,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Cross-cutting spares,Spares,19.61625,True,Cross-cutting spares parcel 4/4 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Food,Consumables,1.596,True,Food parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Water makeup,Consumables,3.78,True,Water makeup parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Oxygen makeup,Consumables,0.7056,True,Oxygen makeup parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Nitrogen makeup,Consumables,0.126,True,Nitrogen makeup parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Hygiene/medical/waste,Consumables,0.4620000000000001,True,Hygiene/medical/waste parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Fixed survival stores,Consumables,3.0,True,Fixed survival stores parcel 1/1 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Packaging/deployment interfaces,Packaging,17.415536,True,Packaging/deployment interfaces parcel 1/3 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Packaging/deployment interfaces,Packaging,17.415536,True,Packaging/deployment interfaces parcel 2/3 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,Packaging/deployment interfaces,Packaging,17.415536,True,Packaging/deployment interfaces parcel 3/3 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-7,cargo,System integration margin,Integration,7.270791999999986,True,System integration margin parcel 1/6 part 1,99.99999999999999,100.0,1.4210854715202004e-14
+Cargo-8,cargo,System integration margin,Integration,10.362438200000014,True,System integration margin parcel 1/6 part 2,98.52858920000001,100.0,1.4714107999999868
+Cargo-8,cargo,System integration margin,Integration,17.6332302,True,System integration margin parcel 2/6 part 1,98.52858920000001,100.0,1.4714107999999868
+Cargo-8,cargo,System integration margin,Integration,17.6332302,True,System integration margin parcel 3/6 part 1,98.52858920000001,100.0,1.4714107999999868
+Cargo-8,cargo,System integration margin,Integration,17.6332302,True,System integration margin parcel 4/6 part 1,98.52858920000001,100.0,1.4714107999999868
+Cargo-8,cargo,System integration margin,Integration,17.6332302,True,System integration margin parcel 5/6 part 1,98.52858920000001,100.0,1.4714107999999868
+Cargo-8,cargo,System integration margin,Integration,17.6332302,True,System integration margin parcel 6/6 part 1,98.52858920000001,100.0,1.4714107999999868
