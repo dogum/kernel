@@ -132,22 +132,37 @@ assert.ok(!allFiles.some((name) => name.endsWith(".pyc")), "compiled Python cach
 assert.ok(!allFiles.includes("fleet-dna/fleet_dna_vehicle_days.csv"), "Fleet DNA source CSV was committed");
 assert.ok(!allFiles.includes("fleet-dna/Fleet_DNA_Data_Dictionary.pdf"), "Fleet DNA source PDF was committed");
 
-const originalArtifactHashes = {
+const curatedArtifactHashes = {
   "regex-engine/artifacts/REPORT.md": "e3ae9d1889507a8f635dcfaae9c9b623473f73f86800aeb45e982597f07e8df5",
   "regex-engine/artifacts/myre.py": "cd28ec3bf978252786af8fef0497a5020b31b07991c8b7a24a27100fbaddb6dd",
   "lunar-settlement/artifacts/ASSUMPTIONS.csv": "db82f4e3be36e1d8228ca0580e37a159b094175ecb6a3130394acb41d3347ff0",
   "lunar-settlement/artifacts/LAUNCH_MANIFEST.csv": "465547dd7fb15876cb65e6d58c72c2fe19921e7beae6b4e00e04559d50756dd6",
   "lunar-settlement/artifacts/REPORT.md": "c6887a7b730a75b2ba6dfb545f085e4d98e2a3db352f2b24a8710a7efe645435",
-  "lunar-settlement/artifacts/lunar_settlement_model.py": "d804fec5caa259079f01694c5259de53e80a1ca881905bedcb17800583d38501",
+  "lunar-settlement/artifacts/lunar_settlement_model.py": "79d813eaba60e2e10a1eff01b2b134fc12c2e9f5474d1604c15d595d72232263",
   "lunar-settlement/artifacts/launch_stack.png": "589febf594b6fa2c1e5ba4d58b0ed087756257cc4a046752604d25838ffefee8",
   "lunar-settlement/artifacts/launch_uncertainty.png": "99ecbe7db6d5b94f81f048d598abb7b40174d9fd3d037c0d2e357e110edda0a7",
   "lunar-settlement/artifacts/mass_budget.png": "3299905783d4b33710978415b1aeb6e6662f4248d283c18e7ffa12d03e6d4392",
   "lunar-settlement/artifacts/sensitivity_tornado.png": "56f17ec875b0211f251e2d3840257fba908596b39fc279a6480b4135db03d066",
 };
 
-for (const [relative, expected] of Object.entries(originalArtifactHashes)) {
-  assert.equal(sha256(path.join(examplesRoot, relative)), expected, `${relative}: original artifact changed`);
+for (const [relative, expected] of Object.entries(curatedArtifactHashes)) {
+  assert.equal(sha256(path.join(examplesRoot, relative)), expected, `${relative}: curated artifact changed`);
 }
+
+const lunarModel = fs.readFileSync(
+  path.join(examplesRoot, "lunar-settlement/artifacts/lunar_settlement_model.py"),
+  "utf8",
+);
+assert.match(
+  lunarModel,
+  /Path\(__file__\)\.resolve\(\)\.with_name\("ASSUMPTIONS\.csv"\)/,
+  "lunar-settlement: default assumptions path is not relative to the model",
+);
+assert.match(
+  lunarModel,
+  /path = DEFAULT_ASSUMPTIONS if path is None else path/,
+  "lunar-settlement: explicit assumptions paths are not preserved",
+);
 
 const markdownFiles = [path.join(repo, "README.md"), ...walk(examplesRoot).filter((name) => name.endsWith(".md"))];
 for (const markdownPath of markdownFiles) {
