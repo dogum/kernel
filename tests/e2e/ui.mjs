@@ -133,6 +133,11 @@ const stillBusy = await kAsync(page, `const before = nbId + cells.map((c) => c.i
 assert.equal(stillBusy, true, 'a kernel that stays busy (restart, running cell) blocks the import');
 const pausedBlank = await kAsync(page, `await newNotebook(); const blankId = nbId, books = readLib().notebooks.length; agRun = { id: 'paused-run', status: 'paused' }; await openExample('lunar-settlement'); return { moved: nbId !== blankId, added: readLib().notebooks.length === books + 1, blankKept: readLib().notebooks.some((n) => n.id === blankId), opened: nbName === 'lunar-settlement' }`);
 assert.deepEqual(pausedBlank, { moved: true, added: true, blankKept: true, opened: true }, 'a blank notebook with an unfinished run is left alone; the example opens in a new notebook');
+await clearToasts();
+const locked = await kAsync(page, `notebookSwitching = true; try { await agentTurn('hello'); } finally { notebookSwitching = false; } return { running: agRunning, told: [...document.querySelectorAll('.toast')].some((t) => /notebook switch/.test(t.textContent)) }`);
+assert.deepEqual(locked, { running: false, told: true }, 'runs cannot start while notebooks switch');
+const raced = await kAsync(page, `const realSave = saveWorkspaceState; let first = true; saveWorkspaceState = async (...args) => { if (first) { first = false; agRunning = true; } return realSave(...args); }; try { await openExample('regex-engine'); } finally { saveWorkspaceState = realSave; agRunning = false; } return { imported: nbName === 'regex-engine', blank: isBlankNotebook() }`);
+assert.deepEqual(raced, { imported: false, blank: true }, 'a run that gets going during the switch stops the import');
 const fresh = await newContext(browser);
 const linked = await openApp(fresh, file + '?example=lunar-settlement');
 await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && cells.length > 3`));

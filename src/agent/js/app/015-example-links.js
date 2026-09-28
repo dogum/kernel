@@ -38,7 +38,8 @@ async function openExample(name) {
     for (let waited = 0; busy && waited < exampleWaitMs; waited += 250) await new Promise((r) => setTimeout(r, 250));
     // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
     const reuse = isBlankNotebook() && !hasUnfinishedRun();
-    if (agRunning || busy || (!reuse && !(await newNotebook()))) {
+    if (agRunning || busy || (!reuse && !(await newNotebook())) || agRunning || busy) {
+      // the last check covers a run or cell that got going during the switch's awaits
       closeToast();
       refuse();
       return;

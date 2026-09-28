@@ -172,12 +172,26 @@ function createNotebook(name) {
   return id;
 }
 
+/* A switch saves, resets Python and loads the next notebook's agent over several awaits; runs can't start meanwhile. */
+let notebookSwitching = false;
 // Resolves to false, and changes nothing, when a run or cell is active.
 async function newNotebook() {
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return false;
+  }
   if (agRunning || busy) {
     toast("Finish or stop the current run first.", "err");
     return false;
   }
+  notebookSwitching = true;
+  try {
+    return await createAndOpenNotebook();
+  } finally {
+    notebookSwitching = false;
+  }
+}
+async function createAndOpenNotebook() {
   persist();
   await saveActiveThreadNow();
   await saveWorkspaceState();
@@ -198,10 +212,22 @@ async function switchNotebook(id) {
     closeLibrary();
     return;
   }
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (agRunning || busy) {
     toast("Finish or stop the current run first.", "err");
     return;
   }
+  notebookSwitching = true;
+  try {
+    await openExistingNotebook(id);
+  } finally {
+    notebookSwitching = false;
+  }
+}
+async function openExistingNotebook(id) {
   persist();
   await saveActiveThreadNow();
   await saveWorkspaceState();

@@ -5806,12 +5806,26 @@ function createNotebook(name) {
   return id;
 }
 
+/* A switch saves, resets Python and loads the next notebook's agent over several awaits; runs can't start meanwhile. */
+let notebookSwitching = false;
 // Resolves to false, and changes nothing, when a run or cell is active.
 async function newNotebook() {
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return false;
+  }
   if (agRunning || busy) {
     toast("Finish or stop the current run first.", "err");
     return false;
   }
+  notebookSwitching = true;
+  try {
+    return await createAndOpenNotebook();
+  } finally {
+    notebookSwitching = false;
+  }
+}
+async function createAndOpenNotebook() {
   persist();
   await saveActiveThreadNow();
   await saveWorkspaceState();
@@ -5832,10 +5846,22 @@ async function switchNotebook(id) {
     closeLibrary();
     return;
   }
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (agRunning || busy) {
     toast("Finish or stop the current run first.", "err");
     return;
   }
+  notebookSwitching = true;
+  try {
+    await openExistingNotebook(id);
+  } finally {
+    notebookSwitching = false;
+  }
+}
+async function openExistingNotebook(id) {
   persist();
   await saveActiveThreadNow();
   await saveWorkspaceState();
@@ -11441,6 +11467,10 @@ async function completePendingTools(turnNb) {
 }
 async function resumeAgentRun() {
   if (agRunning || !agRun || RUN_TERMINAL.has(agRun.status)) return;
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (!agKey) {
     openAgSettings();
     return;
@@ -11462,6 +11492,10 @@ async function resumeAgentRun() {
 async function agentTurn(text, options) {
   options = options || {};
   if (agRunning) return;
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (!options.resume && agRun && !RUN_TERMINAL.has(agRun.status)) {
     toast("Resume or end the current run before starting a new request.", "err");
     return;
@@ -12563,7 +12597,8 @@ async function openExample(name) {
     for (let waited = 0; busy && waited < exampleWaitMs; waited += 250) await new Promise((r) => setTimeout(r, 250));
     // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
     const reuse = isBlankNotebook() && !hasUnfinishedRun();
-    if (agRunning || busy || (!reuse && !(await newNotebook()))) {
+    if (agRunning || busy || (!reuse && !(await newNotebook())) || agRunning || busy) {
+      // the last check covers a run or cell that got going during the switch's awaits
       closeToast();
       refuse();
       return;

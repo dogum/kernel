@@ -237,6 +237,10 @@ async function completePendingTools(turnNb) {
 }
 async function resumeAgentRun() {
   if (agRunning || !agRun || RUN_TERMINAL.has(agRun.status)) return;
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (!agKey) {
     openAgSettings();
     return;
@@ -258,6 +262,10 @@ async function resumeAgentRun() {
 async function agentTurn(text, options) {
   options = options || {};
   if (agRunning) return;
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (!options.resume && agRun && !RUN_TERMINAL.has(agRun.status)) {
     toast("Resume or end the current run before starting a new request.", "err");
     return;
