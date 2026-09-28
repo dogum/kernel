@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Runs the browser end-to-end suites against both builds. Requires the `playwright` package and a Chromium build:
-//   npm install --no-save playwright && npx playwright install chromium && node tests/e2e/run.mjs
+// Runs the browser end-to-end suites against both builds. Needs the dev dependencies and a Chromium build:
+//   npm ci && npx playwright install chromium && npm run test:e2e
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 const here = fileURLToPath(new URL(".", import.meta.url));

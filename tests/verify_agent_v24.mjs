@@ -1,40 +1,22 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { declarations, functionSource, has } from "./lib/source.mjs";
 
 const desktopPath = "docs/kernel-agent.html";
 const mobilePath = "docs/kernel-agent-mobile.html";
 const desktop = fs.readFileSync(desktopPath, "utf8");
 const mobile = fs.readFileSync(mobilePath, "utf8");
 
-function functionSource(text, name) {
-  let start = text.indexOf(`function ${name}(`);
-  assert.ok(start >= 0, `${name} exists`);
-  if (text.slice(Math.max(0, start - 6), start) === "async ") start -= 6;
-  const brace = text.indexOf("{", text.indexOf(")", start));
-  let depth = 0, quote = null, escaped = false;
-  for (let i = brace; i < text.length; i += 1) {
-    const char = text[i];
-    if (quote) {
-      if (escaped) escaped = false;
-      else if (char === "\\") escaped = true;
-      else if (char === quote) quote = null;
-      continue;
-    }
-    if (char === "'" || char === '"' || char === "`") { quote = char; continue; }
-    if (char === "{") depth += 1;
-    else if (char === "}" && --depth === 0) return text.slice(start, i + 1);
-  }
-  throw new Error(`Could not extract ${name}`);
-}
 const fns = (...names) => names.map((name) => functionSource(desktop, name)).join("\n");
-const docs = JSON.parse(desktop.match(/var DOCS=("(?:[^"\\]|\\.)*");/)[1]);
+const docs = new Function(`${declarations(desktop, "DOCS")};return DOCS`)();
 
 /* ---------- release identity and parity ---------- */
-assert.ok(desktop.includes("·A v2.4.0") && mobile.includes("·A v2.4.0"), "both builds identify as v2.4.0");
-assert.ok(desktop.includes("model:'claude-opus-5-5'") && desktop.includes("maxOut:64000"), "Anthropic defaults to Claude Opus 5.5 with room for thinking");
-for (const id of ["btnInterrupt", "agCellMinutes"]) assert.ok(desktop.includes(`id="${id}"`) && mobile.includes(`id="${id}"`), `${id} exists in both builds`);
-assert.ok(!/\bpyodide\.(?:FS|globals|runPythonAsync|loadPackage)/.test(desktop.slice(0, desktop.indexOf("function kernelWorkerMain(")) + desktop.slice(desktop.indexOf("const kw={"))), "only the kernel worker touches the Pyodide API");
+assert.ok(has(desktop, "·A v2.4.0") && has(mobile, "·A v2.4.0"), "both builds identify as v2.4.0");
+assert.ok(has(desktop, "model:'claude-opus-5-5'") && has(desktop, "maxOut:64000"), "Anthropic defaults to Claude Opus 5.5 with room for thinking");
+for (const id of ["btnInterrupt", "agCellMinutes"]) assert.ok(has(desktop, `id="${id}"`) && has(mobile, `id="${id}"`), `${id} exists in both builds`);
+const outsideWorker = desktop.replace(functionSource(desktop, "kernelWorkerMain"), "");
+for (const api of ["FS", "globals", "runPythonAsync", "loadPackage"]) assert.ok(!has(outsideWorker, `pyodide.${api}`), `only the kernel worker touches pyodide.${api}`);
 
 /* ---------- 7: the stable prompt teaches the completion contract ---------- */
 for (const needle of ["finish_run", "update_plan", "<kernel_state>", "run: true", "Only KERNEL reports pauses"]) assert.ok(docs.includes(needle), `operating note covers ${needle}`);
@@ -195,18 +177,19 @@ blobs.store.set("h-old", new Uint8Array([1])); blobs.setFiles([{ id: "f1", blob:
 assert.deepEqual([...await blobs.artifactBytes({ id: "f1", blob: "h-old" })], [1], "a checkpoint reference reads its own content, not the live file with the same id");
 assert.deepEqual([...await blobs.artifactBytes({ id: "f1", bytes: new Uint8Array([7]) })], [7], "legacy embedded bytes win over live data");
 assert.deepEqual([...await blobs.artifactBytes({ id: "zz", blob: "h-new" })], [9], "live bytes are reused when the content hash matches");
-const zip = new Function(`${desktop.slice(desktop.indexOf("const ZIP_UTF8="), desktop.indexOf("function downloadBlob"))};return {zipStore,zipStoreParts,zipReadStore}`)();
+const zip = new Function(`${declarations(desktop, ...["ZIP_UTF8", "crcTable", "crc32", "zipHeader", "z16", "z32", "joinBytes", "zipStore", "zipStoreParts", "zipReadStore"])};return {zipStore,zipStoreParts,zipReadStore}`)();
 const entries = [{ name: "a.txt", data: new TextEncoder().encode("hello") }, { name: "b.bin", data: new Uint8Array([0, 255]) }];
 const parts = zip.zipStoreParts(entries);
 assert.ok(Array.isArray(parts) && parts.length > 3, "exports stream ZIP parts instead of one joined buffer");
 assert.deepEqual(new Uint8Array(await new Blob(parts).arrayBuffer()), zip.zipStore(entries), "Blob parts and the joined archive are byte-identical");
 assert.deepEqual([...zip.zipReadStore(zip.zipStore(entries)).get("b.bin")], [0, 255]);
 const exportSource = functionSource(desktop, "downloadWorkspaceZip");
-assert.ok(exportSource.includes("written.has(hash)") && exportSource.includes("new Blob(zipStoreParts(entries)"), "full exports write each unique payload once from Blob parts");
-assert.ok(functionSource(desktop, "gcBlobs").includes("cutoff") && !functionSource(desktop, "kdbEach").includes("catch"), "garbage collection never sweeps from a partial scan or races recent writes");
+assert.ok(has(exportSource, "written.has(hash)") && has(exportSource, "new Blob(zipStoreParts(entries)"), "full exports write each unique payload once from Blob parts");
+assert.ok(has(functionSource(desktop, "gcBlobs"), "cutoff") && !has(functionSource(desktop, "kdbEach"), "catch"), "garbage collection never sweeps from a partial scan or races recent writes");
 
 /* ---------- 2: add-and-run tools ---------- */
-for (const tool of ["add_cells", "edit_cell"]) assert.ok(new RegExp(`name:'${tool}'[\\s\\S]{0,900}run:\\{type:'boolean'`).test(desktop), `${tool} accepts run:true`);
+const agTools = new Function(`${declarations(desktop, "AG_TOOLS")};return AG_TOOLS`)();
+for (const tool of ["add_cells", "edit_cell"]) assert.equal(agTools.find((t) => t.name === tool).input_schema.properties.run.type, "boolean", `${tool} accepts run:true`);
 const exclusion = new Function(`let cells=[{id:"h",type:"code"}],dataFiles=[],agContextPolicies={cells:{h:"excluded"},artifacts:{}};${fns("getCellContextPolicy", "getArtifactContextPolicy", "agentStateExclusionReason")};return agentStateExclusionReason`)();
 assert.match(exclusion("add_cells", { run: true, cells: [] }), /BLOCKED/, "add-and-run respects the shared-runtime exclusion barrier");
 assert.equal(exclusion("add_cells", { cells: [] }), "", "staging cells without running stays allowed");

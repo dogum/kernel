@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { declarations, functionSource, has, scripts } from "./lib/source.mjs";
 
 const files = ["docs/kernel-agent.html", "docs/kernel-agent-mobile.html"];
 const html = Object.fromEntries(files.map((file) => [file, fs.readFileSync(file, "utf8")]));
 
-function scripts(text) {
-  return [...text.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-    .map((match) => match[1])
-    .filter((body) => body.trim());
-}
 
 function sharedRuntime(text) {
   const start = text.indexOf("const HARNESS = `");
@@ -18,27 +14,6 @@ function sharedRuntime(text) {
   return text.slice(start, end);
 }
 
-function functionSource(text, name) {
-  const start = text.indexOf(`function ${name}(`);
-  assert.ok(start >= 0, `${name} exists`);
-  const brace = text.indexOf("{", start);
-  let depth = 0;
-  let quote = null;
-  let escaped = false;
-  for (let i = brace; i < text.length; i += 1) {
-    const char = text[i];
-    if (quote) {
-      if (escaped) escaped = false;
-      else if (char === "\\") escaped = true;
-      else if (char === quote) quote = null;
-      continue;
-    }
-    if (char === "'" || char === '"' || char === "`") { quote = char; continue; }
-    if (char === "{") depth += 1;
-    else if (char === "}" && --depth === 0) return text.slice(start, i + 1);
-  }
-  throw new Error(`Could not extract ${name}`);
-}
 
 for (const file of files) {
   for (const [index, body] of scripts(html[file]).entries()) {
@@ -66,23 +41,20 @@ for (const [label, needle] of [
   ["active-only compaction", "Earlier-thread checkpoint"],
   ["Markdown chat", "renderAgentMarkdown"],
   ["stable cell ids", "cell_id:c.id"],
-]) assert.ok(desktop.includes(needle), `includes ${label}`);
+]) assert.ok(has(desktop, needle), `includes ${label}`);
 
-assert.ok(!desktop.includes("slice(-300)"), "transcript is not silently capped");
-assert.ok(!desktop.includes("while(out.length>1500000"), "full messages are not silently dropped");
-assert.ok(desktop.includes('id="agThreadSelect"'), "thread selector is rendered");
-assert.ok(desktop.includes('id="ctxInput"') && desktop.includes('id="ctxOutput"'), "input/output usage is visible");
-assert.ok(mobile.includes('id="btnWorkspace"'), "mobile exposes workspace ZIP export");
-assert.ok(mobile.includes('id="varsSort"'), "mobile exposes variable sorting");
+assert.ok(!has(desktop, "slice(-300)"), "transcript is not silently capped");
+assert.ok(!has(desktop, "while(out.length>1500000"), "full messages are not silently dropped");
+assert.ok(has(desktop, 'id="agThreadSelect"'), "thread selector is rendered");
+assert.ok(has(desktop, 'id="ctxInput"') && has(desktop, 'id="ctxOutput"'), "input/output usage is visible");
+assert.ok(has(mobile, 'id="btnWorkspace"'), "mobile exposes workspace ZIP export");
+assert.ok(has(mobile, 'id="varsSort"'), "mobile exposes variable sorting");
 for (const exportName of ["agExportBundle", "downloadWorkspaceZip"]) {
   const body = functionSource(desktop, exportName);
-  assert.ok(!body.includes("agKey") && !body.includes("agConfigs"), `${exportName} cannot serialize provider keys`);
+  assert.ok(!has(body, "agKey") && !has(body, "agConfigs"), `${exportName} cannot serialize provider keys`);
 }
 
-const zipStart = desktop.indexOf("const ZIP_UTF8=");
-const zipEnd = desktop.indexOf("function downloadBlob", zipStart);
-assert.ok(zipStart >= 0 && zipEnd > zipStart, "ZIP implementation is present");
-const zipFactory = new Function(`${desktop.slice(zipStart, zipEnd)};return {zipStore,zipReadStore}`);
+const zipFactory = new Function(`${declarations(desktop, ...["ZIP_UTF8", "crcTable", "crc32", "zipHeader", "z16", "z32", "joinBytes", "zipStore", "zipStoreParts", "zipReadStore"])};return {zipStore,zipReadStore}`);
 const { zipStore, zipReadStore } = zipFactory();
 const input = [
   { name: "manifest.json", data: new TextEncoder().encode('{"ok":true}') },

@@ -4,12 +4,13 @@
 //   node scripts/build.mjs           write docs/kernel-agent.html and docs/kernel-agent-mobile.html
 //   node scripts/build.mjs --check   exit 1 if either page is out of date with src/ (CI runs this)
 //
-// Page templates are plain HTML with two directives:
+// Sources use three markers:
 //   <!-- @include path -->    on a line of its own: replaced by the file (or, with a *, every matching
 //                             file in name order). Paths are relative to src/. Included files may
 //                             include others.
 //   /*@embed path*/           inside a JavaScript template literal: replaced by the file's text, escaped
 //                             for the literal (this is how src/agent/python/harness.py reaches Python).
+//   %VERSION%                 anywhere: replaced by "version" from package.json.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,8 +53,11 @@ function expand(rel, stack = []) {
     .replace(EMBED, (_, spec) => templateLiteral(read(spec)));
 }
 
+// The release version lives in package.json; sources say %VERSION% where it belongs.
+export const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
+
 export function build(template) {
-  return expand(template);
+  return expand(template).replaceAll("%VERSION%", VERSION);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

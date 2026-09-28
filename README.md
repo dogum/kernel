@@ -134,13 +134,10 @@ Provider model discovery is available from settings. Custom API base URLs are su
 Release checks:
 
 ```bash
-node scripts/build.mjs --check
-node tests/verify_agent_v2.mjs
-node tests/verify_agent_v23.mjs
-node tests/verify_agent_v24.mjs
-node tests/verify_examples.mjs
-# browser end-to-end (needs Playwright + Chromium)
-npm install --no-save playwright && npx playwright install chromium && node tests/e2e/run.mjs
+npm ci                 # dev tools: prettier, acorn, playwright
+npm run check          # docs/ is built from the current src/, and src/ is formatted
+npm test               # static and fixture checks
+npx playwright install chromium && npm run test:e2e   # both builds in a real browser
 ```
 
 GitHub Actions runs the same checks on every push and pull request.

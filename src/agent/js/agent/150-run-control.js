@@ -1,26 +1,365 @@
 /* ── run control, checkpoints, and read-only model comparison ── */
-function openRunControl(tab){if(!$('#compareProfiles').value.trim())$('#compareProfiles').value=agProvider+':'+agModel;renderRunControl();$('#runScrim').classList.add('show');if(tab){const btn=$('[data-run-tab="'+tab+'"]');if(btn)btn.click()}}
-function closeRunControl(){$('#runScrim').classList.remove('show')}
-function comparisonProfiles(){const rows=$('#compareProfiles').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),out=[],seen=new Set();for(const row of rows){const at=row.indexOf(':');const provider=(at>0?row.slice(0,at):agProvider).trim().toLowerCase(),model=(at>0?row.slice(at+1):row).trim();if(!AG_PROVIDER_DEFS[provider]||!model)continue;const key=provider+':'+model;if(!seen.has(key)){seen.add(key);out.push({provider,model})}}return out.slice(0,6)}
-function profileEndpoint(provider,base,path){base=String(base||AG_PROVIDER_DEFS[provider].base).replace(/\/+$/,'');if(provider==='anthropic'&&!/\/v1$/i.test(base))base+='/v1';return base+path}
-function profileHeaders(provider,key){const h={'content-type':'application/json'};if(provider==='anthropic'){h['x-api-key']=key;h['anthropic-version']='2023-06-01';h['anthropic-dangerous-direct-browser-access']='true'}else h.authorization='Bearer '+key;return h}
-async function compareProfile(profile,prompt){
-  const c=agConfigs[profile.provider]||{},key=profile.provider===agProvider?agKey:(c.key||'');if(!key)throw new Error('No '+AG_PROVIDER_DEFS[profile.provider].label+' key is configured');const base=profile.provider===agProvider?agBase:(c.base||AG_PROVIDER_DEFS[profile.provider].base),ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),90000),started=performance.now();let body,url;
-  const context=agContextBlock(''),instructions='You are reviewing a live notebook in read-only comparison mode. Do not propose tool calls and do not claim you changed anything. Give a concise, evidence-grounded answer.'+(context?'\n\n'+context:'')+'\n\n<kernel_state>\n'+agStateParts().notebook+'\n</kernel_state>';
-  if(profile.provider==='anthropic'){url=profileEndpoint(profile.provider,base,'/messages');body={model:profile.model,max_tokens:16000,stream:false,system:instructions,messages:[{role:'user',content:prompt}]}}
-  else{url=profileEndpoint(profile.provider,base,'/responses');body={model:profile.model,instructions,input:prompt,store:false,max_output_tokens:16000}}
-  try{const res=await fetch(url,{method:'POST',headers:profileHeaders(profile.provider,key),body:JSON.stringify(body),signal:ctl.signal,cache:'no-store',referrerPolicy:'no-referrer'});let data=null,raw='';try{raw=await res.text();data=JSON.parse(raw)}catch(e){}if(!res.ok)throw new Error(AG_PROVIDER_DEFS[profile.provider].label+' API '+res.status+(raw?' — '+agTrunc(redactText(raw),300):''));if(!data)throw new Error('Provider returned invalid JSON');let text='',inputTokens=0,outputTokens=0;if(profile.provider==='anthropic'){if(data.stop_reason==='refusal')throw new Error('Declined by the model'+(data.stop_details&&data.stop_details.category?' ('+data.stop_details.category+')':''));text=(data.content||[]).filter(x=>x.type==='text').map(x=>x.text||'').join('\n');inputTokens=data.usage&&data.usage.input_tokens||0;outputTokens=data.usage&&data.usage.output_tokens||0}else{text=data.output_text||'';if(!text)for(const item of (data.output||[]))if(item.type==='message')text+=(item.content||[]).filter(x=>x.type==='output_text').map(x=>x.text||'').join('\n');inputTokens=data.usage&&data.usage.input_tokens||0;outputTokens=data.usage&&data.usage.output_tokens||0}return {provider:profile.provider,model:profile.model,text,latencyMs:performance.now()-started,inputTokens,outputTokens,at:Date.now()}}finally{clearTimeout(timer)}
+function openRunControl(tab) {
+  if (!$("#compareProfiles").value.trim()) $("#compareProfiles").value = agProvider + ":" + agModel;
+  renderRunControl();
+  $("#runScrim").classList.add("show");
+  if (tab) {
+    const btn = $('[data-run-tab="' + tab + '"]');
+    if (btn) btn.click();
+  }
 }
-async function runComparison(){if(agRunning||busy){toast('Finish the active run first.','err');return}const profiles=comparisonProfiles(),prompt=$('#comparePrompt').value.trim();if(!profiles.length||!prompt){toast('Add at least one provider:model profile and a prompt.','err');return}const btn=$('#compareRun');btn.disabled=true;btn.textContent='COMPARING…';agComparisons=[];renderComparisonResults();try{const settled=await Promise.all(profiles.map(async p=>{try{return await compareProfile(p,prompt)}catch(e){return {provider:p.provider,model:p.model,error:redactText(e&&e.message||e),at:Date.now()}}}));agComparisons=settled;await saveActiveThreadNow();renderComparisonResults();toast('Read-only comparison complete · '+settled.length+' profile'+(settled.length===1?'':'s'))}finally{btn.disabled=false;btn.textContent='Run comparison'}}
-async function applyCheckpointSnapshot(cp,targetId,name){
-  const payload={v:3,name,cells:clonePlain(cp.cells||[]),updated:Date.now()};localStorage.setItem(nbKey(targetId),JSON.stringify(payload));const ws=kdbClone(cp.workspace||{v:3,artifacts:[],outputs:[]});ws.v=3;ws.notebookId=targetId;ws.updated=Date.now();ws.artifacts=await externalizeArtifacts(ws.artifacts||ws.files||[]);delete ws.files;await kdbPut('workspaces',ws);
-  const th=cp.thread||{},tid=th.id||('t_'+uid()),meta={id:tid,name:th.name||'Checkpoint thread',created:cp.created||Date.now(),updated:Date.now()};let idx=readThreadIndex(targetId);const old=idx.threads.find(x=>x.id===tid);if(old)Object.assign(old,meta);else idx.threads.push(meta);idx.active=tid;idx.v=3;writeThreadIndex(idx,targetId);await kdbPut('threads',{key:threadKey(tid,targetId),notebookId:targetId,id:tid,name:meta.name,created:meta.created,updated:meta.updated,messages:clonePlain(th.messages||[]),transcript:clonePlain(th.transcript||[]),usage:clonePlain(th.usage||{}),provider:th.provider||agProvider,model:th.model||agModel,plan:clonePlain(th.plan||[]),comparisons:[],contextPolicies:clonePlain(th.contextPolicies||{cells:{},artifacts:{}})});
+function closeRunControl() {
+  $("#runScrim").classList.remove("show");
 }
-async function restoreCheckpoint(cpId,fork){
-  if(agRunning||busy){toast('Finish the active run first.','err');return}const cp=await kdbGet('checkpoints',cpId);if(!cp){toast('Checkpoint is no longer available.','err');return}if(!fork&&!confirm('Restore this checkpoint? Current notebook, outputs, artifacts, and active thread state will be replaced.'))return;await saveActiveThreadNow();await saveWorkspaceState();if(!fork&&agRun&&!RUN_TERMINAL.has(agRun.status)){await runEvent('checkpoint_restored',cp.label,{checkpointId:cp.id});agRun.status='abandoned';agRun.phase='terminal';agRun.activeElapsedMs=runElapsed(agRun);agRun.activeSince=null;agRun.finished=Date.now();agRun.usageEnd=agUsage();await runEvent('run_abandoned','Checkpoint restore ended the previous run')}
-  const name=fork?(nbName+' · fork '+new Date(cp.created).toLocaleDateString()):nbName,target=fork?createNotebook(name):nbId;if(fork){const lib=readLib(),entry=lib&&lib.notebooks.find(x=>x.id===target);if(entry){entry.parentNotebookId=cp.notebookId;entry.parentCheckpointId=cp.id;writeLib(lib)}}await applyCheckpointSnapshot(cp,target,name);if(fork){await switchNotebook(target);persist()}else{await isolateNotebookRuntime();applyNotebook(target);render();if(cells[0])selectCell(cells[0].id,'command');await restoreWorkspaceState(target);await activateNotebookAgent(target);refreshInspector();if(ui.left)renderLibrary()}closeRunControl();toast((fork?'Forked from':'Restored')+' checkpoint · '+cp.label);
+function comparisonProfiles() {
+  const rows = $("#compareProfiles")
+      .value.split(/\r?\n/)
+      .map((x) => x.trim())
+      .filter(Boolean),
+    out = [],
+    seen = new Set();
+  for (const row of rows) {
+    const at = row.indexOf(":");
+    const provider = (at > 0 ? row.slice(0, at) : agProvider).trim().toLowerCase(),
+      model = (at > 0 ? row.slice(at + 1) : row).trim();
+    if (!AG_PROVIDER_DEFS[provider] || !model) continue;
+    const key = provider + ":" + model;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({ provider, model });
+    }
+  }
+  return out.slice(0, 6);
 }
-$('#agRuns').addEventListener('click',()=>openRunControl());$('#agCheckpoint').addEventListener('click',async()=>{if(agRunning||busy){toast('Pause the active run before creating a manual checkpoint.','err');return}if(agRun&&agRun.pendingTools&&agRun.pendingTools.length){toast('Resume or end the pending tool batch before checkpointing.','err');return}const name=await appPrompt('Checkpoint label','Manual checkpoint','Save');if(name!=null){const cp=await createCheckpoint(name||'Manual checkpoint','manual',agRun);if(cp)toast('Checkpoint saved.')}});$('#agPause').addEventListener('click',async()=>{if(!agRunning)return;agPauseRequested=true;agAbortReason='pause';resolveApproval(false);if(agAbort)try{agAbort.abort()}catch(e){}if(agRun){agRun.status='pausing';await runEvent('pause_requested','Pause requested at the next safe boundary')}agStateUi()});$('#agResume').addEventListener('click',resumeAgentRun);$('#agAbandon').addEventListener('click',async()=>{if(!agRun)return;if(agRun.pendingTools&&agRun.pendingTools.length){agStop=true;await completePendingTools(nbId)}else await finalizeRun('abandoned','Ended by the human');agRun=null;renderRunControl();agStateUi();await saveActiveThreadNow()});
-$('#runX').addEventListener('click',closeRunControl);$('#runDone').addEventListener('click',closeRunControl);$('#runScrim').addEventListener('mousedown',e=>{if(e.target===$('#runScrim'))closeRunControl()});$('#runScrim').querySelector('.run-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-run-tab]');if(!b)return;$('#runScrim').querySelectorAll('[data-run-tab]').forEach(x=>x.classList.toggle('active',x===b));$('#runScrim').querySelectorAll('[data-run-pane]').forEach(x=>x.classList.toggle('active',x.dataset.runPane===b.dataset.runTab))});
-$('#runCheckpoints').addEventListener('click',e=>{const restore=e.target.closest('[data-run-restore]'),fork=e.target.closest('[data-run-fork]');if(restore)restoreCheckpoint(restore.dataset.runRestore,false);else if(fork)restoreCheckpoint(fork.dataset.runFork,true)});$('#runNotebook').addEventListener('click',e=>{const p=e.target.closest('[data-run-cell-context]'),f=e.target.closest('[data-run-focus]');if(p){cycleCellContext(p.dataset.runCellContext);renderRunControl()}else if(f){const c=findCell(f.dataset.runFocus);if(c){focusAgCell(c);closeRunControl()}}});$('#runNewCheckpoint').addEventListener('click',async()=>{if(agRunning||busy){toast('Pause the active run before creating a manual checkpoint.','err');return}if(agRun&&agRun.pendingTools&&agRun.pendingTools.length){toast('Resume or end the pending tool batch before checkpointing.','err');return}const name=await appPrompt('Checkpoint label','Manual checkpoint','Save');if(name!=null){const cp=await createCheckpoint(name||'Manual checkpoint','manual',agRun);if(cp)renderRunControl()}});$('#compareRun').addEventListener('click',runComparison);$('#runDiagnostics').addEventListener('click',exportDiagnostics);$('#runPrivateZip').addEventListener('click',downloadPrivateRunZip);$('#runShare').addEventListener('click',downloadShareSafeZip);
-
+function profileEndpoint(provider, base, path) {
+  base = String(base || AG_PROVIDER_DEFS[provider].base).replace(/\/+$/, "");
+  if (provider === "anthropic" && !/\/v1$/i.test(base)) base += "/v1";
+  return base + path;
+}
+function profileHeaders(provider, key) {
+  const h = { "content-type": "application/json" };
+  if (provider === "anthropic") {
+    h["x-api-key"] = key;
+    h["anthropic-version"] = "2023-06-01";
+    h["anthropic-dangerous-direct-browser-access"] = "true";
+  } else h.authorization = "Bearer " + key;
+  return h;
+}
+async function compareProfile(profile, prompt) {
+  const c = agConfigs[profile.provider] || {},
+    key = profile.provider === agProvider ? agKey : c.key || "";
+  if (!key) throw new Error("No " + AG_PROVIDER_DEFS[profile.provider].label + " key is configured");
+  const base = profile.provider === agProvider ? agBase : c.base || AG_PROVIDER_DEFS[profile.provider].base,
+    ctl = new AbortController(),
+    timer = setTimeout(() => ctl.abort(), 90000),
+    started = performance.now();
+  let body, url;
+  const context = agContextBlock(""),
+    instructions =
+      "You are reviewing a live notebook in read-only comparison mode. Do not propose tool calls and do not claim you changed anything. Give a concise, evidence-grounded answer." +
+      (context ? "\n\n" + context : "") +
+      "\n\n<kernel_state>\n" +
+      agStateParts().notebook +
+      "\n</kernel_state>";
+  if (profile.provider === "anthropic") {
+    url = profileEndpoint(profile.provider, base, "/messages");
+    body = {
+      model: profile.model,
+      max_tokens: 16000,
+      stream: false,
+      system: instructions,
+      messages: [{ role: "user", content: prompt }],
+    };
+  } else {
+    url = profileEndpoint(profile.provider, base, "/responses");
+    body = { model: profile.model, instructions, input: prompt, store: false, max_output_tokens: 16000 };
+  }
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: profileHeaders(profile.provider, key),
+      body: JSON.stringify(body),
+      signal: ctl.signal,
+      cache: "no-store",
+      referrerPolicy: "no-referrer",
+    });
+    let data = null,
+      raw = "";
+    try {
+      raw = await res.text();
+      data = JSON.parse(raw);
+    } catch (e) {}
+    if (!res.ok)
+      throw new Error(
+        AG_PROVIDER_DEFS[profile.provider].label +
+          " API " +
+          res.status +
+          (raw ? " — " + agTrunc(redactText(raw), 300) : ""),
+      );
+    if (!data) throw new Error("Provider returned invalid JSON");
+    let text = "",
+      inputTokens = 0,
+      outputTokens = 0;
+    if (profile.provider === "anthropic") {
+      if (data.stop_reason === "refusal")
+        throw new Error(
+          "Declined by the model" +
+            (data.stop_details && data.stop_details.category ? " (" + data.stop_details.category + ")" : ""),
+        );
+      text = (data.content || [])
+        .filter((x) => x.type === "text")
+        .map((x) => x.text || "")
+        .join("\n");
+      inputTokens = (data.usage && data.usage.input_tokens) || 0;
+      outputTokens = (data.usage && data.usage.output_tokens) || 0;
+    } else {
+      text = data.output_text || "";
+      if (!text)
+        for (const item of data.output || [])
+          if (item.type === "message")
+            text += (item.content || [])
+              .filter((x) => x.type === "output_text")
+              .map((x) => x.text || "")
+              .join("\n");
+      inputTokens = (data.usage && data.usage.input_tokens) || 0;
+      outputTokens = (data.usage && data.usage.output_tokens) || 0;
+    }
+    return {
+      provider: profile.provider,
+      model: profile.model,
+      text,
+      latencyMs: performance.now() - started,
+      inputTokens,
+      outputTokens,
+      at: Date.now(),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function runComparison() {
+  if (agRunning || busy) {
+    toast("Finish the active run first.", "err");
+    return;
+  }
+  const profiles = comparisonProfiles(),
+    prompt = $("#comparePrompt").value.trim();
+  if (!profiles.length || !prompt) {
+    toast("Add at least one provider:model profile and a prompt.", "err");
+    return;
+  }
+  const btn = $("#compareRun");
+  btn.disabled = true;
+  btn.textContent = "COMPARING…";
+  agComparisons = [];
+  renderComparisonResults();
+  try {
+    const settled = await Promise.all(
+      profiles.map(async (p) => {
+        try {
+          return await compareProfile(p, prompt);
+        } catch (e) {
+          return { provider: p.provider, model: p.model, error: redactText((e && e.message) || e), at: Date.now() };
+        }
+      }),
+    );
+    agComparisons = settled;
+    await saveActiveThreadNow();
+    renderComparisonResults();
+    toast("Read-only comparison complete · " + settled.length + " profile" + (settled.length === 1 ? "" : "s"));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run comparison";
+  }
+}
+async function applyCheckpointSnapshot(cp, targetId, name) {
+  const payload = { v: 3, name, cells: clonePlain(cp.cells || []), updated: Date.now() };
+  localStorage.setItem(nbKey(targetId), JSON.stringify(payload));
+  const ws = kdbClone(cp.workspace || { v: 3, artifacts: [], outputs: [] });
+  ws.v = 3;
+  ws.notebookId = targetId;
+  ws.updated = Date.now();
+  ws.artifacts = await externalizeArtifacts(ws.artifacts || ws.files || []);
+  delete ws.files;
+  await kdbPut("workspaces", ws);
+  const th = cp.thread || {},
+    tid = th.id || "t_" + uid(),
+    meta = { id: tid, name: th.name || "Checkpoint thread", created: cp.created || Date.now(), updated: Date.now() };
+  let idx = readThreadIndex(targetId);
+  const old = idx.threads.find((x) => x.id === tid);
+  if (old) Object.assign(old, meta);
+  else idx.threads.push(meta);
+  idx.active = tid;
+  idx.v = 3;
+  writeThreadIndex(idx, targetId);
+  await kdbPut("threads", {
+    key: threadKey(tid, targetId),
+    notebookId: targetId,
+    id: tid,
+    name: meta.name,
+    created: meta.created,
+    updated: meta.updated,
+    messages: clonePlain(th.messages || []),
+    transcript: clonePlain(th.transcript || []),
+    usage: clonePlain(th.usage || {}),
+    provider: th.provider || agProvider,
+    model: th.model || agModel,
+    plan: clonePlain(th.plan || []),
+    comparisons: [],
+    contextPolicies: clonePlain(th.contextPolicies || { cells: {}, artifacts: {} }),
+  });
+}
+async function restoreCheckpoint(cpId, fork) {
+  if (agRunning || busy) {
+    toast("Finish the active run first.", "err");
+    return;
+  }
+  const cp = await kdbGet("checkpoints", cpId);
+  if (!cp) {
+    toast("Checkpoint is no longer available.", "err");
+    return;
+  }
+  if (
+    !fork &&
+    !confirm("Restore this checkpoint? Current notebook, outputs, artifacts, and active thread state will be replaced.")
+  )
+    return;
+  await saveActiveThreadNow();
+  await saveWorkspaceState();
+  if (!fork && agRun && !RUN_TERMINAL.has(agRun.status)) {
+    await runEvent("checkpoint_restored", cp.label, { checkpointId: cp.id });
+    agRun.status = "abandoned";
+    agRun.phase = "terminal";
+    agRun.activeElapsedMs = runElapsed(agRun);
+    agRun.activeSince = null;
+    agRun.finished = Date.now();
+    agRun.usageEnd = agUsage();
+    await runEvent("run_abandoned", "Checkpoint restore ended the previous run");
+  }
+  const name = fork ? nbName + " · fork " + new Date(cp.created).toLocaleDateString() : nbName,
+    target = fork ? createNotebook(name) : nbId;
+  if (fork) {
+    const lib = readLib(),
+      entry = lib && lib.notebooks.find((x) => x.id === target);
+    if (entry) {
+      entry.parentNotebookId = cp.notebookId;
+      entry.parentCheckpointId = cp.id;
+      writeLib(lib);
+    }
+  }
+  await applyCheckpointSnapshot(cp, target, name);
+  if (fork) {
+    await switchNotebook(target);
+    persist();
+  } else {
+    await isolateNotebookRuntime();
+    applyNotebook(target);
+    render();
+    if (cells[0]) selectCell(cells[0].id, "command");
+    await restoreWorkspaceState(target);
+    await activateNotebookAgent(target);
+    refreshInspector();
+    if (ui.left) renderLibrary();
+  }
+  closeRunControl();
+  toast((fork ? "Forked from" : "Restored") + " checkpoint · " + cp.label);
+}
+$("#agRuns").addEventListener("click", () => openRunControl());
+$("#agCheckpoint").addEventListener("click", async () => {
+  if (agRunning || busy) {
+    toast("Pause the active run before creating a manual checkpoint.", "err");
+    return;
+  }
+  if (agRun && agRun.pendingTools && agRun.pendingTools.length) {
+    toast("Resume or end the pending tool batch before checkpointing.", "err");
+    return;
+  }
+  const name = await appPrompt("Checkpoint label", "Manual checkpoint", "Save");
+  if (name != null) {
+    const cp = await createCheckpoint(name || "Manual checkpoint", "manual", agRun);
+    if (cp) toast("Checkpoint saved.");
+  }
+});
+$("#agPause").addEventListener("click", async () => {
+  if (!agRunning) return;
+  agPauseRequested = true;
+  agAbortReason = "pause";
+  resolveApproval(false);
+  if (agAbort)
+    try {
+      agAbort.abort();
+    } catch (e) {}
+  if (agRun) {
+    agRun.status = "pausing";
+    await runEvent("pause_requested", "Pause requested at the next safe boundary");
+  }
+  agStateUi();
+});
+$("#agResume").addEventListener("click", resumeAgentRun);
+$("#agAbandon").addEventListener("click", async () => {
+  if (!agRun) return;
+  if (agRun.pendingTools && agRun.pendingTools.length) {
+    agStop = true;
+    await completePendingTools(nbId);
+  } else await finalizeRun("abandoned", "Ended by the human");
+  agRun = null;
+  renderRunControl();
+  agStateUi();
+  await saveActiveThreadNow();
+});
+$("#runX").addEventListener("click", closeRunControl);
+$("#runDone").addEventListener("click", closeRunControl);
+$("#runScrim").addEventListener("mousedown", (e) => {
+  if (e.target === $("#runScrim")) closeRunControl();
+});
+$("#runScrim")
+  .querySelector(".run-tabs")
+  .addEventListener("click", (e) => {
+    const b = e.target.closest("[data-run-tab]");
+    if (!b) return;
+    $("#runScrim")
+      .querySelectorAll("[data-run-tab]")
+      .forEach((x) => x.classList.toggle("active", x === b));
+    $("#runScrim")
+      .querySelectorAll("[data-run-pane]")
+      .forEach((x) => x.classList.toggle("active", x.dataset.runPane === b.dataset.runTab));
+  });
+$("#runCheckpoints").addEventListener("click", (e) => {
+  const restore = e.target.closest("[data-run-restore]"),
+    fork = e.target.closest("[data-run-fork]");
+  if (restore) restoreCheckpoint(restore.dataset.runRestore, false);
+  else if (fork) restoreCheckpoint(fork.dataset.runFork, true);
+});
+$("#runNotebook").addEventListener("click", (e) => {
+  const p = e.target.closest("[data-run-cell-context]"),
+    f = e.target.closest("[data-run-focus]");
+  if (p) {
+    cycleCellContext(p.dataset.runCellContext);
+    renderRunControl();
+  } else if (f) {
+    const c = findCell(f.dataset.runFocus);
+    if (c) {
+      focusAgCell(c);
+      closeRunControl();
+    }
+  }
+});
+$("#runNewCheckpoint").addEventListener("click", async () => {
+  if (agRunning || busy) {
+    toast("Pause the active run before creating a manual checkpoint.", "err");
+    return;
+  }
+  if (agRun && agRun.pendingTools && agRun.pendingTools.length) {
+    toast("Resume or end the pending tool batch before checkpointing.", "err");
+    return;
+  }
+  const name = await appPrompt("Checkpoint label", "Manual checkpoint", "Save");
+  if (name != null) {
+    const cp = await createCheckpoint(name || "Manual checkpoint", "manual", agRun);
+    if (cp) renderRunControl();
+  }
+});
+$("#compareRun").addEventListener("click", runComparison);
+$("#runDiagnostics").addEventListener("click", exportDiagnostics);
+$("#runPrivateZip").addEventListener("click", downloadPrivateRunZip);
+$("#runShare").addEventListener("click", downloadShareSafeZip);

@@ -19,7 +19,7 @@ export function staticServer(port = 8765, extraHeaders = {}) {
     if (p.endsWith('.html')) {
       // Test-only: expose the app closure through a direct-eval hook injected at the end of the main IIFE.
       let html = fs.readFileSync(p, 'utf8');
-      const at = html.indexOf('(function init(){');
+      const at = html.search(/\(function init\(\)\s*\{/);
       const end = at < 0 ? -1 : html.indexOf('\n})();\n</script>', html.indexOf('})();', at) + 5);
       if (end > 0) html = html.slice(0, end) + '\nwindow.__k=function(s){return eval(s)};' + html.slice(end);
       return res.end(html);

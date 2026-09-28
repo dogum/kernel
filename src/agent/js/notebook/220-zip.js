@@ -1,97 +1,723 @@
 /* ===== portable .kernel.zip (standard ZIP, stored entries, no dependency) ===== */
-const ZIP_UTF8=0x0800;
-let crcTable=null;
-function crc32(bytes){
-  if(!crcTable){crcTable=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);crcTable[n]=c>>>0}}
-  let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;
-}
-function zipHeader(size){return new Uint8Array(size)}
-function z16(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint16(o,n,true)}
-function z32(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint32(o,n>>>0,true)}
-function joinBytes(parts){let n=0;for(const p of parts)n+=p.byteLength;const out=new Uint8Array(n);let at=0;for(const p of parts){out.set(p,at);at+=p.byteLength}return out}
-function zipStore(entries){return joinBytes(zipStoreParts(entries))}
-/* Parts go straight into new Blob([...]) so an export never needs one contiguous buffer the size of the whole archive. */
-function zipStoreParts(entries){
-  const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;
-  for(const ent of entries){
-    const name=enc.encode(ent.name),data=ent.data instanceof Uint8Array?ent.data:new Uint8Array(ent.data),crc=crc32(data);
-    const lh=zipHeader(30);z32(lh,0,0x04034b50);z16(lh,4,20);z16(lh,6,ZIP_UTF8);z16(lh,8,0);z32(lh,14,crc);z32(lh,18,data.length);z32(lh,22,data.length);z16(lh,26,name.length);
-    locals.push(lh,name,data);
-    const ch=zipHeader(46);z32(ch,0,0x02014b50);z16(ch,4,20);z16(ch,6,20);z16(ch,8,ZIP_UTF8);z16(ch,10,0);z32(ch,16,crc);z32(ch,20,data.length);z32(ch,24,data.length);z16(ch,28,name.length);z32(ch,42,offset);
-    centrals.push(ch,name);offset+=lh.length+name.length+data.length;
+const ZIP_UTF8 = 0x0800;
+let crcTable = null;
+function crc32(bytes) {
+  if (!crcTable) {
+    crcTable = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      crcTable[n] = c >>> 0;
+    }
   }
-  const central=joinBytes(centrals),end=zipHeader(22);z32(end,0,0x06054b50);z16(end,8,entries.length);z16(end,10,entries.length);z32(end,12,central.length);z32(end,16,offset);
-  return [...locals,central,end];
+  let c = 0xffffffff;
+  for (const b of bytes) c = crcTable[(c ^ b) & 255] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
 }
-function zipReadStore(bytes){
-  bytes=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),dec=new TextDecoder();let end=-1;
-  for(let i=Math.max(0,bytes.length-65557);i<=bytes.length-22;i++)if(dv.getUint32(i,true)===0x06054b50)end=i;
-  if(end<0)throw new Error("Not a valid ZIP archive");
-  const count=dv.getUint16(end+10,true),out=new Map();if(count>5000)throw new Error("ZIP contains too many entries");let at=dv.getUint32(end+16,true);
-  for(let i=0;i<count;i++){
-    if(at<0||at+46>bytes.length||dv.getUint32(at,true)!==0x02014b50)throw new Error("Invalid ZIP directory");
-    const method=dv.getUint16(at+10,true),crc=dv.getUint32(at+16,true),packed=dv.getUint32(at+20,true),size=dv.getUint32(at+24,true),nl=dv.getUint16(at+28,true),xl=dv.getUint16(at+30,true),cl=dv.getUint16(at+32,true),lo=dv.getUint32(at+42,true);if(at+46+nl+xl+cl>bytes.length)throw new Error("Invalid ZIP directory bounds");const name=dec.decode(bytes.slice(at+46,at+46+nl));
-    if(method!==0||packed!==size)throw new Error("This importer accepts KERNEL archives (stored ZIP entries) only");
-    if(lo<0||lo+30>bytes.length||dv.getUint32(lo,true)!==0x04034b50)throw new Error("Invalid ZIP entry");
-    const lnl=dv.getUint16(lo+26,true),lxl=dv.getUint16(lo+28,true),start=lo+30+lnl+lxl;if(start<0||start+size>bytes.length)throw new Error("Invalid ZIP entry bounds for "+name);const data=bytes.slice(start,start+size);
-    if(out.has(name))throw new Error("ZIP contains duplicate entry "+name);if(crc32(data)!==crc)throw new Error("ZIP checksum failed for "+name);out.set(name,data);at+=46+nl+xl+cl;
+function zipHeader(size) {
+  return new Uint8Array(size);
+}
+function z16(v, o, n) {
+  new DataView(v.buffer, v.byteOffset, v.byteLength).setUint16(o, n, true);
+}
+function z32(v, o, n) {
+  new DataView(v.buffer, v.byteOffset, v.byteLength).setUint32(o, n >>> 0, true);
+}
+function joinBytes(parts) {
+  let n = 0;
+  for (const p of parts) n += p.byteLength;
+  const out = new Uint8Array(n);
+  let at = 0;
+  for (const p of parts) {
+    out.set(p, at);
+    at += p.byteLength;
   }
   return out;
 }
-function downloadBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1800)}
-async function downloadWorkspaceZip(options){
-  options=options||{};const includeCheckpoints=options.includeCheckpoints!==false;
-  if(agRunning||busy){toast("Finish or stop the current run first.","err");return}
-  progressOn();setStatus("Packing workspace…","busy");
-  try{
-    persist();if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();const env=await captureEnvironment(),ws=await saveWorkspaceState(),threadIndex=readThreadIndex(nbId),threads=await kdbThreads(nbId),runs=await kdbRuns(nbId),checkpoints=includeCheckpoints?await kdbCheckpoints(nbId):[],enc=new TextEncoder(),entries=[];
-    const manifest={format:"kernel-workspace",version:3,app:"KERNEL·A",app_version:"2.4.0",export_profile:includeCheckpoints?"full":"private-run",exported_at:new Date().toISOString(),notebook:{name:nbName},active_thread_id:threadIndex.active||null,thread_index:threadIndex,artifacts:[],runs:runs.map(r=>r.id),checkpoints:checkpoints.map(c=>c.id)};
-    entries.push({name:"manifest.json",data:new Uint8Array()},{name:"notebook.ipynb",data:enc.encode(JSON.stringify(toIpynb(),null,1))},{name:"environment.json",data:enc.encode(JSON.stringify(env,null,2))},{name:"requirements.txt",data:enc.encode(requirementsSnapshot(env))});
-    const written=new Map(),entryFor=async(f,fallbackName)=>{const bytes=await artifactBytes(f),hash=f.blob&&!f.bytes?f.blob:await blobHash(bytes);if(written.has(hash))return {entry:written.get(hash),bytes};written.set(hash,fallbackName);entries.push({name:fallbackName,data:bytes});return {entry:fallbackName,bytes}};
-    for(let i=0;i<((ws&&ws.artifacts)||[]).length;i++){const f=ws.artifacts[i],stage=artifactStage(f),{entry,bytes}=await entryFor(f,"data/"+(stage==='input'?'inputs':stage==='final'?'final':'scratch')+"/"+String(i+1).padStart(4,"0")+".bin"),meta={id:f.id,path:f.path||f.name,type:f.type||"",origin:f.origin||"upload",stage,size:bytes.byteLength,preview:f.preview||"",createdAt:f.createdAt||null,updatedAt:f.updatedAt||null,fingerprint:f.fingerprint||"",producer:f.producer||null,derivedFrom:f.derivedFrom||[],entry};manifest.artifacts.push(meta)}
-    for(const t of threads)entries.push({name:"threads/"+encodeURIComponent(t.id)+".json",data:enc.encode(JSON.stringify(t))});
-    for(const r of runs)entries.push({name:"runs/"+encodeURIComponent(r.id)+".json",data:enc.encode(JSON.stringify(r))});
-    for(const cp of checkpoints){const copy=kdbClone(cp),arts=(copy.workspace&&(copy.workspace.artifacts||copy.workspace.files))||[];if(copy.workspace){const metas=[];for(let i=0;i<arts.length;i++){const f=arts[i],{entry,bytes}=await entryFor(f,"checkpoint-artifacts/"+encodeURIComponent(cp.id)+"/"+String(i+1).padStart(4,"0")+".bin"),meta=Object.assign({},f,{entry,size:bytes.byteLength});delete meta.bytes;delete meta.blob;metas.push(meta)}copy.workspace.artifacts=metas;delete copy.workspace.files}entries.push({name:"checkpoints/"+encodeURIComponent(cp.id)+".json",data:enc.encode(JSON.stringify(copy))})}
-    entries[0]={name:"manifest.json",data:enc.encode(JSON.stringify(manifest,null,2))};entries.push({name:"README.txt",data:enc.encode(includeCheckpoints?"KERNEL·A portable workspace v3 (app 2.4.0)\n\nOpen this .kernel.zip in KERNEL·A to restore the notebook, rendered outputs and lineage, artifact workspace, environment snapshot, every chat thread, durable runs, usage counters, and checkpoints. API keys are intentionally excluded. The live Python namespace is recreated by rerunning notebook cells.\n":"KERNEL·A private run workspace v3 (app 2.4.0)\n\nContains the current notebook, rendered outputs and lineage, artifacts, full chat threads, durable run ledgers, usage, and environment, but omits historical checkpoints to keep review transfers compact. It is private, not redacted or share-safe. API keys are excluded.\n")});
-    const suffix=includeCheckpoints?".kernel.zip":".kernel-run.zip";downloadBlob(new Blob(zipStoreParts(entries),{type:"application/zip"}),agSlug()+suffix);toast((includeCheckpoints?"Full workspace":"Private run")+" ZIP saved · "+threads.length+" thread"+(threads.length===1?"":"s")+" · "+manifest.artifacts.length+" artifact"+(manifest.artifacts.length===1?"":"s")+(includeCheckpoints?" · "+checkpoints.length+" checkpoint"+(checkpoints.length===1?"":"s"):" · checkpoints omitted"));
-  }catch(e){toast("Could not save workspace · "+String(e.message||e),"err")}finally{setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
+function zipStore(entries) {
+  return joinBytes(zipStoreParts(entries));
 }
-function downloadPrivateRunZip(){return downloadWorkspaceZip({includeCheckpoints:false})}
-function archiveEntityId(value,label){
-  const id=typeof value==="string"?value:"";if(!id||id.length>200||id!==id.trim()||/[\u0000-\u001f\u007f]/.test(id))throw new Error("archive has an invalid "+label);return id;
+/* Parts go straight into new Blob([...]) so an export never needs one contiguous buffer the size of the whole archive. */
+function zipStoreParts(entries) {
+  const enc = new TextEncoder(),
+    locals = [],
+    centrals = [];
+  let offset = 0;
+  for (const ent of entries) {
+    const name = enc.encode(ent.name),
+      data = ent.data instanceof Uint8Array ? ent.data : new Uint8Array(ent.data),
+      crc = crc32(data);
+    const lh = zipHeader(30);
+    z32(lh, 0, 0x04034b50);
+    z16(lh, 4, 20);
+    z16(lh, 6, ZIP_UTF8);
+    z16(lh, 8, 0);
+    z32(lh, 14, crc);
+    z32(lh, 18, data.length);
+    z32(lh, 22, data.length);
+    z16(lh, 26, name.length);
+    locals.push(lh, name, data);
+    const ch = zipHeader(46);
+    z32(ch, 0, 0x02014b50);
+    z16(ch, 4, 20);
+    z16(ch, 6, 20);
+    z16(ch, 8, ZIP_UTF8);
+    z16(ch, 10, 0);
+    z32(ch, 16, crc);
+    z32(ch, 20, data.length);
+    z32(ch, 24, data.length);
+    z16(ch, 28, name.length);
+    z32(ch, 42, offset);
+    centrals.push(ch, name);
+    offset += lh.length + name.length + data.length;
+  }
+  const central = joinBytes(centrals),
+    end = zipHeader(22);
+  z32(end, 0, 0x06054b50);
+  z16(end, 8, entries.length);
+  z16(end, 10, entries.length);
+  z32(end, 12, central.length);
+  z32(end, 16, offset);
+  return [...locals, central, end];
 }
-function hydrateCheckpointArtifacts(cp,entries){
-  if(!cp||typeof cp!=="object"||!Array.isArray(cp.cells))throw new Error("archive contains an invalid checkpoint");
-  archiveEntityId(cp.id,"checkpoint ID");archiveEntityId(cp.threadId,"checkpoint thread ID");
-  const artifacts=cp.workspace&&cp.workspace.artifacts||[],paths=new Set(),ids=new Set();
-  for(const a of artifacts){
-    if(!a||typeof a!=="object")throw new Error("archive contains invalid checkpoint artifact metadata");
-    const path=safeArtifactPath(a.path||a.name),id=archiveEntityId(a.id,"checkpoint artifact ID"),entry=typeof a.entry==="string"?a.entry:"";
-    if(paths.has(path))throw new Error("archive contains duplicate checkpoint artifact paths");if(ids.has(id))throw new Error("archive contains duplicate checkpoint artifact IDs");paths.add(path);ids.add(id);
-    const raw=entries.get(entry);if(!entry||!raw)throw new Error("archive is missing checkpoint artifact data for "+path);if(Number.isFinite(a.size)&&a.size!==raw.byteLength)throw new Error("checkpoint artifact size does not match for "+path);
-    a.path=a.name=path;a.size=raw.byteLength;a.bytes=raw.slice();delete a.entry;
+function zipReadStore(bytes) {
+  bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
+    dec = new TextDecoder();
+  let end = -1;
+  for (let i = Math.max(0, bytes.length - 65557); i <= bytes.length - 22; i++)
+    if (dv.getUint32(i, true) === 0x06054b50) end = i;
+  if (end < 0) throw new Error("Not a valid ZIP archive");
+  const count = dv.getUint16(end + 10, true),
+    out = new Map();
+  if (count > 5000) throw new Error("ZIP contains too many entries");
+  let at = dv.getUint32(end + 16, true);
+  for (let i = 0; i < count; i++) {
+    if (at < 0 || at + 46 > bytes.length || dv.getUint32(at, true) !== 0x02014b50)
+      throw new Error("Invalid ZIP directory");
+    const method = dv.getUint16(at + 10, true),
+      crc = dv.getUint32(at + 16, true),
+      packed = dv.getUint32(at + 20, true),
+      size = dv.getUint32(at + 24, true),
+      nl = dv.getUint16(at + 28, true),
+      xl = dv.getUint16(at + 30, true),
+      cl = dv.getUint16(at + 32, true),
+      lo = dv.getUint32(at + 42, true);
+    if (at + 46 + nl + xl + cl > bytes.length) throw new Error("Invalid ZIP directory bounds");
+    const name = dec.decode(bytes.slice(at + 46, at + 46 + nl));
+    if (method !== 0 || packed !== size)
+      throw new Error("This importer accepts KERNEL archives (stored ZIP entries) only");
+    if (lo < 0 || lo + 30 > bytes.length || dv.getUint32(lo, true) !== 0x04034b50) throw new Error("Invalid ZIP entry");
+    const lnl = dv.getUint16(lo + 26, true),
+      lxl = dv.getUint16(lo + 28, true),
+      start = lo + 30 + lnl + lxl;
+    if (start < 0 || start + size > bytes.length) throw new Error("Invalid ZIP entry bounds for " + name);
+    const data = bytes.slice(start, start + size);
+    if (out.has(name)) throw new Error("ZIP contains duplicate entry " + name);
+    if (crc32(data) !== crc) throw new Error("ZIP checksum failed for " + name);
+    out.set(name, data);
+    at += 46 + nl + xl + cl;
+  }
+  return out;
+}
+function downloadBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1800);
+}
+async function downloadWorkspaceZip(options) {
+  options = options || {};
+  const includeCheckpoints = options.includeCheckpoints !== false;
+  if (agRunning || busy) {
+    toast("Finish or stop the current run first.", "err");
+    return;
+  }
+  progressOn();
+  setStatus("Packing workspace…", "busy");
+  try {
+    persist();
+    if (typeof saveActiveThreadNow === "function") await saveActiveThreadNow();
+    const env = await captureEnvironment(),
+      ws = await saveWorkspaceState(),
+      threadIndex = readThreadIndex(nbId),
+      threads = await kdbThreads(nbId),
+      runs = await kdbRuns(nbId),
+      checkpoints = includeCheckpoints ? await kdbCheckpoints(nbId) : [],
+      enc = new TextEncoder(),
+      entries = [];
+    const manifest = {
+      format: "kernel-workspace",
+      version: 3,
+      app: "KERNEL·A",
+      app_version: APP_VERSION,
+      export_profile: includeCheckpoints ? "full" : "private-run",
+      exported_at: new Date().toISOString(),
+      notebook: { name: nbName },
+      active_thread_id: threadIndex.active || null,
+      thread_index: threadIndex,
+      artifacts: [],
+      runs: runs.map((r) => r.id),
+      checkpoints: checkpoints.map((c) => c.id),
+    };
+    entries.push(
+      { name: "manifest.json", data: new Uint8Array() },
+      { name: "notebook.ipynb", data: enc.encode(JSON.stringify(toIpynb(), null, 1)) },
+      { name: "environment.json", data: enc.encode(JSON.stringify(env, null, 2)) },
+      { name: "requirements.txt", data: enc.encode(requirementsSnapshot(env)) },
+    );
+    const written = new Map(),
+      entryFor = async (f, fallbackName) => {
+        const bytes = await artifactBytes(f),
+          hash = f.blob && !f.bytes ? f.blob : await blobHash(bytes);
+        if (written.has(hash)) return { entry: written.get(hash), bytes };
+        written.set(hash, fallbackName);
+        entries.push({ name: fallbackName, data: bytes });
+        return { entry: fallbackName, bytes };
+      };
+    for (let i = 0; i < ((ws && ws.artifacts) || []).length; i++) {
+      const f = ws.artifacts[i],
+        stage = artifactStage(f),
+        { entry, bytes } = await entryFor(
+          f,
+          "data/" +
+            (stage === "input" ? "inputs" : stage === "final" ? "final" : "scratch") +
+            "/" +
+            String(i + 1).padStart(4, "0") +
+            ".bin",
+        ),
+        meta = {
+          id: f.id,
+          path: f.path || f.name,
+          type: f.type || "",
+          origin: f.origin || "upload",
+          stage,
+          size: bytes.byteLength,
+          preview: f.preview || "",
+          createdAt: f.createdAt || null,
+          updatedAt: f.updatedAt || null,
+          fingerprint: f.fingerprint || "",
+          producer: f.producer || null,
+          derivedFrom: f.derivedFrom || [],
+          entry,
+        };
+      manifest.artifacts.push(meta);
+    }
+    for (const t of threads)
+      entries.push({ name: "threads/" + encodeURIComponent(t.id) + ".json", data: enc.encode(JSON.stringify(t)) });
+    for (const r of runs)
+      entries.push({ name: "runs/" + encodeURIComponent(r.id) + ".json", data: enc.encode(JSON.stringify(r)) });
+    for (const cp of checkpoints) {
+      const copy = kdbClone(cp),
+        arts = (copy.workspace && (copy.workspace.artifacts || copy.workspace.files)) || [];
+      if (copy.workspace) {
+        const metas = [];
+        for (let i = 0; i < arts.length; i++) {
+          const f = arts[i],
+            { entry, bytes } = await entryFor(
+              f,
+              "checkpoint-artifacts/" + encodeURIComponent(cp.id) + "/" + String(i + 1).padStart(4, "0") + ".bin",
+            ),
+            meta = Object.assign({}, f, { entry, size: bytes.byteLength });
+          delete meta.bytes;
+          delete meta.blob;
+          metas.push(meta);
+        }
+        copy.workspace.artifacts = metas;
+        delete copy.workspace.files;
+      }
+      entries.push({
+        name: "checkpoints/" + encodeURIComponent(cp.id) + ".json",
+        data: enc.encode(JSON.stringify(copy)),
+      });
+    }
+    entries[0] = { name: "manifest.json", data: enc.encode(JSON.stringify(manifest, null, 2)) };
+    entries.push({
+      name: "README.txt",
+      data: enc.encode(
+        includeCheckpoints
+          ? "KERNEL·A portable workspace v3 (app " +
+              APP_VERSION +
+              ")\n\nOpen this .kernel.zip in KERNEL·A to restore the notebook, rendered outputs and lineage, artifact workspace, environment snapshot, every chat thread, durable runs, usage counters, and checkpoints. API keys are intentionally excluded. The live Python namespace is recreated by rerunning notebook cells.\n"
+          : "KERNEL·A private run workspace v3 (app " +
+              APP_VERSION +
+              ")\n\nContains the current notebook, rendered outputs and lineage, artifacts, full chat threads, durable run ledgers, usage, and environment, but omits historical checkpoints to keep review transfers compact. It is private, not redacted or share-safe. API keys are excluded.\n",
+      ),
+    });
+    const suffix = includeCheckpoints ? ".kernel.zip" : ".kernel-run.zip";
+    downloadBlob(new Blob(zipStoreParts(entries), { type: "application/zip" }), agSlug() + suffix);
+    toast(
+      (includeCheckpoints ? "Full workspace" : "Private run") +
+        " ZIP saved · " +
+        threads.length +
+        " thread" +
+        (threads.length === 1 ? "" : "s") +
+        " · " +
+        manifest.artifacts.length +
+        " artifact" +
+        (manifest.artifacts.length === 1 ? "" : "s") +
+        (includeCheckpoints
+          ? " · " + checkpoints.length + " checkpoint" + (checkpoints.length === 1 ? "" : "s")
+          : " · checkpoints omitted"),
+    );
+  } catch (e) {
+    toast("Could not save workspace · " + String(e.message || e), "err");
+  } finally {
+    setStatus(kernelReady ? "Ready" : "Kernel failed", kernelReady ? "ok" : "err");
+    progressOff();
+  }
+}
+function downloadPrivateRunZip() {
+  return downloadWorkspaceZip({ includeCheckpoints: false });
+}
+function archiveEntityId(value, label) {
+  const id = typeof value === "string" ? value : "";
+  if (!id || id.length > 200 || id !== id.trim() || /[\u0000-\u001f\u007f]/.test(id))
+    throw new Error("archive has an invalid " + label);
+  return id;
+}
+function hydrateCheckpointArtifacts(cp, entries) {
+  if (!cp || typeof cp !== "object" || !Array.isArray(cp.cells))
+    throw new Error("archive contains an invalid checkpoint");
+  archiveEntityId(cp.id, "checkpoint ID");
+  archiveEntityId(cp.threadId, "checkpoint thread ID");
+  const artifacts = (cp.workspace && cp.workspace.artifacts) || [],
+    paths = new Set(),
+    ids = new Set();
+  for (const a of artifacts) {
+    if (!a || typeof a !== "object") throw new Error("archive contains invalid checkpoint artifact metadata");
+    const path = safeArtifactPath(a.path || a.name),
+      id = archiveEntityId(a.id, "checkpoint artifact ID"),
+      entry = typeof a.entry === "string" ? a.entry : "";
+    if (paths.has(path)) throw new Error("archive contains duplicate checkpoint artifact paths");
+    if (ids.has(id)) throw new Error("archive contains duplicate checkpoint artifact IDs");
+    paths.add(path);
+    ids.add(id);
+    const raw = entries.get(entry);
+    if (!entry || !raw) throw new Error("archive is missing checkpoint artifact data for " + path);
+    if (Number.isFinite(a.size) && a.size !== raw.byteLength)
+      throw new Error("checkpoint artifact size does not match for " + path);
+    a.path = a.name = path;
+    a.size = raw.byteLength;
+    a.bytes = raw.slice();
+    delete a.entry;
   }
   return cp;
 }
-async function importWorkspaceZip(file){
-  progressOn();setStatus("Restoring workspace…","busy");
-  try{
-    if(agRunning||busy)throw new Error("stop the current run first");const entries=zipReadStore(new Uint8Array(await file.arrayBuffer())),dec=new TextDecoder(),readJson=path=>{const bytes=entries.get(path);if(!bytes)throw new Error("archive is missing "+path);return JSON.parse(dec.decode(bytes))},manifest=readJson("manifest.json");if(manifest.format!=="kernel-workspace"||![2,3].includes(manifest.version))throw new Error("unsupported KERNEL workspace version");const note=readJson("notebook.ipynb");if(!note||!Array.isArray(note.cells))throw new Error("archive notebook is invalid");
-    const artifactSpecs=manifest.version===2?(manifest.files||[]).map(f=>({id:artifactId(),path:f.name,type:f.type,origin:f.origin,stage:f.origin==='result'?'final':'input',size:f.size,preview:f.preview,entry:f.path})):(manifest.artifacts||[]),archivePaths=new Set(),archiveIds=new Set();const artifacts=artifactSpecs.map(f=>{const path=collisionSafePath(f.path||f.name,p=>archivePaths.has(p));archivePaths.add(path);const id=manifest.version===3?archiveEntityId(f.id,"artifact ID"):(f.id||artifactId());if(archiveIds.has(id))throw new Error("archive contains duplicate artifact IDs");archiveIds.add(id);const bytes=entries.get(f.entry);if(!bytes)throw new Error("archive is missing artifact data for "+path);if(Number.isFinite(f.size)&&f.size!==bytes.byteLength)throw new Error("artifact size does not match for "+path);return {id,name:path,path,type:f.type||"",origin:f.origin||"upload",stage:f.stage||(f.origin==='upload'?'input':'final'),size:bytes.byteLength,preview:f.preview||"",createdAt:f.createdAt||Date.now(),updatedAt:f.updatedAt||Date.now(),fingerprint:f.fingerprint||bytes.byteLength+":"+crc32(bytes),producer:clonePlain(f.producer||null),derivedFrom:clonePlain(f.derivedFrom||[]),bytes:bytes.slice()}});
-    const threadRows=[],runRows=[],checkpointRows=[],threadIds=new Set(),runIds=new Set(),checkpointIds=new Set();for(const [path,bytes] of entries){if(path.startsWith("threads/")&&path.endsWith(".json")){const t=JSON.parse(dec.decode(bytes)),id=archiveEntityId(t&&t.id,"thread ID");if(threadIds.has(id))throw new Error("archive contains duplicate thread IDs");if(!Array.isArray(t.messages)||!Array.isArray(t.transcript))throw new Error("archive contains an invalid thread");threadIds.add(id);threadRows.push(t)}else if(manifest.version===3&&path.startsWith("runs/")&&path.endsWith(".json")){const r=JSON.parse(dec.decode(bytes)),id=archiveEntityId(r&&r.id,"run ID");archiveEntityId(r&&r.threadId,"run thread ID");if(runIds.has(id))throw new Error("archive contains duplicate run IDs");if(!Array.isArray(r.events))throw new Error("archive contains an invalid run ledger");runIds.add(id);runRows.push(r)}else if(manifest.version===3&&path.startsWith("checkpoints/")&&path.endsWith(".json")){const cp=hydrateCheckpointArtifacts(JSON.parse(dec.decode(bytes)),entries);if(checkpointIds.has(cp.id))throw new Error("archive contains duplicate checkpoint IDs");checkpointIds.add(cp.id);checkpointRows.push(cp)}}
-    if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();await saveWorkspaceState();await isolateNotebookRuntime();const id=createNotebook((manifest.notebook&&manifest.notebook.name)||"Imported workspace");applyNotebook(id);workspaceArchiveImport=true;fromIpynb(note);workspaceArchiveImport=false;nbName=(manifest.notebook&&manifest.notebook.name)||nbName;setNbTitle();persist();
-    const storedArtifacts=await externalizeArtifacts(artifacts);artifacts.forEach((f,i)=>{f.blob=storedArtifacts[i].blob});dataFiles.splice(0,dataFiles.length,...artifacts);for(const f of artifacts)if(kernelReady)await pyFS.write(f.path,f.bytes);const outputs=cells.filter(c=>c.type==="code"&&(c.outputs.length||c.execCount!=null)).map(c=>({cellId:c.id,outputs:clonePlain(c.outputs),execCount:c.execCount,runtime:c.runtime||null,provenance:clonePlain(c.provenance||null)}));let env=null;try{if(entries.has("environment.json"))env=JSON.parse(dec.decode(entries.get("environment.json")))}catch(e){}environmentSnapshot=env||clonePlain(note.metadata&&note.metadata.kernel_environment||null);await kdbPut("workspaces",{v:3,notebookId:id,updated:Date.now(),artifacts:storedArtifacts,outputs,environment:environmentSnapshot});
-    const sourceIndex=manifest.thread_index&&Array.isArray(manifest.thread_index.threads)?manifest.thread_index:{active:null,threads:[]},sourceMeta=new Map(sourceIndex.threads.filter(x=>x&&threadIds.has(x.id)).map(x=>[x.id,x]));const idx={v:3,active:threadIds.has(sourceIndex.active)?sourceIndex.active:null,threads:[]};for(const t of threadRows){t.notebookId=id;t.key=id+":"+t.id;await kdbPut("threads",t);const meta=sourceMeta.get(t.id)||t;idx.threads.push({id:t.id,name:String(meta.name||t.name||'Thread').slice(0,80),created:Number(meta.created||t.created)||Date.now(),updated:Number(meta.updated||t.updated)||Date.now()})}if(!idx.active)idx.active=idx.threads[0]&&idx.threads[0].id;writeThreadIndex(idx,id);
-    const runMap=new Map(),checkpointMap=new Map();for(const r of runRows)runMap.set(r.id,runId());for(const cp of checkpointRows)checkpointMap.set(cp.id,checkpointId());for(const r of runRows){r.id=runMap.get(r.id);r.notebookId=id;r.threadKey=id+":"+r.threadId;r.checkpointId=checkpointMap.get(r.checkpointId)||null;await kdbPut("runs",r)}for(const cp of checkpointRows){cp.id=checkpointMap.get(cp.id);cp.notebookId=id;cp.threadKey=id+":"+cp.threadId;cp.runId=runMap.get(cp.runId)||null;if(cp.workspace){cp.workspace.notebookId=id;cp.workspace.artifacts=await externalizeArtifacts(cp.workspace.artifacts||cp.workspace.files);delete cp.workspace.files}await kdbPut("checkpoints",cp)}
-    renderDataChips();renderDataList();if(typeof activateNotebookAgent==="function")await activateNotebookAgent(id);if(ui.left)renderLibrary();toast("Workspace restored · "+nbName+" · "+artifacts.length+" artifacts · "+checkpointRows.length+" checkpoints");
-  }catch(e){toast("Could not restore workspace · "+redactText(e&&e.message||e),"err")}finally{workspaceArchiveImport=false;setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
+async function importWorkspaceZip(file) {
+  progressOn();
+  setStatus("Restoring workspace…", "busy");
+  try {
+    if (agRunning || busy) throw new Error("stop the current run first");
+    const entries = zipReadStore(new Uint8Array(await file.arrayBuffer())),
+      dec = new TextDecoder(),
+      readJson = (path) => {
+        const bytes = entries.get(path);
+        if (!bytes) throw new Error("archive is missing " + path);
+        return JSON.parse(dec.decode(bytes));
+      },
+      manifest = readJson("manifest.json");
+    if (manifest.format !== "kernel-workspace" || ![2, 3].includes(manifest.version))
+      throw new Error("unsupported KERNEL workspace version");
+    const note = readJson("notebook.ipynb");
+    if (!note || !Array.isArray(note.cells)) throw new Error("archive notebook is invalid");
+    const artifactSpecs =
+        manifest.version === 2
+          ? (manifest.files || []).map((f) => ({
+              id: artifactId(),
+              path: f.name,
+              type: f.type,
+              origin: f.origin,
+              stage: f.origin === "result" ? "final" : "input",
+              size: f.size,
+              preview: f.preview,
+              entry: f.path,
+            }))
+          : manifest.artifacts || [],
+      archivePaths = new Set(),
+      archiveIds = new Set();
+    const artifacts = artifactSpecs.map((f) => {
+      const path = collisionSafePath(f.path || f.name, (p) => archivePaths.has(p));
+      archivePaths.add(path);
+      const id = manifest.version === 3 ? archiveEntityId(f.id, "artifact ID") : f.id || artifactId();
+      if (archiveIds.has(id)) throw new Error("archive contains duplicate artifact IDs");
+      archiveIds.add(id);
+      const bytes = entries.get(f.entry);
+      if (!bytes) throw new Error("archive is missing artifact data for " + path);
+      if (Number.isFinite(f.size) && f.size !== bytes.byteLength)
+        throw new Error("artifact size does not match for " + path);
+      return {
+        id,
+        name: path,
+        path,
+        type: f.type || "",
+        origin: f.origin || "upload",
+        stage: f.stage || (f.origin === "upload" ? "input" : "final"),
+        size: bytes.byteLength,
+        preview: f.preview || "",
+        createdAt: f.createdAt || Date.now(),
+        updatedAt: f.updatedAt || Date.now(),
+        fingerprint: f.fingerprint || bytes.byteLength + ":" + crc32(bytes),
+        producer: clonePlain(f.producer || null),
+        derivedFrom: clonePlain(f.derivedFrom || []),
+        bytes: bytes.slice(),
+      };
+    });
+    const threadRows = [],
+      runRows = [],
+      checkpointRows = [],
+      threadIds = new Set(),
+      runIds = new Set(),
+      checkpointIds = new Set();
+    for (const [path, bytes] of entries) {
+      if (path.startsWith("threads/") && path.endsWith(".json")) {
+        const t = JSON.parse(dec.decode(bytes)),
+          id = archiveEntityId(t && t.id, "thread ID");
+        if (threadIds.has(id)) throw new Error("archive contains duplicate thread IDs");
+        if (!Array.isArray(t.messages) || !Array.isArray(t.transcript))
+          throw new Error("archive contains an invalid thread");
+        threadIds.add(id);
+        threadRows.push(t);
+      } else if (manifest.version === 3 && path.startsWith("runs/") && path.endsWith(".json")) {
+        const r = JSON.parse(dec.decode(bytes)),
+          id = archiveEntityId(r && r.id, "run ID");
+        archiveEntityId(r && r.threadId, "run thread ID");
+        if (runIds.has(id)) throw new Error("archive contains duplicate run IDs");
+        if (!Array.isArray(r.events)) throw new Error("archive contains an invalid run ledger");
+        runIds.add(id);
+        runRows.push(r);
+      } else if (manifest.version === 3 && path.startsWith("checkpoints/") && path.endsWith(".json")) {
+        const cp = hydrateCheckpointArtifacts(JSON.parse(dec.decode(bytes)), entries);
+        if (checkpointIds.has(cp.id)) throw new Error("archive contains duplicate checkpoint IDs");
+        checkpointIds.add(cp.id);
+        checkpointRows.push(cp);
+      }
+    }
+    if (typeof saveActiveThreadNow === "function") await saveActiveThreadNow();
+    await saveWorkspaceState();
+    await isolateNotebookRuntime();
+    const id = createNotebook((manifest.notebook && manifest.notebook.name) || "Imported workspace");
+    applyNotebook(id);
+    workspaceArchiveImport = true;
+    fromIpynb(note);
+    workspaceArchiveImport = false;
+    nbName = (manifest.notebook && manifest.notebook.name) || nbName;
+    setNbTitle();
+    persist();
+    const storedArtifacts = await externalizeArtifacts(artifacts);
+    artifacts.forEach((f, i) => {
+      f.blob = storedArtifacts[i].blob;
+    });
+    dataFiles.splice(0, dataFiles.length, ...artifacts);
+    for (const f of artifacts) if (kernelReady) await pyFS.write(f.path, f.bytes);
+    const outputs = cells
+      .filter((c) => c.type === "code" && (c.outputs.length || c.execCount != null))
+      .map((c) => ({
+        cellId: c.id,
+        outputs: clonePlain(c.outputs),
+        execCount: c.execCount,
+        runtime: c.runtime || null,
+        provenance: clonePlain(c.provenance || null),
+      }));
+    let env = null;
+    try {
+      if (entries.has("environment.json")) env = JSON.parse(dec.decode(entries.get("environment.json")));
+    } catch (e) {}
+    environmentSnapshot = env || clonePlain((note.metadata && note.metadata.kernel_environment) || null);
+    await kdbPut("workspaces", {
+      v: 3,
+      notebookId: id,
+      updated: Date.now(),
+      artifacts: storedArtifacts,
+      outputs,
+      environment: environmentSnapshot,
+    });
+    const sourceIndex =
+        manifest.thread_index && Array.isArray(manifest.thread_index.threads)
+          ? manifest.thread_index
+          : { active: null, threads: [] },
+      sourceMeta = new Map(sourceIndex.threads.filter((x) => x && threadIds.has(x.id)).map((x) => [x.id, x]));
+    const idx = { v: 3, active: threadIds.has(sourceIndex.active) ? sourceIndex.active : null, threads: [] };
+    for (const t of threadRows) {
+      t.notebookId = id;
+      t.key = id + ":" + t.id;
+      await kdbPut("threads", t);
+      const meta = sourceMeta.get(t.id) || t;
+      idx.threads.push({
+        id: t.id,
+        name: String(meta.name || t.name || "Thread").slice(0, 80),
+        created: Number(meta.created || t.created) || Date.now(),
+        updated: Number(meta.updated || t.updated) || Date.now(),
+      });
+    }
+    if (!idx.active) idx.active = idx.threads[0] && idx.threads[0].id;
+    writeThreadIndex(idx, id);
+    const runMap = new Map(),
+      checkpointMap = new Map();
+    for (const r of runRows) runMap.set(r.id, runId());
+    for (const cp of checkpointRows) checkpointMap.set(cp.id, checkpointId());
+    for (const r of runRows) {
+      r.id = runMap.get(r.id);
+      r.notebookId = id;
+      r.threadKey = id + ":" + r.threadId;
+      r.checkpointId = checkpointMap.get(r.checkpointId) || null;
+      await kdbPut("runs", r);
+    }
+    for (const cp of checkpointRows) {
+      cp.id = checkpointMap.get(cp.id);
+      cp.notebookId = id;
+      cp.threadKey = id + ":" + cp.threadId;
+      cp.runId = runMap.get(cp.runId) || null;
+      if (cp.workspace) {
+        cp.workspace.notebookId = id;
+        cp.workspace.artifacts = await externalizeArtifacts(cp.workspace.artifacts || cp.workspace.files);
+        delete cp.workspace.files;
+      }
+      await kdbPut("checkpoints", cp);
+    }
+    renderDataChips();
+    renderDataList();
+    if (typeof activateNotebookAgent === "function") await activateNotebookAgent(id);
+    if (ui.left) renderLibrary();
+    toast(
+      "Workspace restored · " +
+        nbName +
+        " · " +
+        artifacts.length +
+        " artifacts · " +
+        checkpointRows.length +
+        " checkpoints",
+    );
+  } catch (e) {
+    toast("Could not restore workspace · " + redactText((e && e.message) || e), "err");
+  } finally {
+    workspaceArchiveImport = false;
+    setStatus(kernelReady ? "Ready" : "Kernel failed", kernelReady ? "ok" : "err");
+    progressOff();
+  }
 }
 
-function redactClone(value,report,path){path=path||'$';if(typeof value==='string'){if(/^(?:data:image\/|[A-Za-z0-9+/]{1000,}={0,2}$)/.test(value)){report.unscanned.push(path);return value}const clean=redactText(value);if(clean!==value)report.redacted.push(path);return clean}if(Array.isArray(value))return value.map((v,i)=>redactClone(v,report,path+'['+i+']'));if(value&&typeof value==='object'){const out={};for(const [k,v] of Object.entries(value))out[k]=redactClone(v,report,path+'.'+k);return out}return value}
-async function downloadShareSafeZip(){
-  if(agRunning||busy){toast('Finish the active run first.','err');return}progressOn();setStatus('Building share-safe archive…','busy');try{persist();const env=await captureEnvironment(),ws=await saveWorkspaceState(),enc=new TextEncoder(),report={format:'kernel-redaction-report',version:1,created_at:new Date().toISOString(),redacted:[],excluded:['API credentials','chat threads','run ledgers','checkpoints','uploaded inputs','working/scratch artifacts'],unscanned:[]},note=redactClone(toIpynb({includeConversation:false}),report,'notebook'),entries=[],manifest={format:'kernel-share',version:1,app_version:'2.4.0',exported_at:new Date().toISOString(),notebook:{name:redactText(nbName)},artifacts:[]};if(note.metadata){delete note.metadata.kernel_agent;if(note.metadata.kernel_environment&&note.metadata.kernel_environment.browser)delete note.metadata.kernel_environment.browser}
-    const finals=((ws&&ws.artifacts)||[]).filter(f=>artifactStage(f)==='final'),finalIds=new Set(finals.map(f=>f.id)),shareEnv=Object.assign({},env,{browser:undefined,artifacts:(env.artifacts||[]).filter(a=>finalIds.has(a.id))});if(note.metadata)note.metadata.kernel_environment=redactClone(shareEnv,report,'notebook.metadata.kernel_environment');entries.push({name:'manifest.json',data:new Uint8Array()},{name:'notebook.ipynb',data:enc.encode(JSON.stringify(note,null,1))},{name:'environment.json',data:enc.encode(JSON.stringify(redactClone(shareEnv,report,'environment'),null,2))},{name:'requirements.txt',data:enc.encode(requirementsSnapshot(env))});for(let i=0;i<finals.length;i++){const f=finals[i],entry='results/'+String(i+1).padStart(4,'0')+'.bin',ext=fileExt(f.path||f.name),textish=/^(?:txt|md|csv|tsv|json|jsonl|yaml|yml|xml|html|htm|py|sql|log)$/.test(ext)||/^text\//.test(f.type||'')||/json|xml|javascript/.test(f.type||''),raw=await artifactBytes(f);let data=raw;if(textish){const original=new TextDecoder().decode(raw),clean=redactText(original);if(clean!==original)report.redacted.push('artifact://'+f.id);data=enc.encode(clean)}else report.unscanned.push('artifact://'+f.id+' (binary final result)');manifest.artifacts.push({id:f.id,path:redactText(f.path||f.name),type:f.type||'',stage:'final',size:data.byteLength,entry});entries.push({name:entry,data})}entries[0]={name:'manifest.json',data:enc.encode(JSON.stringify(manifest,null,2))};entries.push({name:'redaction-report.json',data:enc.encode(JSON.stringify(report,null,2))},{name:'README.txt',data:enc.encode('KERNEL·A share-safe archive\n\nContains the notebook without conversation metadata, a redacted environment snapshot, requirements, and final results only. Uploaded inputs, working artifacts, run ledgers, checkpoints, and API credentials are excluded. Review redaction-report.json before redistribution; binary/image content is listed as unscanned.\n')});if((report.redacted.length||report.unscanned.length)&&!confirm('Share-safe review: '+report.redacted.length+' text location(s) were redacted and '+report.unscanned.length+' binary/image location(s) could not be scanned. Continue and include the redaction report?')){toast('Share-safe export cancelled for review.');return}downloadBlob(new Blob([zipStore(entries)],{type:'application/zip'}),agSlug()+'.kernel-share.zip');toast('Share-safe ZIP saved · '+finals.length+' final result'+(finals.length===1?'':'s'))}catch(e){toast('Could not build share-safe ZIP · '+redactText(e&&e.message||e),'err')}finally{setStatus(kernelReady?'Ready':'Kernel failed',kernelReady?'ok':'err');progressOff()}
+function redactClone(value, report, path) {
+  path = path || "$";
+  if (typeof value === "string") {
+    if (/^(?:data:image\/|[A-Za-z0-9+/]{1000,}={0,2}$)/.test(value)) {
+      report.unscanned.push(path);
+      return value;
+    }
+    const clean = redactText(value);
+    if (clean !== value) report.redacted.push(path);
+    return clean;
+  }
+  if (Array.isArray(value)) return value.map((v, i) => redactClone(v, report, path + "[" + i + "]"));
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = redactClone(v, report, path + "." + k);
+    return out;
+  }
+  return value;
 }
-function diagnosticSnapshot(){const ctx=prepareContext().stats||{},url=(()=>{try{return new URL(agBase).origin}catch(e){return 'custom'}})(),run=agRun?{id:agRun.id,status:agRun.status,phase:agRun.phase,provider:agRun.provider,model:agRun.model,started:agRun.started,updated:agRun.updated,toolCalls:agRun.toolCalls,modelCalls:agRun.modelCalls,attempt:agRun.attempt,budgets:agRun.budgets,autoExtensionsUsed:agRun.autoExtensionsUsed||0,completionAccepted:!!agRun.completionAccepted,elapsedMs:runElapsed(agRun),tokenDelta:runTokens(agRun),events:(agRun.events||[]).map(e=>({seq:e.seq,at:e.at,type:e.type,phase:e.phase,summary:e.summary}))}:null;return {format:'kernel-diagnostics',version:1,createdAt:new Date().toISOString(),appVersion:'2.4.0',browser:{userAgent:navigator.userAgent,language:navigator.language,online:navigator.onLine},storage:{indexedDbFallback:!!kdbLastError,lastError:kdbLastError?String(kdbLastError.message||kdbLastError):null},kernel:{ready:kernelReady,generation:kernelGeneration,environmentHash:environmentSnapshot&&environmentSnapshot.hash||null,pythonVersion:environmentSnapshot&&environmentSnapshot.pythonVersion||null,packageCount:environmentSnapshot&&environmentSnapshot.packages&&environmentSnapshot.packages.length||0},provider:{name:agProvider,model:agModel,apiOrigin:url,modelInfo:agModelInfo?{context:agModelInfo.max_input_tokens,source:agModelInfo.source}:null},notebook:{cellCount:cells.length,codeCells:cells.filter(c=>c.type==='code').length,fresh:cells.filter(c=>c.freshness==='fresh').length,stale:cells.filter(c=>c.freshness==='stale').length,historical:cells.filter(c=>c.freshness==='historical').length,artifactCounts:{input:dataFiles.filter(d=>artifactStage(d)==='input').length,scratch:dataFiles.filter(d=>artifactStage(d)==='scratch').length,final:dataFiles.filter(d=>artifactStage(d)==='final').length}},thread:{messageCount:agMsgs.length,transcriptRows:txEntries().length,usage:agUsage(),context:ctx,planSteps:agPlan.length},run}}
-function exportDiagnostics(){const clean=redactText(JSON.stringify(diagnosticSnapshot(),null,2));downloadBlob(new Blob([clean],{type:'application/json'}),agSlug()+'-diagnostics.json');toast('Diagnostics exported without keys, prompts, cell source, outputs, or artifact contents.')}
-
+async function downloadShareSafeZip() {
+  if (agRunning || busy) {
+    toast("Finish the active run first.", "err");
+    return;
+  }
+  progressOn();
+  setStatus("Building share-safe archive…", "busy");
+  try {
+    persist();
+    const env = await captureEnvironment(),
+      ws = await saveWorkspaceState(),
+      enc = new TextEncoder(),
+      report = {
+        format: "kernel-redaction-report",
+        version: 1,
+        created_at: new Date().toISOString(),
+        redacted: [],
+        excluded: [
+          "API credentials",
+          "chat threads",
+          "run ledgers",
+          "checkpoints",
+          "uploaded inputs",
+          "working/scratch artifacts",
+        ],
+        unscanned: [],
+      },
+      note = redactClone(toIpynb({ includeConversation: false }), report, "notebook"),
+      entries = [],
+      manifest = {
+        format: "kernel-share",
+        version: 1,
+        app_version: APP_VERSION,
+        exported_at: new Date().toISOString(),
+        notebook: { name: redactText(nbName) },
+        artifacts: [],
+      };
+    if (note.metadata) {
+      delete note.metadata.kernel_agent;
+      if (note.metadata.kernel_environment && note.metadata.kernel_environment.browser)
+        delete note.metadata.kernel_environment.browser;
+    }
+    const finals = ((ws && ws.artifacts) || []).filter((f) => artifactStage(f) === "final"),
+      finalIds = new Set(finals.map((f) => f.id)),
+      shareEnv = Object.assign({}, env, {
+        browser: undefined,
+        artifacts: (env.artifacts || []).filter((a) => finalIds.has(a.id)),
+      });
+    if (note.metadata)
+      note.metadata.kernel_environment = redactClone(shareEnv, report, "notebook.metadata.kernel_environment");
+    entries.push(
+      { name: "manifest.json", data: new Uint8Array() },
+      { name: "notebook.ipynb", data: enc.encode(JSON.stringify(note, null, 1)) },
+      {
+        name: "environment.json",
+        data: enc.encode(JSON.stringify(redactClone(shareEnv, report, "environment"), null, 2)),
+      },
+      { name: "requirements.txt", data: enc.encode(requirementsSnapshot(env)) },
+    );
+    for (let i = 0; i < finals.length; i++) {
+      const f = finals[i],
+        entry = "results/" + String(i + 1).padStart(4, "0") + ".bin",
+        ext = fileExt(f.path || f.name),
+        textish =
+          /^(?:txt|md|csv|tsv|json|jsonl|yaml|yml|xml|html|htm|py|sql|log)$/.test(ext) ||
+          /^text\//.test(f.type || "") ||
+          /json|xml|javascript/.test(f.type || ""),
+        raw = await artifactBytes(f);
+      let data = raw;
+      if (textish) {
+        const original = new TextDecoder().decode(raw),
+          clean = redactText(original);
+        if (clean !== original) report.redacted.push("artifact://" + f.id);
+        data = enc.encode(clean);
+      } else report.unscanned.push("artifact://" + f.id + " (binary final result)");
+      manifest.artifacts.push({
+        id: f.id,
+        path: redactText(f.path || f.name),
+        type: f.type || "",
+        stage: "final",
+        size: data.byteLength,
+        entry,
+      });
+      entries.push({ name: entry, data });
+    }
+    entries[0] = { name: "manifest.json", data: enc.encode(JSON.stringify(manifest, null, 2)) };
+    entries.push(
+      { name: "redaction-report.json", data: enc.encode(JSON.stringify(report, null, 2)) },
+      {
+        name: "README.txt",
+        data: enc.encode(
+          "KERNEL·A share-safe archive\n\nContains the notebook without conversation metadata, a redacted environment snapshot, requirements, and final results only. Uploaded inputs, working artifacts, run ledgers, checkpoints, and API credentials are excluded. Review redaction-report.json before redistribution; binary/image content is listed as unscanned.\n",
+        ),
+      },
+    );
+    if (
+      (report.redacted.length || report.unscanned.length) &&
+      !confirm(
+        "Share-safe review: " +
+          report.redacted.length +
+          " text location(s) were redacted and " +
+          report.unscanned.length +
+          " binary/image location(s) could not be scanned. Continue and include the redaction report?",
+      )
+    ) {
+      toast("Share-safe export cancelled for review.");
+      return;
+    }
+    downloadBlob(new Blob([zipStore(entries)], { type: "application/zip" }), agSlug() + ".kernel-share.zip");
+    toast("Share-safe ZIP saved · " + finals.length + " final result" + (finals.length === 1 ? "" : "s"));
+  } catch (e) {
+    toast("Could not build share-safe ZIP · " + redactText((e && e.message) || e), "err");
+  } finally {
+    setStatus(kernelReady ? "Ready" : "Kernel failed", kernelReady ? "ok" : "err");
+    progressOff();
+  }
+}
+function diagnosticSnapshot() {
+  const ctx = prepareContext().stats || {},
+    url = (() => {
+      try {
+        return new URL(agBase).origin;
+      } catch (e) {
+        return "custom";
+      }
+    })(),
+    run = agRun
+      ? {
+          id: agRun.id,
+          status: agRun.status,
+          phase: agRun.phase,
+          provider: agRun.provider,
+          model: agRun.model,
+          started: agRun.started,
+          updated: agRun.updated,
+          toolCalls: agRun.toolCalls,
+          modelCalls: agRun.modelCalls,
+          attempt: agRun.attempt,
+          budgets: agRun.budgets,
+          autoExtensionsUsed: agRun.autoExtensionsUsed || 0,
+          completionAccepted: !!agRun.completionAccepted,
+          elapsedMs: runElapsed(agRun),
+          tokenDelta: runTokens(agRun),
+          events: (agRun.events || []).map((e) => ({
+            seq: e.seq,
+            at: e.at,
+            type: e.type,
+            phase: e.phase,
+            summary: e.summary,
+          })),
+        }
+      : null;
+  return {
+    format: "kernel-diagnostics",
+    version: 1,
+    createdAt: new Date().toISOString(),
+    appVersion: APP_VERSION,
+    browser: { userAgent: navigator.userAgent, language: navigator.language, online: navigator.onLine },
+    storage: {
+      indexedDbFallback: !!kdbLastError,
+      lastError: kdbLastError ? String(kdbLastError.message || kdbLastError) : null,
+    },
+    kernel: {
+      ready: kernelReady,
+      generation: kernelGeneration,
+      environmentHash: (environmentSnapshot && environmentSnapshot.hash) || null,
+      pythonVersion: (environmentSnapshot && environmentSnapshot.pythonVersion) || null,
+      packageCount: (environmentSnapshot && environmentSnapshot.packages && environmentSnapshot.packages.length) || 0,
+    },
+    provider: {
+      name: agProvider,
+      model: agModel,
+      apiOrigin: url,
+      modelInfo: agModelInfo ? { context: agModelInfo.max_input_tokens, source: agModelInfo.source } : null,
+    },
+    notebook: {
+      cellCount: cells.length,
+      codeCells: cells.filter((c) => c.type === "code").length,
+      fresh: cells.filter((c) => c.freshness === "fresh").length,
+      stale: cells.filter((c) => c.freshness === "stale").length,
+      historical: cells.filter((c) => c.freshness === "historical").length,
+      artifactCounts: {
+        input: dataFiles.filter((d) => artifactStage(d) === "input").length,
+        scratch: dataFiles.filter((d) => artifactStage(d) === "scratch").length,
+        final: dataFiles.filter((d) => artifactStage(d) === "final").length,
+      },
+    },
+    thread: {
+      messageCount: agMsgs.length,
+      transcriptRows: txEntries().length,
+      usage: agUsage(),
+      context: ctx,
+      planSteps: agPlan.length,
+    },
+    run,
+  };
+}
+function exportDiagnostics() {
+  const clean = redactText(JSON.stringify(diagnosticSnapshot(), null, 2));
+  downloadBlob(new Blob([clean], { type: "application/json" }), agSlug() + "-diagnostics.json");
+  toast("Diagnostics exported without keys, prompts, cell source, outputs, or artifact contents.");
+}
