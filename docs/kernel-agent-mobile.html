@@ -12602,6 +12602,18 @@ function notebookOccupied() {
   return busy || cellStarting || notebookSwitching;
 }
 
+// A blank notebook can still hold Python state from cells that ran and were then deleted, so give it a clean runtime,
+// as a new notebook gets. The switch lock keeps cells, runs, restarts and switches from starting while Python resets.
+async function resetBlankNotebook() {
+  notebookSwitching = true;
+  try {
+    await isolateNotebookRuntime();
+    return true;
+  } finally {
+    notebookSwitching = false;
+  }
+}
+
 // A paused or failed run can be resumed and would run its pending tools against whatever the notebook then holds.
 function hasUnfinishedRun() {
   return !!(agRun && !RUN_TERMINAL.has(agRun.status));
@@ -12635,8 +12647,15 @@ async function openExample(name) {
     }
     // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
     const reuse = isBlankNotebook() && !hasUnfinishedRun();
-    if (agRunning || notebookOccupied() || (!reuse && !(await newNotebook())) || agRunning || notebookOccupied()) {
-      // the last check covers a run or cell that got going during the switch's awaits
+    if (
+      agRunning ||
+      notebookOccupied() ||
+      !(await (reuse ? resetBlankNotebook() : newNotebook())) ||
+      agRunning ||
+      notebookOccupied() ||
+      (reuse && !isBlankNotebook())
+    ) {
+      // the last checks cover a run or cell that got going, or work added, during the reset's or switch's awaits
       closeToast();
       refuse();
       return;
