@@ -158,6 +158,10 @@ Open it from the [live page](https://dogum.github.io/kernel/) or [`docs/kernel-a
 
 The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page unless you use the agent. The agent sends the selected active context directly to the provider/API base you choose (Anthropic, OpenAI, xAI, or a compatible gateway) using a key stored in this browser. Responses requests explicitly disable provider-side response storage where the protocol supports it. Exports never serialize provider configuration or stored keys; because a full workspace is intentionally lossless, user-authored prompts/cells/files are preserved verbatim. Inspect a share-safe archive's redaction report before redistributing it.
 
+## Contributing
+
+The agent pages are built from readable modules in [`src/`](src/README.md); [`CONTRIBUTING.md`](CONTRIBUTING.md) has the layout, the commands to run before a PR, and how releases work. Changes are listed in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## License
 
 Apache 2.0. See [`LICENSE`](LICENSE).

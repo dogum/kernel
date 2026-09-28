@@ -1,0 +1,64 @@
+name: Release
+
+# Two ways to release:
+#   1. Push a tag vX.Y.Z (it must match "version" in package.json).
+#   2. Run this workflow manually; it reads the version from package.json and tags the commit.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Resolve version and tag
+        id: v
+        run: |
+          v=$(node -p 'require("./package.json").version')
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != package.json v$v"; exit 1; }
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+
+      - name: Package the skill and the single-file apps
+        run: |
+          set -euo pipefail
+          mkdir -p dist/kernel-notebooks
+          cp -r skill/. dist/kernel-notebooks/
+          (cd dist && zip -qr kernel-notebooks.skill kernel-notebooks)
+          cp docs/kernel.html docs/kernel-agent.html docs/kernel-agent-mobile.html dist/
+
+      - name: Release notes from CHANGELOG
+        run: |
+          awk -v v="${{ steps.v.outputs.version }}" '/^## /{p = index($0, "[" v "]") > 0; next} p' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
+          printf '\n---\n' >> notes.md
+          cat .github/release-footer.md >> notes.md
+          cat notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ steps.v.outputs.tag }}
+          body_path: notes.md
+          files: |
+            dist/kernel-notebooks.skill
+            dist/kernel.html
+            dist/kernel-agent.html
+            dist/kernel-agent-mobile.html

@@ -20,6 +20,10 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
+      - name: kernel-notebooks.skill matches skill/
+        run: |
+          unzip -q kernel-notebooks.skill -d "$RUNNER_TEMP/skill"
+          diff -r "$RUNNER_TEMP/skill/kernel-notebooks" skill
 
   browser:
     name: Browser end-to-end (desktop + mobile builds)
