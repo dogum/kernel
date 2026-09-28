@@ -12604,6 +12604,11 @@ function isBlankNotebook() {
   );
 }
 
+// Python is running or restarting, a cell is preparing to run, or a notebook switch is still saving and restoring.
+function notebookOccupied() {
+  return busy || cellStarting || notebookSwitching;
+}
+
 // A paused or failed run can be resumed and would run its pending tools against whatever the notebook then holds.
 function hasUnfinishedRun() {
   return !!(agRun && !RUN_TERMINAL.has(agRun.status));
@@ -12626,9 +12631,9 @@ async function openExample(name) {
     if (!res.ok) throw new Error(res.status === 404 ? "there is no example called " + name : "HTTP " + res.status);
     const notebook = await res.json();
     // Importing while Python boots, restarts or runs a cell would mix the example with that execution, and a run may
-    // have started during the download, so wait for the kernel and check again. Until startup has restored this
-    // notebook's saved files it can look blank when it isn't, so wait for that too.
-    for (let waited = 0; (busy || cellStarting || !startupSettled) && waited < exampleWaitMs; waited += 250)
+    // have started during the download, so wait for the kernel and check again. Until startup, or a notebook switch,
+    // has restored the notebook's saved files it can look blank when it isn't, so wait for those too.
+    for (let waited = 0; (notebookOccupied() || !startupSettled) && waited < exampleWaitMs; waited += 250)
       await new Promise((r) => setTimeout(r, 250));
     if (!startupRestored) {
       closeToast();
@@ -12637,7 +12642,7 @@ async function openExample(name) {
     }
     // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
     const reuse = isBlankNotebook() && !hasUnfinishedRun();
-    if (agRunning || busy || cellStarting || (!reuse && !(await newNotebook())) || agRunning || busy || cellStarting) {
+    if (agRunning || notebookOccupied() || (!reuse && !(await newNotebook())) || agRunning || notebookOccupied()) {
       // the last check covers a run or cell that got going during the switch's awaits
       closeToast();
       refuse();
