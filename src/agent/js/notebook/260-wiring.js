@@ -60,6 +60,8 @@ $("#moreMenu").addEventListener("click", (e) => {
   if (a === "newNb") newNotebook();
   else if (a === "openNb") $("#btnOpen").click();
   else if (a === "saveZip") downloadWorkspaceZip();
+  else if (a === "saveIpynb") downloadIpynb();
+  else if (a === "restart") restartKernel();
   else if (a === "restartRun") restartAndRunAll();
   else if (a === "splitOut") setSplitOutputs(!ui.splitOutputs);
   else if (a === "collapseAll") setAllCollapsed(true);

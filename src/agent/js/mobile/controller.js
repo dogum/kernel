@@ -255,5 +255,9 @@
   else if (mq.addListener) mq.addListener(normalize);
   normalize();
 
+  /* keyboard hints don't apply on a phone */
+  var agIn = el("#agIn");
+  if (agIn && mq.matches) agIn.placeholder = agIn.placeholder.replace(/\s*\(⌘J\)$/, "");
+
   window.__kaMobile = { normalize: normalize, only: only, closeAll: closeAll };
 })();

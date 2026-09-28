@@ -4,6 +4,12 @@ Notable changes to KERNEL, KERNEL·A (the agent), and KERNEL·M (the phone build
 
 ## [Unreleased]
 
+### Phones
+- Opening KERNEL·A on a phone opens KERNEL·M, the same app laid out for touch, with the same notebooks and the same link parameters, so example links work too. `?layout=desktop` keeps the desktop layout for the tab, and the app menu's KERNEL·A entry uses it.
+- KERNEL·M is denser: a one-row header with every toolbar action under ⋯, 12.5px code in a narrower gutter, and tighter cells, outputs, first-run card and sheets. Files and Variables sheets fit their contents. On iOS the viewport stops focus zoom, so fields no longer need 16px type.
+- On touch screens, COPY, CSV and PNG sit under an output instead of covering it. The iOS install hint hides itself after a few seconds, and toasts stay above it.
+- The desktop layout holds together in narrow windows: the header takes two rows with a sideways-scrolling toolbar, and the footer wraps.
+
 ### Getting started
 - Example links: `kernel-agent.html?example=<name>` opens one of the curated runs in `examples/` with its original outputs, in a new notebook if the current one has work in it. The welcome card has a *See a real agent run* button, and the landing page and README link all four. Fleet DNA reads public data the repository doesn't include, so it links to where to get it.
 - A demo of an agent run at the top of the README and the landing page, recorded by `npm run demo`.

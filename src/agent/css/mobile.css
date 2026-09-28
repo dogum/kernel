@@ -1,79 +1,121 @@
 /* ===== KERNEL·A — mobile + PWA layer (variant only) ===== */
 /* Affordances that only appear on phones; hidden by default. */
 #mob-bar,#mob-scrim,.ms-grab,#pwa-install{display:none}
+.menu-item.narrow-only,.menu-sep.narrow-only{display:none}
 
 @media (max-width:760px){
-  /* code/editor sized to avoid iOS focus-zoom and use the width */
-  :root{--gutter-w:40px; --code-fs:16px; --code-pad-x:12px; --code-pad-y:11px;}
+  /* Dense by default: compact code and prose, a narrow gutter, tight cards. iOS focus-zoom is stopped in the
+     viewport tag instead of with 16px fields, so fields can match the rest of the type. */
+  :root{--gutter-w:34px; --code-fs:12.5px; --code-lh:1.5; --code-pad-x:9px; --code-pad-y:8px;}
 
-  /* ---- top bar: compact, horizontally scrollable tools ---- */
-  .topbar{gap:8px; padding:8px 10px;}
-  .brand{gap:7px;}
-  .brand h1{font-size:15px; letter-spacing:.10em;}
-  .nb-pill{margin-left:4px; max-width:38vw; padding:4px 7px;}
-  .status{max-width:34vw; font-size:10px; padding:4px 8px;}
-  .toolbar{flex:1 1 auto; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
-           -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-left:6px; gap:5px; justify-content:flex-start;}
-  .toolbar::-webkit-scrollbar{display:none;}
-  .btn{padding:7px 10px;}
-  #btnAgent,#btnVars{display:none;}            /* covered by the bottom bar */
+  /* ---- top bar: one row. Brand, notebook, status, interrupt while busy, and every other action in ⋯ ---- */
+  .topbar{gap:6px; padding:6px 8px; padding-top:calc(6px + env(safe-area-inset-top));}
+  .brand{gap:4px; flex:1 1 auto; min-width:0; align-items:center;}
+  .brand h1{font-size:13px; letter-spacing:.08em; flex:0 0 auto;}
+  .brand .mark{width:10px; height:10px; box-shadow:0 0 0 2px var(--accent-ghost);}
+  .brand .brand-v{display:none;}
+  .brand-btn{align-items:center; padding:3px 4px; margin:-3px -4px;}
+  .brand-btn .mark{margin-right:.45em;}
+  .brand-chev{width:10px; height:10px; margin-left:4px;}
+  .nb-pill{flex:0 1 auto; min-width:0; max-width:none; margin-left:2px; padding:4px 7px; font-size:12px; gap:5px;}
+  .status{flex:0 0 auto; max-width:30vw; padding:4px 7px; gap:5px; font-size:10px;}
+  .status[data-s="ok"] #statusText{display:none;}   /* the dot says ready; words only while booting, busy or failed */
+  .toolbar{flex:0 0 auto; margin-left:0; gap:4px; flex-wrap:nowrap;}
+  .toolbar > .btn:not(#btnInterrupt),.toolbar > .tb-sep{display:none;}
+  .btn-more{padding:4px 10px; font-size:13px; line-height:1; align-self:stretch;}
+  .menu{min-width:224px; max-height:calc(100dvh - 120px); overflow:auto;}
+  .menu-item{font-size:13.5px; padding:9px 10px;}
+  .menu-item.narrow-only,.menu-sep.narrow-only{display:block;}
 
   /* ---- notebook canvas ---- */
-  .sheet{padding:14px 10px 112px; background-size:24px 24px;}
-  .notebook{gap:12px;}
-  .add-row{opacity:1; margin:12px auto 8px;}
-  .add-btn{padding:9px 16px;}
+  .sheet{padding:8px 6px 84px; background-size:22px 22px;}
+  .notebook{gap:8px;}
+  .gutter{padding-right:5px; font-size:10px;}
+  .gutter .exec-time{font-size:8px; letter-spacing:0; white-space:nowrap; margin-top:1px;}
+  .cell.md .gutter .exec{font-size:10px;}
+  .md-rendered{font-size:14px; line-height:1.5; padding:3px 10px 5px;}
+  .md-rendered h1{font-size:1.45em;} .md-rendered h2{font-size:1.22em;} .md-rendered h3{font-size:1.08em;}
+  .md-rendered pre{padding:9px 10px;} .md-rendered pre code{font-size:12px;}
+  .md-rendered table{font-size:12.5px;} .md-rendered th,.md-rendered td{padding:4px 7px;}
+  .outputs{padding:2px 0 4px;}
+  .out{padding:6px 9px;}
+  .out-stream pre,.out-text pre,.out-err pre{font-size:11.5px; line-height:1.45;}
+  .out-html{font-size:12.5px;}
+  .out-html table.dataframe{font-size:11px;}
+  .out-html table.dataframe th,.out-html table.dataframe td{padding:3px 6px;}
+  .collapsed-peek{padding:8px 10px !important;}
+  .add-row{opacity:1; margin:8px auto 4px; gap:6px;}
+  .add-btn{padding:6px 12px; font-size:12px;}
   /* the selected cell's tools sit in a row beneath it (no hover on touch), so they never cover code */
   .cell-tools{position:static; display:none; width:max-content; max-width:100%; flex-wrap:wrap; align-self:flex-end;
-              margin:6px 4px 4px auto; opacity:1; transform:none; box-shadow:none;}
+              margin:2px 4px 4px auto; padding:2px; gap:0; opacity:1; transform:none; box-shadow:none;}
   .cell.selected .cell-tools{display:flex; pointer-events:auto;}
+  .ct{width:30px; height:28px;}
+  .ct.type,.ct.ai{height:28px; padding:0 7px;}
   .lib-acts{opacity:1;}                          /* no hover on touch: row actions stay visible */
-  .toast-host{bottom:calc(66px + env(safe-area-inset-bottom)); width:calc(100vw - 24px);}  /* above the tab bar */
-  .toast{max-width:100%;}
-  .ct{width:32px; height:32px;}
-  .ct.type,.ct.ai{height:32px;}
-  .md-rendered{font-size:15.5px;}
   .foot{display:none;}                           /* replaced by the bottom bar */
 
-  /* prevent iOS zoom on focus for every text entry */
-  textarea,input[type=text],input[type=password],input[type=number],input[type=search],input:not([type]){font-size:16px;}
+  /* first-run card: the same choices in half the height; keyboard tips don't apply on a phone */
+  .welcome{padding:12px 12px 12px; margin-bottom:8px;}
+  .welcome h2{font-size:16px; margin-bottom:3px;}
+  .welcome p{font-size:12.5px; line-height:1.45; margin-bottom:10px;}
+  .welcome-acts{gap:6px; margin-bottom:0;}
+  .welcome-acts .btn{padding:6px 10px; font-size:12px;}
+  .welcome .welcome-tip{display:none;}
+
+  /* toasts sit above the tab bar, and above the install hint while it shows */
+  .toast-host{bottom:calc(60px + env(safe-area-inset-bottom)); width:calc(100vw - 24px);}
+  body:has(#pwa-install.on) .toast-host{bottom:calc(112px + env(safe-area-inset-bottom));}
+  .toast{max-width:100%; font-size:12.5px; padding:8px 12px;}
+
+  /* fields: 14px reads well and, with the viewport fix, doesn't trigger iOS zoom */
+  textarea:not(.ta),input[type=text],input[type=password],input[type=number],input[type=search],input:not([type]),select{font-size:14px;}
+  .panel-search input,.var-tools select,.ag-threadbar select{font-size:13px;}
 
   /* ---- side panels become bottom sheets ---- */
   .panel{
     position:fixed !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
     width:auto !important; max-width:none !important; min-width:0 !important;
-    height:86dvh; max-height:90dvh;
+    height:auto; min-height:38dvh; max-height:86dvh;   /* Files and Variables fit their contents */
     border:1px solid var(--line-2) !important; border-bottom:0 !important;
-    border-radius:16px 16px 0 0;
+    border-radius:14px 14px 0 0;
     box-shadow:0 -20px 60px -24px rgba(0,0,0,.55);
     transform:translateY(112%); visibility:hidden; pointer-events:none;
     transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s linear .32s;
     z-index:120; overscroll-behavior:contain;
-    box-sizing:border-box; padding-bottom:calc(56px + env(safe-area-inset-bottom)); /* clear the bottom bar */
+    box-sizing:border-box; padding-bottom:calc(52px + env(safe-area-inset-bottom)); /* clear the bottom bar */
   }
   .panel.open{transform:none; visibility:visible; pointer-events:auto;
     transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s;}
-  .panel-agent{height:90dvh;}
+  .panel-agent{height:90dvh; max-height:90dvh;}
   .panel-grip{display:none !important;}          /* no edge-resize on touch */
+  .panel-h{padding:8px 12px 6px;}
+  .panel-b{padding:0 8px 10px;}
+  .panel-search{padding:0 12px 7px;}
 
   /* grab handle at the top of each sheet (injected) */
-  .ms-grab{display:flex; align-items:center; justify-content:center; height:22px; flex:0 0 auto; touch-action:none; cursor:grab;}
-  .ms-grab::before{content:""; width:38px; height:4px; border-radius:3px; background:var(--line-2);}
+  .ms-grab{display:flex; align-items:center; justify-content:center; height:18px; flex:0 0 auto; touch-action:none; cursor:grab;}
+  .ms-grab::before{content:""; width:36px; height:4px; border-radius:3px; background:var(--line-2);}
 
   /* sheet internals fit the sheet height */
   .panel-agent .panel-inner{overflow:hidden;}
-  .ag-body{padding:8px 10px 10px;}
-  .ag-composer textarea{min-height:54px;}
-  .ag-row{flex-wrap:nowrap; gap:6px;}             /* one line: the model chip shrinks, SEND stays reachable */
-  .ag-mode,.ag-send,.ag-stop,.ag-model,#agModelChip{padding:9px 12px; font-size:11px;}
+  .ag-body{padding:6px 8px 8px;}
+  .ag-tx{padding:8px; gap:6px;}
+  .ag-u{font-size:13px;} .ag-a{font-size:13px; line-height:1.45;}
+  .ag-composer{margin-top:6px;}
+  .ag-composer textarea{min-height:48px; padding:8px 9px; font-size:14px;}
+  .ag-row{flex-wrap:nowrap; gap:5px;}             /* one line: the model chip shrinks, SEND stays reachable */
+  .ag-mode,.ag-send,.ag-stop,.ag-model,#agModelChip{padding:8px 10px; font-size:10.5px;}
   .ag-mode,.ag-send,.ag-stop{flex:0 0 auto;}
   #agModelChip{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .ag-steps{flex:0 1 auto; min-width:0; overflow:hidden; white-space:nowrap;}
   .ag-usage{flex:1 1 0; min-width:0;}
 
   /* modals: rise from the bottom, full small-screen friendly */
-  .scrim{padding:10px; align-items:flex-end;}
-  .modal{max-height:88dvh; border-radius:14px;}
+  .scrim{padding:8px; align-items:flex-end;}
+  .modal{max-height:88dvh; border-radius:12px;}
+  .modal-h{padding:12px 14px 10px;}
+  .modal-b{padding:12px 14px 16px;}
 
   /* ---- backdrop behind an open sheet ---- */
   #mob-scrim{display:block; position:fixed; inset:0; z-index:110;
@@ -83,48 +125,45 @@
 
   /* ---- bottom navigation bar ---- */
   #mob-bar{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:130;
-    height:calc(56px + env(safe-area-inset-bottom));
+    height:calc(52px + env(safe-area-inset-bottom));
     padding:0 6px env(safe-area-inset-bottom);
     background:color-mix(in srgb,var(--paper) 90%,white);
     border-top:1px solid var(--line-2); backdrop-filter:saturate(1.3) blur(10px);
     align-items:stretch; justify-content:space-around;}
-  .mb-btn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  .mb-btn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     background:none; border:0; cursor:pointer; color:var(--ink-3);
-    font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.10em; text-transform:uppercase;}
+    font-family:var(--mono); font-size:8.5px; font-weight:600; letter-spacing:.10em; text-transform:uppercase;}
   .mb-btn .mb-ic{display:flex; align-items:center; justify-content:center;}
-  .mb-btn svg{width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .mb-btn svg{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
   .mb-btn[data-k="run"] svg{fill:currentColor; stroke:none;}
   .mb-btn[data-k="agent"] svg{fill:currentColor; stroke:none;}
   .mb-btn.active{color:var(--accent);}
-  .mb-btn.prime .mb-ic{width:42px; height:28px; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line-2));
-    border-radius:9px; background:var(--accent-ghost); color:var(--accent);}
+  .mb-btn.prime .mb-ic{width:40px; height:26px; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line-2));
+    border-radius:8px; background:var(--accent-ghost); color:var(--accent);}
   .mb-btn.prime.active .mb-ic{background:var(--accent); color:var(--on-accent);}
   .mb-btn.prime{color:var(--accent);}
 
-  /* nudge the suite dock above the bar so it stays reachable */
-  /* an open sheet owns the bottom of the screen; the dock would cover its composer */
-
-  /* install pill */
+  /* install hint: above the bar, compact */
   #pwa-install{position:fixed; left:50%; transform:translateX(-50%);
-    bottom:calc(68px + env(safe-area-inset-bottom)); z-index:136; display:none;
-    align-items:center; gap:10px; padding:9px 10px 9px 14px;
-    background:var(--surface); border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2)); border-radius:11px;
-    box-shadow:0 14px 36px -16px rgba(0,0,0,.55); font-family:var(--sans); font-size:12.5px; color:var(--ink); max-width:92vw;}
+    bottom:calc(60px + env(safe-area-inset-bottom)); z-index:136; display:none;
+    align-items:center; gap:8px; padding:7px 8px 7px 12px;
+    background:var(--surface); border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2)); border-radius:10px;
+    box-shadow:0 14px 36px -16px rgba(0,0,0,.55); font-family:var(--sans); font-size:12px; color:var(--ink); max-width:92vw;}
   #pwa-install.on{display:flex;}
   #pwa-install b{color:var(--accent); font-weight:700;}
   #pwa-install .pi-go{font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--on-accent); background:var(--accent); border:0; border-radius:7px; padding:8px 12px; cursor:pointer;}
+    color:var(--on-accent); background:var(--accent); border:0; border-radius:7px; padding:7px 11px; cursor:pointer;}
   #pwa-install .pi-x{background:none; border:0; color:var(--ink-3); font-size:18px; line-height:1; cursor:pointer; padding:0 4px;}
 }
 
 /* very small phones */
 @media (max-width:380px){
-  .nb-pill{max-width:30vw;}
-  .status{max-width:28vw;}
+  .status{max-width:24vw;}
   .mb-btn{font-size:8px;}
+  :root{--code-fs:12px;}
 }
 
 /* short landscape phones: taller sheets */
 @media (max-width:900px) and (orientation:landscape) and (max-height:540px){
-  .panel,.panel-agent{height:94dvh;}
+  .panel,.panel-agent{max-height:94dvh;} .panel-agent{height:94dvh;}
 }

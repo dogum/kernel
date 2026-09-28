@@ -15,7 +15,7 @@
 .out{position:relative}
 .out-acts{position:absolute;top:6px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .12s;z-index:2}
 .out:hover .out-acts,.out:focus-within .out-acts{opacity:1}
-@media (hover:none){.out-acts{opacity:.85}}
+@media (hover:none){.out-acts{position:static;opacity:1;justify-content:flex-end;margin-top:5px}}  /* no hover on touch: a row under the output, never over it */
 .out-acts button{font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:3px 7px;cursor:pointer}
 .out-acts button:hover{color:var(--accent);border-color:var(--accent)}
 .out.long{max-height:460px}

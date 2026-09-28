@@ -3,6 +3,24 @@
 <html lang="en">
 <head>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
+<script>
+/* Phones get KERNEL·M, the same app laid out for touch (tab bar, bottom sheets), with the same notebooks and the same
+   link parameters. ?layout=desktop keeps this layout for the rest of the tab's session. */
+try {
+  (function () {
+    var q = new URLSearchParams(location.search), key = "kernel.layout";
+    if (q.get("layout") === "desktop") {
+      sessionStorage.setItem(key, "desktop");
+      q.delete("layout");
+      history.replaceState(null, "", location.pathname + (String(q) ? "?" + q : "") + location.hash);
+      return;
+    }
+    if (sessionStorage.getItem(key) === "desktop") return;
+    if (matchMedia("(pointer:coarse)").matches && Math.min(screen.width, screen.height) <= 600)
+      location.replace("kernel-agent-mobile.html" + location.search + location.hash);
+  })();
+} catch (e) {}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KERNEL·A v%VERSION% — durable agentic notebook, in a single file</title>
@@ -29,7 +47,7 @@
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
 <header class="topbar">
-  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A v%VERSION%</span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
+  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A<span class="brand-v"> v%VERSION%</span></span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
     <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
       <span id="nbTitleText">Untitled</span>

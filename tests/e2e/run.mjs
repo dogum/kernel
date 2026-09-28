@@ -10,5 +10,8 @@ for (const suite of ["agent-loop.mjs", "kernel-worker.mjs", "ui.mjs"]) for (cons
   const r = spawnSync(process.execPath, [here + suite, build], { stdio: "inherit", env: { ...process.env, NODE_NO_WARNINGS: "1" } });
   if (r.status !== 0) { failed += 1; console.error(`FAILED: ${suite} on ${build}`); }
 }
+// the phone suite opens both builds itself, as a phone would
+const phone = spawnSync(process.execPath, [here + "phone.mjs"], { stdio: "inherit", env: { ...process.env, NODE_NO_WARNINGS: "1" } });
+if (phone.status !== 0) { failed += 1; console.error("FAILED: phone.mjs"); }
 if (failed) process.exit(1);
-console.log("Browser E2E passed: agent loop, kernel worker, and UI on desktop and mobile builds.");
+console.log("Browser E2E passed: agent loop, kernel worker, and UI on desktop and mobile builds, and the phone layout.");
