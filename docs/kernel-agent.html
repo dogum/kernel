@@ -12595,6 +12595,8 @@ window.addEventListener("ut-theme", function () {
    the outputs on screen are the ones the original run produced. A notebook that already has work in it is kept;
    the example opens in a new notebook. */
 const EXAMPLE_BASE = "https://raw.githubusercontent.com/dogum/kernel/main/examples/";
+// Examples whose runs read public data this repository doesn't include. Each has a SOURCE.md saying where to get it.
+const EXAMPLES_NEEDING_DATA = ["fleet-dna"];
 let exampleWaitMs = 180000; // how long to wait for boot, a restart or a running cell before giving up
 
 function isBlankNotebook() {
@@ -12674,7 +12676,13 @@ async function openExample(name) {
     await saveWorkspaceState();
     if (ui.left) renderLibrary();
     closeToast();
-    toast("Opened the " + name + " example. The outputs are from the original agent run; Run all recomputes them.");
+    const opened = "Opened the " + name + " example. The outputs are from the original agent run";
+    if (!EXAMPLES_NEEDING_DATA.includes(name)) toast(opened + "; Run all recomputes them.");
+    else {
+      const sources = "https://github.com/dogum/kernel/blob/main/examples/" + name + "/SOURCE.md";
+      const action = { label: "Where to get them", run: () => window.open(sources, "_blank", "noopener") };
+      toast(opened + ". Rerunning it needs public data that isn't included; add those files first.", "", { action });
+    }
   } catch (err) {
     closeToast();
     toast("Could not open the example · " + String(err && err.message ? err.message : err), "err");

@@ -148,6 +148,9 @@ const reset = await kAsync(page, `const c = insertCell(cells.length, 'code', fal
 assert.deepEqual(reset, { blank: true, reused: true, imported: true, stale: false }, 'an example reusing a blank notebook starts from a clean Python namespace');
 const typed = await kAsync(page, `await newNotebook(); const realIsolate = isolateNotebookRuntime; isolateNotebookRuntime = async (...args) => { cells[0].source = 'typed_meanwhile = 1'; cells[0].taEl.value = cells[0].source; return realIsolate(...args); }; try { await openExample('regex-engine'); } finally { isolateNotebookRuntime = realIsolate; } return { imported: nbName === 'regex-engine', kept: cells.length === 1 && cells[0].taEl.value === 'typed_meanwhile = 1' }`);
 assert.deepEqual(typed, { imported: false, kept: true }, 'work added while Python resets is not replaced by the example');
+await clearToasts();
+await kAsync(page, `await openExample('fleet-dna')`);
+assert.equal(await toastAct('needs public data').textContent(), 'Where to get them', 'an example that needs outside data says so and links to where to get it');
 const fresh = await newContext(browser);
 const linked = await openApp(fresh, file + '?example=lunar-settlement');
 await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && cells.length > 3`));
