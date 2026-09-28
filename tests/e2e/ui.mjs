@@ -14,6 +14,19 @@ const clearToasts = () => page.evaluate(() => document.querySelectorAll('.toast'
 assert.equal(await k(page, `getComputedStyle(document.getElementById('btnInterrupt')).display`), 'none');
 assert.ok(await k(page, `document.scrollingElement.scrollWidth <= innerWidth`), 'no horizontal page scroll');
 
+// 1b. the brand opens the app menu (other KERNEL apps, project page, theme); nothing floats over the notebook
+assert.equal(await k(page, `!!document.getElementById('dna-dock')`), false, 'no floating dock');
+await page.click('#suiteBtn');
+assert.equal(await k(page, `document.getElementById('suiteBtn').getAttribute('aria-expanded')`), 'true');
+assert.equal(await k(page, `document.querySelectorAll('#suiteMenu a.sm-item[href$=".html"]').length`), 3, 'two other apps and the project page are links');
+assert.match(await k(page, `document.querySelector('#suiteMenu .sm-item.cur').textContent`), mobile ? /KERNEL·M/ : /KERNEL·A/);
+const theme0 = await k(page, `document.documentElement.dataset.theme||'light'`);
+await page.click('#suiteMenu [data-sm="theme"]');
+assert.notEqual(await k(page, `document.documentElement.dataset.theme`), theme0, 'theme toggles from the menu');
+await page.click('#suiteMenu [data-sm="theme"]');
+await page.keyboard.press('Escape');
+assert.equal(await k(page, `document.getElementById('suiteMenu').classList.contains('open') || document.activeElement.id!=='suiteBtn'`), false, 'Escape closes and returns focus');
+
 // 2. first run: the welcome card offers a sample that loads, runs, and then gets out of the way
 assert.equal(await k(page, `!!document.querySelector('.welcome') && !document.querySelector('.welcome').hidden`), true);
 await page.click('[data-w="sample"]');

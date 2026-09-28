@@ -56,7 +56,7 @@ target = target.replace(
 );
 
 target = target.replace(/<title>[^<]*<\/title>/, '<title>KERNEL·A v2.4.0 — agentic notebook · mobile (PWA)</title>');
-target = target.replace(/<h1>KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span><\/h1>/, '<h1>KERNEL<span class="brand-a">·A v2.4.0</span></h1>');
+target = target.replace(/KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span>/, 'KERNEL<span class="brand-a">·A v2.4.0</span>');
 target = target.replace('id="btnOpen" title="Open .ipynb"', 'id="btnOpen" title="Open .ipynb or .kernel.zip"');
 if (!target.includes('id="btnWorkspace"')) {
   const zipButton = source.match(/^\s*<button class="btn" id="btnWorkspace"[^\n]*$/m)?.[0];
