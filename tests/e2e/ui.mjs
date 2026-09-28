@@ -1,0 +1,101 @@
+import assert from 'node:assert/strict';
+import { staticServer, launch, openApp, k, kAsync } from './harness.mjs';
+const srv = await staticServer(8765);
+const { browser, context } = await launch();
+const file = process.argv[2] || 'kernel-agent.html';
+const mobile = /mobile/.test(file);
+const page = await openApp(context, file);
+await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+const run = (src) => kAsync(page, `const c=insertCell(cells.length,'code',false);c.source=${JSON.stringify(src)};if(c.taEl)c.taEl.value=c.source;await runCell(c);return {id:c.id,out:c.outputs,exec:c.execCount};`);
+const toastAct = (text, nth = 0) => page.locator('.toast:not(.closing)', { hasText: text }).nth(nth).locator('.toast-act');
+const clearToasts = () => page.evaluate(() => document.querySelectorAll('.toast').forEach(t => t.remove()));
+
+// 1. idle chrome: Interrupt only appears while a cell runs; the page never scrolls sideways
+assert.equal(await k(page, `getComputedStyle(document.getElementById('btnInterrupt')).display`), 'none');
+assert.ok(await k(page, `document.scrollingElement.scrollWidth <= innerWidth`), 'no horizontal page scroll');
+
+// 2. first run: the welcome card offers a sample that loads, runs, and then gets out of the way
+assert.equal(await k(page, `!!document.querySelector('.welcome') && !document.querySelector('.welcome').hidden`), true);
+await page.click('[data-w="sample"]');
+await page.waitForFunction(() => window.__k('cells.length>=3 && cells.every(c=>c.type!=="code"||c.execCount!=null) && !busy'), null, { timeout: 120000 });
+assert.equal(await k(page, `!!dataEntry('sample_sales.csv')`), true);
+assert.equal(await k(page, `!document.querySelector('.welcome') || document.querySelector('.welcome').hidden`), true, 'welcome hides once the notebook has content');
+assert.match(await k(page, `document.querySelector('.out-html table').textContent`), /revenue/);
+
+// 3. outputs read naturally: plain numbers, tracebacks name cells, errors offer a fix, tables export
+let r = await run('df.revenue.mean()');
+assert.doesNotMatch(JSON.stringify(r.out), /np\.float64|numpy/, 'numpy scalars print as plain numbers');
+r = await run('df.revenu.sum()');
+const tb = await k(page, `findCell(${JSON.stringify(r.id)}).el.querySelector('.out-err').textContent`);
+assert.match(tb, /Cell \d+, line 1/); assert.doesNotMatch(tb, /kernel:\/\//);
+assert.equal(await k(page, `!!findCell(${JSON.stringify(r.id)}).el.querySelector('.out-fix')`), true, 'errors offer Fix with agent');
+assert.ok(await k(page, `[...document.querySelectorAll('.out-acts button')].some(b=>/CSV/.test(b.textContent))`), 'tables offer CSV export');
+r = await run('for i in range(80): print(i)');
+assert.equal(await k(page, `findCell(${JSON.stringify(r.id)}).el.querySelector('.out.long')!==null`), true, 'long output is clipped with an expand control');
+
+// 4. delete undo: each toast restores its own cell, in notebook order, whichever is clicked first
+await clearToasts();
+const before = await k(page, `cells.map(c=>c.id).join()`);
+await kAsync(page, `deleteCell(cells[1]); deleteCell(cells[1]);`);
+await toastAct('Deleted cell', 0).click();
+await toastAct('Deleted cell', 0).click();
+assert.equal(await k(page, `cells.map(c=>c.id).join()`), before, 'oldest-first undo keeps notebook order');
+assert.equal(await kAsync(page, `const n=cells.length; undoDeleteCell(deletedCells[0]||{}); return cells.length===n`), true, 'a spent Undo does nothing');
+await kAsync(page, `selectCell(cells[2].id,'command'); deleteCell(cells[2]);`);
+await page.keyboard.press('z');
+assert.equal(await k(page, `cells.map(c=>c.id).join()`), before, 'z restores the last deleted cell');
+
+// 5. clear-outputs undo
+await clearToasts();
+const withOut = await k(page, `cells.filter(c=>c.outputs&&c.outputs.length).length`);
+await kAsync(page, `clearOutputs();`);
+assert.equal(await k(page, `cells.filter(c=>c.outputs&&c.outputs.length).length`), 0);
+await toastAct('Outputs cleared').click();
+assert.equal(await k(page, `cells.filter(c=>c.outputs&&c.outputs.length).length`), withOut);
+
+// 6. inspector: explore a DataFrame in one click; deleting a variable can be undone
+await kAsync(page, `toggleRight(true); await refreshInspector();`);
+await page.waitForFunction(() => window.__k(`lastVars.includes('df')`));
+await page.locator('#varsList .var-row', { hasText: 'df' }).first().click();
+await page.locator('#varsList .vd-act', { hasText: 'describe' }).first().click();
+await page.waitForFunction(() => window.__k(`!busy && cells.some(c=>/\\.describe\\(include/.test(c.source)&&c.execCount!=null)`));
+assert.ok(await k(page, `cells.some(c=>/\\.describe\\(include/.test(c.source) && JSON.stringify(c.outputs).includes('revenue'))`), 'describe cell added and run');
+await page.waitForFunction(() => !!document.querySelector('#varsList .var-item.open .vd-acts'), null, { timeout: 10000 });
+r = await run('s = df.revenue');
+await kAsync(page, `await exploreWith('import matplotlib.pyplot as plt\\ns.plot.hist(bins=30, title="s")');`);
+assert.ok(await k(page, `JSON.stringify(cells.find(c=>/plot\\.hist/.test(c.source)).outputs).includes('image')`), 'histogram renders a figure');
+await clearToasts();
+await page.waitForFunction(() => window.__k('!busy'));
+await kAsync(page, `await delVar('df'); await refreshInspector();`);
+assert.equal(await k(page, `lastVars.includes('df')`), false);
+await toastAct('Deleted df').click();
+await page.waitForFunction(() => window.__k(`lastVars.includes('df')`));
+r = await run('df.shape');
+assert.match(JSON.stringify(r.out), /600, 9/, 'restored variable keeps its value');
+await kAsync(page, `toggleRight(false);`);
+
+// 7. files: drop anywhere to mount; clicking a data row previews it; removal can be undone
+await page.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File(['a,b\n1,2\n'], 'dropped.csv', { type: 'text/csv' })); const s = document.querySelector('.sheet'); s.dispatchEvent(new DragEvent('dragenter', { bubbles: true, dataTransfer: dt })); s.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt })); });
+await page.waitForFunction(() => window.__k(`!!dataEntry('dropped.csv')`));
+await kAsync(page, `toggleLeft(true); renderDataList();`);
+await page.locator('#dataList .data-row', { hasText: 'dropped.csv' }).locator('.data-meta').click();
+await page.waitForFunction(() => !!document.querySelector('#dataList .data-preview table'));
+assert.ok(await k(page, `Math.round(document.querySelector('#dataList .data-name').getBoundingClientRect().width) > 100`), 'data names stay readable');
+await clearToasts();
+await kAsync(page, `await removeData('dropped.csv');`);
+await toastAct('Removed dropped.csv').click();
+await page.waitForFunction(() => window.__k(`!!dataEntry('dropped.csv')`));
+await kAsync(page, `toggleLeft(false);`);
+
+// 8. layout: the cell toolbar never covers code; on phones the composer's SEND stays above the tab bar
+await kAsync(page, `selectCell(cells[1].id,'command'); cells[1].el.scrollIntoView({block:'center'});`);
+await page.waitForTimeout(300);
+assert.equal(await k(page, `(()=>{const c=cells[1],a=c.el.querySelector('.cell-tools').getBoundingClientRect(),b=c.preEl.getBoundingClientRect(),cs=getComputedStyle(c.preEl);const top=b.top+parseFloat(cs.paddingTop),bottom=b.bottom-parseFloat(cs.paddingBottom);return a.bottom<=top+1||a.top>=bottom-1})()`), true, 'cell toolbar clear of the code');
+if (mobile) {
+  await kAsync(page, `ui.agent=true; applyUI();`);
+  await page.waitForTimeout(500);
+  assert.ok(await k(page, `document.getElementById('agSend').getBoundingClientRect().bottom <= document.getElementById('mob-bar').getBoundingClientRect().top`), 'SEND above the tab bar');
+  await kAsync(page, `ui.agent=false; applyUI();`);
+}
+console.log('UI E2E passed for', file);
+await browser.close(); srv.close();

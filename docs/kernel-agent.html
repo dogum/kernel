@@ -530,6 +530,59 @@ body.resizing{cursor:col-resize; user-select:none}
 .ag-send:hover:not(:disabled){background:var(--accent-2);border-color:var(--accent-2)}
 </style>
 <style id="kernel-agent-v2">
+/* v2.5 UI: the hidden attribute always wins over component display rules */
+[hidden]{display:none!important}
+.toast{display:flex;align-items:center;gap:14px;pointer-events:auto}
+.ag-sys{text-transform:none!important;letter-spacing:.01em!important;font:11px/1.45 var(--sans)!important;color:var(--ink-3)!important;padding:3px 6px!important}
+.ag-state.nokey{color:var(--busy);border-color:color-mix(in srgb,var(--busy) 45%,var(--line-2));cursor:pointer}
+.ag-state.nokey:hover{color:var(--accent);border-color:var(--accent)}
+.ag-run-metrics{white-space:normal!important;line-height:1.35!important}
+.ag-recovery.calm{background:var(--accent-ghost);border-bottom-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+.ag-recovery.calm strong{color:var(--accent)}
+.ag-chips{margin:2px 0}
+.drop-overlay{position:fixed;inset:0;z-index:2147482000;display:none;align-items:center;justify-content:center;background:color-mix(in srgb,var(--accent) 10%,transparent);outline:3px dashed var(--accent);outline-offset:-10px;pointer-events:none}
+.drop-overlay.on{display:flex}
+.drop-overlay>div{display:flex;flex-direction:column;gap:4px;align-items:center;padding:18px 26px;background:var(--surface);border:1px solid var(--line-2);border-radius:6px;box-shadow:var(--shadow);font-family:var(--sans);color:var(--ink)}
+.drop-overlay b{font-size:15px}.drop-overlay span{font-size:12px;color:var(--ink-3)}
+.out{position:relative}
+.out-acts{position:absolute;top:6px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .12s;z-index:2}
+.out:hover .out-acts,.out:focus-within .out-acts{opacity:1}
+@media (hover:none){.out-acts{opacity:.85}}
+.out-acts button{font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:3px 7px;cursor:pointer}
+.out-acts button:hover{color:var(--accent);border-color:var(--accent)}
+.out.long{max-height:460px}
+.out.long.expanded{max-height:none}
+.out-fix{display:inline-block;font:600 11px var(--sans);color:var(--accent);background:var(--surface);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2));border-radius:3px;padding:4px 10px;margin:6px 6px 2px 0;cursor:pointer}
+.out-fix:hover{background:var(--accent);color:var(--on-accent)}
+.data-meta{cursor:pointer}
+.welcome{max-width:900px;width:100%;margin:0 auto 14px;padding:22px 24px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);box-sizing:border-box}
+.welcome h2{margin:0 0 6px;font-family:var(--disp);font-size:20px;color:var(--ink)}
+.welcome p{margin:0 0 14px;font-family:var(--sans);font-size:13.5px;line-height:1.55;color:var(--ink-2);max-width:62ch}
+.welcome-acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.welcome .welcome-tip{margin:0;max-width:none;font-size:11.5px;color:var(--ink-3)}
+
+.toast-act{font:600 12px var(--sans);color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:3px;padding:4px 10px;cursor:pointer}
+.toast-act:hover{background:rgba(255,255,255,.26)}
+.toast.closing{pointer-events:none}
+.toast-host{z-index:2147482500}  /* above sheets, modals, and the drop overlay so Undo is always reachable */
+/* flex/grid children may shrink, so wide outputs scroll inside their cell instead of pushing the sheet under the panels */
+.sheet,.notebook,.cell,.cell .body,.outputs,.out,.out-card{min-width:0}
+.out-text,.out-stream,.out-err{overflow-x:auto}
+.data-top,.lib-row{flex-wrap:wrap;row-gap:7px}
+.vd-acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.vd-act{font:10.5px var(--mono);color:var(--ink-2);background:var(--surface);border:1px solid var(--line-2);border-radius:2px;padding:3px 8px;cursor:pointer}
+.vd-act:hover{color:var(--accent);border-color:var(--accent)}
+.lib-meta{flex:1 1 150px}
+.lib-acts{margin-left:auto}
+.data-meta{flex:1 1 150px}
+.data-acts{flex-wrap:wrap;margin-left:auto}
+.ag-adv{margin-top:14px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)}
+.ag-adv>summary{cursor:pointer;padding:10px 12px;font:600 10px var(--mono);letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;list-style-position:inside}
+.ag-adv>summary:hover{color:var(--ink)}
+.ag-adv>.ag-settings-grid{padding:4px 12px 12px}
+.ag-key-help{font-family:var(--sans);font-size:11px;color:var(--accent);text-decoration:none;margin-left:6px;letter-spacing:0;text-transform:none;font-weight:500}
+.ag-key-help:hover{text-decoration:underline}
+#agScrim .prompt-acts{position:sticky;bottom:-1px;z-index:2;background:var(--surface);margin:12px -1px 0;padding:12px 0 2px;border-top:1px solid var(--line)}
 .ag-progress{font-family:var(--sans);font-size:11.5px;line-height:1.45;color:var(--ink-3);border-left:2px solid var(--line-2);padding:1px 0 1px 8px;white-space:pre-wrap;word-break:break-word}
 /* ===== KERNEL·A v2 · provider-neutral, threaded, portable ===== */
 .ag-threadbar{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
@@ -623,6 +676,16 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
 .md-rendered .mermaid:not([data-done]){font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:pre-wrap; background:var(--surface-2); border:1px dashed var(--line-2); border-radius:8px; padding:10px 12px; text-align:left}
 .md-rendered .mermaid.mermaid-err{color:var(--err); border-color:var(--err-line)}
 </style>
+<style id="kernel-desktop-ui">
+.status{flex:0 0 auto}
+.foot{padding-right:210px}
+.cell-tools{top:-20px;right:12px}
+.menu-item.narrow-only,.menu-sep.narrow-only{display:none}
+@media (max-width:1280px){
+  .toolbar #btnNew,.toolbar #btnOpen,.toolbar #btnWorkspace,.toolbar #btnClear{display:none}
+  .menu-item.narrow-only{display:block}.menu-sep.narrow-only{display:block}
+}
+</style>
 </head>
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
@@ -652,6 +715,10 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
     <div class="menu-wrap">
       <button class="btn btn-chip btn-more" id="btnMore" title="More actions" aria-haspopup="true">⋯</button>
       <div class="menu" id="moreMenu" aria-hidden="true">
+        <button class="menu-item narrow-only" data-mi="newNb">New notebook</button>
+        <button class="menu-item narrow-only" data-mi="openNb">Open .ipynb or .kernel.zip…</button>
+        <button class="menu-item narrow-only" data-mi="saveZip">Save workspace ZIP</button>
+        <div class="menu-sep narrow-only"></div>
         <button class="menu-item" data-mi="restartRun">Restart &amp; run all</button>
         <button class="menu-item" data-mi="splitOut" id="miSplit">Move outputs to panel</button>
         <button class="menu-item" data-mi="collapseAll">Collapse all cells</button>
@@ -690,7 +757,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
         <span class="ag-run-metrics" id="agRunMetrics">NO ACTIVE RUN</span>
       </div>
       <div class="ag-planstrip" id="agPlanStrip"><b>PLAN</b><span id="agPlanCurrent"></span></div>
-      <div class="ag-recovery" id="agRecovery"><div class="ag-recovery-copy"><strong id="agRecoveryTitle">RUN PAUSED</strong><span id="agRecoveryText"></span><div class="ag-budget" id="agRecoveryBudget"><span></span></div></div><div class="ag-recovery-actions"><button class="ag-run-btn" id="agResume">RESUME</button><button class="ag-run-btn warn" id="agAbandon">END</button></div></div>
+      <div class="ag-recovery" id="agRecovery"><div class="ag-recovery-copy"><strong id="agRecoveryTitle">RUN PAUSED</strong><span id="agRecoveryText"></span><div class="ag-budget" id="agRecoveryBudget"><span></span></div></div><div class="ag-recovery-actions"><button class="ag-run-btn" id="agResume">RESUME</button><button class="ag-run-btn warn" id="agAbandon" title="End this run; the notebook and thread stay as they are">END RUN</button></div></div>
       <div class="ag-body">
         <div class="ag-tx" id="agTx"></div>
         <div class="ag-composer">
@@ -698,7 +765,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <textarea id="agIn" rows="2" placeholder="Describe an analysis — or paste an image to show it something… (⌘J)"></textarea>
           <div class="ag-row">
             <button class="ag-mode" id="agMode" title="Autonomy — AUTO runs freely, STEP asks before each run">AUTO</button>
-              <button class="ag-mode" id="agModelChip" title="Open provider and model settings">sonnet</button>
+              <button class="ag-mode" id="agModelChip" title="Open provider and model settings"></button>
             <span class="ag-steps" id="agSteps"></span>
               <span class="ag-usage" id="agUsage" title="Input and output tokens · click for context details"></span>
             <button class="ag-stop" id="agStop" style="display:none">STOP</button>
@@ -742,6 +809,15 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
   <aside class="panel panel-right" id="rightPanel" aria-hidden="true">
     <div class="panel-grip" data-side="right" title="Drag to resize"></div>
     <div class="panel-inner">
+      <section class="panel-section" id="secVars">
+        <div class="panel-h">
+          <button class="panel-toggle" data-sec="vars"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Variables</span></button>
+          <span class="panel-count" id="varsCount">0 names</span>
+        </div>
+        <div class="panel-search"><input id="varsFilter" placeholder="Filter variables" autocomplete="off" spellcheck="false"></div>
+        <div class="var-tools"><select id="varsSort" aria-label="Sort variables"><option value="name">Name</option><option value="type">Type</option><option value="memory">Memory</option></select><button class="var-refresh" id="varsRefresh">REFRESH</button></div>
+        <div class="panel-b" id="varsList"></div>
+      </section>
       <section class="panel-section" id="secOutputs">
         <div class="panel-h">
           <button class="panel-toggle" data-sec="out"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Outputs</span></button>
@@ -751,15 +827,6 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <div class="outputs-hint" id="outHint"><p>Push cell outputs into this panel, synced to each cell.</p><button id="outEnable">Move outputs here</button></div>
           <div id="outList"></div>
         </div>
-      </section>
-      <section class="panel-section" id="secVars">
-        <div class="panel-h">
-          <button class="panel-toggle" data-sec="vars"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Variables</span></button>
-          <span class="panel-count" id="varsCount">0 names</span>
-        </div>
-        <div class="panel-search"><input id="varsFilter" placeholder="Filter variables" autocomplete="off" spellcheck="false"></div>
-        <div class="var-tools"><select id="varsSort" aria-label="Sort variables"><option value="name">Name</option><option value="type">Type</option><option value="memory">Memory</option></select><button class="var-refresh" id="varsRefresh">REFRESH</button></div>
-        <div class="panel-b" id="varsList"></div>
       </section>
     </div>
   </aside>
@@ -806,20 +873,25 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
       <div class="ag-settings-grid">
         <div class="ag-field"><label for="agProvider">PROVIDER</label><select id="agProvider" class="prompt-input"><option value="anthropic">Anthropic</option><option value="openai">OpenAI</option><option value="xai">xAI / Grok</option></select></div>
         <div class="ag-field"><label for="agReasoning">REASONING EFFORT</label><select id="agReasoning" class="prompt-input"><option value="off">Provider default</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
-        <div class="ag-field wide"><label id="agKeyLabel" for="agKey">ANTHROPIC API KEY</label><input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></div>
-        <div class="ag-field wide"><label for="agBase">API BASE URL</label><input id="agBase" class="prompt-input" type="url" autocomplete="off" spellcheck="false"><div class="ag-field-note">Editable for compatible gateways. Kernel never includes keys in notebook or ZIP exports.</div></div>
-        <div class="ag-field wide"><label for="agModel">MODEL ID</label><div class="ag-model-row"><input id="agModel" class="prompt-input" type="text" list="agModelList" autocomplete="off" spellcheck="false" placeholder="claude-opus-5-5"><datalist id="agModelList"></datalist><button class="btn" id="agDiscover" type="button">Discover</button></div><div class="ag-discovery" id="agDiscovery"></div></div>
-        <div class="ag-field"><label for="agOut">MAX OUTPUT TOKENS</label><input id="agOut" class="prompt-input" type="number" min="512" max="128000" step="256"></div>
-        <div class="ag-field"><label for="agCtxOverride">CONTEXT LIMIT · OPTIONAL</label><input id="agCtxOverride" class="prompt-input" type="number" min="8192" max="4000000" step="1024" placeholder="auto"></div>
-        <div class="ag-field"><label for="agCompactAt">COMPACT ACTIVE PAYLOAD AT %</label><input id="agCompactAt" class="prompt-input" type="number" min="50" max="95"></div>
-        <div class="ag-field"><label for="agMax">TOOL CALL CHECKPOINT</label><input id="agMax" class="prompt-input" type="number" min="4" max="200"></div>
-        <div class="ag-field"><label for="agMinutes">ACTIVE TIME CHECKPOINT · MIN</label><input id="agMinutes" class="prompt-input" type="number" min="1" max="720"></div>
-        <div class="ag-field"><label for="agTokenBudget">EFFECTIVE TOKEN BUDGET / RUN</label><input id="agTokenBudget" class="prompt-input" type="number" min="1000" max="10000000" step="1000" title="Uncached input + output + 10% of cache reads"></div>
-        <div class="ag-field"><label for="agAutoExtensions">AUTO PROGRESS EXTENSIONS</label><input id="agAutoExtensions" class="prompt-input" type="number" min="0" max="20"></div>
-        <div class="ag-field"><label for="agCellMinutes">AGENT CELL TIME LIMIT · MIN</label><input id="agCellMinutes" class="prompt-input" type="number" min="1" max="240" title="KERNEL interrupts an agent-run cell that runs longer than this"></div>
-        <div class="ag-field wide"><label>AUTONOMY</label><div style="display:flex;gap:6px"><button class="btn" id="agAutoBtn">AUTO</button><button class="btn" id="agStepBtn">STEP</button></div></div>
+        <div class="ag-field wide"><label for="agKey"><span id="agKeyLabel">ANTHROPIC API KEY</span><a class="ag-key-help" id="agKeyHelp" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get a key ↗</a></label><input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"><div class="ag-field-note">Stored only in this browser and sent only to the API base below. Never included in notebooks or ZIP exports.</div></div>
+        <div class="ag-field wide"><label for="agModel">MODEL ID</label><div class="ag-model-row"><input id="agModel" class="prompt-input" type="text" list="agModelList" autocomplete="off" spellcheck="false" placeholder="claude-opus-5-5"><datalist id="agModelList"></datalist><button class="btn" id="agDiscover" type="button" title="List the models this key can use">Discover</button></div><div class="ag-discovery" id="agDiscovery"></div></div>
+        <div class="ag-field wide"><label>AUTONOMY</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" id="agAutoBtn">AUTO</button><button class="btn" id="agStepBtn">STEP</button><span class="ag-field-note" style="margin:0">AUTO runs cells on its own · STEP asks before running code</span></div></div>
       </div>
-      <div class="ag-field-note" style="margin-top:12px">Keys remain in this browser and are sent only to the selected API base. AUTO can extend tool/time checkpoints while notebook progress continues; the effective token budget (uncached input + output + 10% of cache reads) stays hard. Transient provider errors retry automatically. STEP asks before execution. Full thread history stays local and portable while only the active API payload is compacted.</div>
+      <details class="ag-adv">
+        <summary>Advanced · endpoint, output, context, and run limits</summary>
+        <div class="ag-settings-grid">
+          <div class="ag-field wide"><label for="agBase">API BASE URL</label><input id="agBase" class="prompt-input" type="url" autocomplete="off" spellcheck="false"><div class="ag-field-note">Change only for a compatible gateway you control.</div></div>
+          <div class="ag-field"><label for="agOut">MAX OUTPUT TOKENS</label><input id="agOut" class="prompt-input" type="number" min="512" max="128000" step="256"></div>
+          <div class="ag-field"><label for="agCtxOverride">CONTEXT LIMIT · OPTIONAL</label><input id="agCtxOverride" class="prompt-input" type="number" min="8192" max="4000000" step="1024" placeholder="auto"></div>
+          <div class="ag-field"><label for="agCompactAt">COMPACT ACTIVE PAYLOAD AT %</label><input id="agCompactAt" class="prompt-input" type="number" min="50" max="95"></div>
+          <div class="ag-field"><label for="agCellMinutes">AGENT CELL TIME LIMIT · MIN</label><input id="agCellMinutes" class="prompt-input" type="number" min="1" max="240" title="KERNEL interrupts an agent-run cell that runs longer than this"></div>
+          <div class="ag-field"><label for="agMax">TOOL CALL CHECKPOINT</label><input id="agMax" class="prompt-input" type="number" min="4" max="200"></div>
+          <div class="ag-field"><label for="agMinutes">ACTIVE TIME CHECKPOINT · MIN</label><input id="agMinutes" class="prompt-input" type="number" min="1" max="720"></div>
+          <div class="ag-field"><label for="agTokenBudget">EFFECTIVE TOKEN BUDGET / RUN</label><input id="agTokenBudget" class="prompt-input" type="number" min="1000" max="10000000" step="1000" title="Uncached input + output + 10% of cache reads"></div>
+          <div class="ag-field"><label for="agAutoExtensions">AUTO PROGRESS EXTENSIONS</label><input id="agAutoExtensions" class="prompt-input" type="number" min="0" max="20"></div>
+        </div>
+        <div class="ag-field-note" style="margin:0 12px 12px">AUTO can extend tool and time checkpoints while the notebook keeps making progress; the effective token budget (uncached input + output + 10% of cache reads) is a hard stop. Transient provider errors retry automatically. Full thread history stays local; only the payload sent to the model is compacted.</div>
+      </details>
       <div class="prompt-acts"><button class="btn" id="agClear">Clear key</button><button class="btn primary" id="agSave">Save</button></div>
     </div>
   </div>
@@ -874,6 +946,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
           <div class="kbd-row"><span>Move selection</span><kbd>↑ ↓ / j k</kbd></div>
           <div class="kbd-row"><span>Insert above / below</span><kbd>a</kbd> <kbd>b</kbd></div>
           <div class="kbd-row"><span>Delete cell</span><kbd>d d</kbd></div>
+          <div class="kbd-row"><span>Undo cell delete</span><kbd>z</kbd></div>
           <div class="kbd-row"><span>Interrupt running cell</span><kbd>i i</kbd></div>
           <div class="kbd-row"><span>To markdown / code</span><kbd>m</kbd> <kbd>y</kbd></div>
         </div>
@@ -961,6 +1034,9 @@ def _emit_obj(o):
                 _OUT.append({"kind":"html", "html":str(h)}); return
         except Exception:
             pass
+    np = sys.modules.get("numpy")
+    if np is not None and isinstance(o, (np.integer, np.floating, np.bool_)):
+        o = o.item()
     try: _OUT.append({"kind":"text", "text":repr(o)})
     except Exception: _OUT.append({"kind":"text", "text":"<unrepresentable object>"})
 
@@ -1004,6 +1080,7 @@ _KNS = _new_kernel_ns()
 def _kernel_reset():
     global _KNS
     _KNS = _new_kernel_ns()
+    _KTRASH.clear()
     if "matplotlib" in sys.modules:
         try:
             import matplotlib.pyplot as plt
@@ -1142,10 +1219,12 @@ def _inspect_ns():
         info = ""
         try:
             if tn == "DataFrame":
-                info = "%d rows x %d cols" % (v.shape[0], v.shape[1])
-            elif tn in ("Series", "ndarray"):
+                info = "%d \u00d7 %d" % (v.shape[0], v.shape[1])
+            elif tn == "Series":
+                info = "%d values" % len(v)
+            elif tn == "ndarray":
                 sh = getattr(v, "shape", None)
-                info = ("shape " + str(tuple(sh))) if sh is not None else ""
+                info = " \u00d7 ".join(str(int(n)) for n in sh) if sh else "scalar"
             elif tn in ("list", "tuple", "set", "dict", "frozenset"):
                 info = "%d items" % len(v)
             elif tn in ("str", "bytes"):
@@ -1160,8 +1239,22 @@ def _inspect_ns():
     rows.sort(key=lambda r: r["name"].lower())
     return json.dumps(rows)
 
+_KTRASH = {}
+
 def _del_var(name):
-    _KNS.pop(name, None)
+    if name in _KNS:
+        _KTRASH.pop(name, None)
+        _KTRASH[name] = _KNS.pop(name)
+        while len(_KTRASH) > 8:
+            _KTRASH.pop(next(iter(_KTRASH)))
+    return "ok"
+
+def _undel_var(name):
+    if name not in _KTRASH:
+        return "gone"
+    if name in _KNS:
+        return "exists"
+    _KNS[name] = _KTRASH.pop(name)
     return "ok"
 
 def _short(x):
@@ -1441,11 +1534,15 @@ const uid=()=>"c"+Math.random().toString(36).slice(2,9);
 const nuid=()=>"nb"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
-function toast(msg,kind){
+function toast(msg,kind,opts){
   const host=$("#toastHost"); const t=document.createElement("div");
-  t.className="toast"+(kind?(" "+kind):""); t.textContent=String(msg); host.appendChild(t);
+  t.className="toast"+(kind?(" "+kind):""); const text=document.createElement("span"); text.textContent=String(msg); t.appendChild(text);
+  let timer=null; const close=()=>{ clearTimeout(timer); t.classList.remove("show"); t.classList.add("closing"); setTimeout(()=>t.remove(),250); };
+  if(opts&&opts.action){ const b=document.createElement("button"); b.className="toast-act"; b.textContent=opts.action.label||"Undo"; b.addEventListener("click",()=>{ if(t.classList.contains("closing")) return; close(); try{ opts.action.run(); }catch(e){ console.error(e); } }); t.appendChild(b); }
+  host.appendChild(t);
   requestAnimationFrame(()=>t.classList.add("show"));
-  setTimeout(()=>{t.classList.remove("show"); setTimeout(()=>t.remove(),250);}, kind==="err"?4200:2600);
+  timer=setTimeout(close, opts&&opts.action?7000:(kind==="err"?4200:2600));
+  return close;
 }
 function setStatus(text,s,full){ $("#statusText").textContent=text; $("#status").dataset.s=s; $("#status").title=full||""; const ib=document.getElementById("btnInterrupt"); if(ib) ib.hidden=!(s==="busy"&&busy&&kernelReady); }
 function pkgSummary(verb,names){
@@ -1646,7 +1743,7 @@ function buildCell(cell){
   sec.addEventListener("mouseleave",()=>linkHover(cell.id,false));
 
   // events
-  ta.addEventListener("input",()=>{ cell.source=ta.value; paint(cell); schedulePersist(); recomputeDependencies(); if(cell.type==="code") cmp.onInput(cell); });
+  ta.addEventListener("input",()=>{ cell.source=ta.value; paint(cell); schedulePersist(); recomputeDependencies(); if(cell.type==="code") cmp.onInput(cell); renderWelcome(); });
   ta.addEventListener("focus",()=>{ selectCell(cell.id,"edit"); });
   ta.addEventListener("keydown",e=>editorKey(e,cell));
   ta.addEventListener("blur",()=>{ cmp.hideSoon(); });
@@ -1717,20 +1814,24 @@ function renderOutputs(cell){
   if(!outs.length){ host.hidden=true; return; }
   host.hidden=false;
   if(cell.provenance){
-    const p=document.createElement("div");p.className="out-provenance";
-    const f=cellFreshness(cell),who=cell.provenance.actor||"human";
-    p.innerHTML='<span>'+escAttr(who)+' · '+escAttr(new Date(cell.provenance.at||Date.now()).toLocaleString())+'</span><span>'+escAttr(cell.provenance.sourceHash||"")+'</span>'+(f.state!=="fresh"?'<span class="bad">'+escAttr(f.state.toUpperCase())+(f.reasons.length?' · '+escAttr(f.reasons.join("; ")):'')+'</span>':'<span>FRESH</span>');
-    host.appendChild(p);
+    const f=cellFreshness(cell),who=cell.provenance.actor||"human",when=new Date(cell.provenance.at||Date.now()).toLocaleString();
+    if(cell.execEl) cell.execEl.title="Run by "+who+" · "+when+" · "+f.state+(f.reasons.length?" · "+f.reasons.join("; "):"");
+    if(f.state==="stale"){
+      const p=document.createElement("div");p.className="out-provenance";
+      p.innerHTML='<span class="bad">STALE</span><span>'+escAttr(f.reasons.join("; ")||"inputs changed since this ran")+'</span><span>rerun to refresh · ran by '+escAttr(who)+' · '+escAttr(when)+'</span>';
+      host.appendChild(p);
+    }
   }
   for(const o of outs){
     const d=document.createElement("div");
     if(o.kind==="stream"){ d.className="out out-stream"+(o.name==="stderr"?" stderr":""); d.innerHTML="<pre>"+esc(o.text)+"</pre>"; }
     else if(o.kind==="text"){ d.className="out out-text"; d.innerHTML="<pre>"+esc(o.text)+"</pre>"; }
     else if(o.kind==="error"){
-      d.className="out out-err";const pre=document.createElement("pre");pre.textContent=stripAnsi(o.text||o.error&&o.error.text||"");d.appendChild(pre);
+      d.className="out out-err";const pre=document.createElement("pre");pre.textContent=friendlyTrace(stripAnsi(o.text||o.error&&o.error.text||""));d.appendChild(pre);
       for(const fr of (o.frames||o.error&&o.error.frames||[]).filter(x=>x&&x.cellId)){
-        const b=document.createElement("button");b.className="out-frame-link";b.textContent='↗ '+fr.cellId+(fr.line?':'+fr.line:'');b.title=(fr.function||"")+(fr.source?' · '+fr.source:'');b.addEventListener("click",()=>focusCellLine(fr.cellId,fr.line));d.appendChild(b);
+        const target=findCell(fr.cellId),b=document.createElement("button");b.className="out-frame-link";b.textContent='↗ '+(target?cellTag(target):'deleted cell')+(fr.line?', line '+fr.line:'');b.title=(fr.function||"")+(fr.source?' · '+fr.source:'');b.addEventListener("click",()=>focusCellLine(fr.cellId,fr.line));d.appendChild(b);
       }
+      if(typeof agFixCell==="function"){ const fx=document.createElement("button"); fx.className="out-fix"; fx.textContent="✦ Fix with agent"; fx.title="Draft a request for the agent to fix and rerun this cell"; fx.addEventListener("click",()=>agFixCell(cell,o)); d.appendChild(fx); }
     }
     else if(o.kind==="image"){
       d.className="out out-img";const img=document.createElement("img"),mime=/^image\/(?:png|jpeg|gif|webp)$/i.test(o.mime||"")?o.mime:"image/png",b64=String(o.b64||"");img.alt="figure";
@@ -1749,10 +1850,35 @@ function renderOutputs(cell){
       f.srcdoc=String(o.html||"");
       d.appendChild(f);
     }
+    const acts=outputActions(cell,o,d); if(acts) d.appendChild(acts);
     host.appendChild(d);
   }
 }
+function copyText(text){
+  const done=()=>toast("Copied");
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,()=>fallback()); return; }
+  fallback();
+  function fallback(){ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); done(); }catch(e){ toast("Copy is not available here","err"); } ta.remove(); }
+}
+function tableToDelimited(table,sep){
+  const cellText=v=>{ v=String(v).replace(/\s+/g," ").trim(); return sep===","&&/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  return [...table.querySelectorAll("tr")].map(tr=>[...tr.children].map(c=>cellText(c.textContent)).join(sep)).join("\n")+"\n";
+}
+function outputActions(cell,o,d){
+  const acts=document.createElement("div"); acts.className="out-acts";
+  const add=(label,title,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=label; b.title=title; b.addEventListener("click",e=>{ e.stopPropagation(); fn(b); }); acts.appendChild(b); };
+  const stem=(nbName||"notebook").replace(/[^A-Za-z0-9_-]+/g,"-")+"-cell"+(indexOf(cell)+1);
+  if(o.kind==="stream"||o.kind==="text"){
+    add("COPY","Copy this output",()=>copyText(stripAnsi(o.text||"")));
+    if(String(o.text||"").split("\n").length>40){ d.classList.add("long"); add("EXPAND","Show the whole output",b=>{ const on=d.classList.toggle("expanded"); b.textContent=on?"COLLAPSE":"EXPAND"; }); }
+  } else if(o.kind==="error") add("COPY","Copy the traceback",()=>copyText(friendlyTrace(stripAnsi(o.text||""))));
+  else if(o.kind==="html"){ const table=d.querySelector("table"); if(table){ add("COPY","Copy the table (tab-separated, pastes into spreadsheets)",()=>copyText(tableToDelimited(table,"\t"))); add("CSV","Download the table as CSV",()=>downloadBlob(new Blob([tableToDelimited(table,",")],{type:"text/csv"}),stem+".csv")); } }
+  else if(o.kind==="image"&&/^[A-Za-z0-9+/]*={0,2}$/.test(String(o.b64||""))){ add("PNG","Download this figure",()=>{ const bin=atob(o.b64),bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); downloadBlob(new Blob([bytes],{type:o.mime||"image/png"}),stem+".png"); }); }
+  return acts.childElementCount?acts:null;
+}
 const stripAnsi=s=>String(s).replace(/\x1b\[[0-9;]*m/g,"");
+/* kernel://<notebook>/<cell-id> is the stable virtual filename Python sees; people read cell positions */
+function friendlyTrace(text){return String(text).replace(/File "kernel:\/\/[^/"]+\/([A-Za-z0-9_-]+)", line (\d+)/g,(m,id,line)=>{const c=findCell(id);return (c?"Cell "+(indexOf(c)+1):"Deleted cell")+", line "+line})}
 function sanitizeHtml(h){
   const t=document.createElement("template");t.innerHTML=String(h||"");
   t.content.querySelectorAll("script,style,base,object,embed,iframe,link,meta,form,template").forEach(n=>n.remove());
@@ -1778,6 +1904,7 @@ function indexOf(cell){ return cells.indexOf(cell); }
 function render(){
   nb.innerHTML="";
   for(const cell of cells){ nb.appendChild(buildCell(cell)); }
+  renderWelcome();
   $("#cellCount").textContent=cells.length;
   if(selectedId){ const c=findCell(selectedId); if(c&&c.el) c.el.classList.add("selected"); }
   if(ui&&ui.splitOutputs) layoutOutputs();
@@ -1909,12 +2036,36 @@ function convertTo(cell, type){
   render(); selectCell(cell.id,"command"); schedulePersist(); scheduleWorkspacePersist();
 }
 function toggleType(cell){ convertTo(cell, cell.type==="code"?"markdown":"code"); }
+/* Deleted cells stay restorable (toast Undo, or z in command mode) for this page session. */
+const deletedCells=[];
 function deleteCell(cell){
-  const i=indexOf(cell); cells.splice(i,1);
-  if(!cells.length) cells.push(mkCell("code",""));
+  const i=indexOf(cell);
+  const snap={notebook:nbId,index:i,prev:i>0?cells[i-1].id:null,next:i+1<cells.length?cells[i+1].id:null,cell:{id:cell.id,type:cell.type,source:cell.taEl?cell.taEl.value:cell.source,outputs:clonePlain(cell.outputs||[]),execCount:cell.execCount,runtime:cell.runtime==null?null:cell.runtime,provenance:clonePlain(cell.provenance||null),collapsed:!!cell.collapsed},placeholder:null};
+  cells.splice(i,1);
+  if(!cells.length){ const blank=mkCell("code",""); cells.push(blank); snap.placeholder=blank.id; }
   render();
   const sel=cells[Math.min(i, cells.length-1)]; if(sel) selectCell(sel.id,"command");
   schedulePersist(); scheduleWorkspacePersist();
+  deletedCells.push(snap); if(deletedCells.length>30) deletedCells.shift();
+  toast("Deleted cell "+(i+1), null, {action:{label:"Undo", run:()=>undoDeleteCell(snap)}});
+}
+function undoDeleteCell(target){
+  let snap=null;
+  if(target){
+    const at=deletedCells.indexOf(target);
+    if(at<0){ toast("That cell was already restored"); return; }
+    if(target.notebook!==nbId){ toast("Switch back to that notebook to restore the cell","err"); return; }
+    snap=deletedCells.splice(at,1)[0];
+  } else { for(let i=deletedCells.length-1;i>=0;i--){ if(deletedCells[i].notebook===nbId){ snap=deletedCells.splice(i,1)[0]; break; } } }
+  if(!snap){ toast("Nothing to undo"); return; }
+  const blank=snap.placeholder&&findCell(snap.placeholder); if(blank&&!(blank.taEl?blank.taEl.value:blank.source).trim()&&!(blank.outputs||[]).length) cells.splice(indexOf(blank),1);
+  const c=mkCell(snap.cell.type, snap.cell.source, findCell(snap.cell.id)?uid():snap.cell.id);
+  Object.assign(c,{outputs:snap.cell.outputs, execCount:snap.cell.execCount, runtime:snap.cell.runtime, provenance:snap.cell.provenance, collapsed:snap.cell.collapsed});
+  const next=snap.next&&findCell(snap.next),prev=snap.prev&&findCell(snap.prev);
+  const at=next?indexOf(next):prev?indexOf(prev)+1:snap.prev?Math.min(snap.index,cells.length):0;
+  cells.splice(at, 0, c);
+  render(); selectCell(c.id,"command"); if(c.el) c.el.scrollIntoView({block:"center",behavior:"smooth"});
+  refreshNotebookFreshness(); schedulePersist(); scheduleWorkspacePersist(); toast("Restored cell "+(indexOf(c)+1));
 }
 
 /* ===== execution ===== */
@@ -2210,9 +2361,16 @@ async function restartKernel(){
   finally{ try{ await refreshInspector(); }catch(_){} busy=false; setStatus("Ready","ok"); }
 }
 function clearOutputs(){
+  const snap=cells.filter(c=>(c.outputs&&c.outputs.length)||c.execCount!=null).map(c=>({id:c.id,outputs:c.outputs,execCount:c.execCount,runtime:c.runtime,provenance:c.provenance})),home=nbId;
   for(const cell of cells){ cell.outputs=[]; cell.execCount=null; cell.runtime=null;cell.provenance=null; if(cell.timeEl) cell.timeEl.textContent=""; renderOutputs(cell); refreshExec(cell); }
   if(ui.splitOutputs) layoutOutputs();
-  schedulePersist(); scheduleWorkspacePersist(); toast("Outputs cleared");
+  schedulePersist(); scheduleWorkspacePersist();
+  if(!snap.length){ toast("No outputs to clear"); return; }
+  toast("Outputs cleared", null, {action:{label:"Undo", run:()=>{
+    if(home!==nbId) return;
+    for(const s of snap){ const c=findCell(s.id); if(!c||(c.outputs&&c.outputs.length)||c.execCount!=null) continue; Object.assign(c,{outputs:s.outputs,execCount:s.execCount,runtime:s.runtime,provenance:s.provenance}); if(c.timeEl) c.timeEl.textContent=c.runtime!=null?fmtDur(c.runtime):""; renderOutputs(c); refreshExec(c); }
+    if(ui.splitOutputs) layoutOutputs(); refreshNotebookFreshness(); schedulePersist(); scheduleWorkspacePersist(); toast("Outputs restored");
+  }}});
 }
 /* newNotebook lives in the notebook-library section below */
 
@@ -2353,7 +2511,16 @@ async function removeData(name){
   const d=dataEntry(name);if(!d)return;try{ if(kernelReady) await pyFS.unlink(d.name); }catch(_){ }
   if(d._previewUrl)URL.revokeObjectURL(d._previewUrl);const i=dataFiles.indexOf(d); if(i>=0) dataFiles.splice(i,1);
   recomputeDependencies();
-  renderDataChips(); renderDataList(); scheduleWorkspacePersist(); toast("Removed "+name);
+  renderDataChips(); renderDataList(); scheduleWorkspacePersist();
+  const snap=Object.assign({},d,{_previewUrl:null,blob:null,fsStat:null}),home=nbId;
+  toast("Removed "+d.name, null, {action:{label:"Undo", run:()=>restoreData(snap,i,home)}});
+}
+async function restoreData(snap,index,home){
+  if(home!==nbId){ toast("Switch back to that notebook to restore "+snap.name,"err"); return; }
+  if(dataEntry(snap.id)||dataEntry(snap.name)){ toast(snap.name+" is already mounted"); return; }
+  try{ if(kernelReady&&snap.bytes) await pyFS.write(snap.name, snap.bytes); }catch(e){ toast("Could not restore "+snap.name,"err"); return; }
+  dataFiles.splice(Math.min(Math.max(index,0),dataFiles.length),0,snap);
+  recomputeDependencies(); renderDataChips(); renderDataList(); scheduleWorkspacePersist(); toast("Restored "+snap.name);
 }
 function setArtifactStage(id,stage){const d=dataEntry(id);if(!d)return;d.stage=stage;d.updatedAt=Date.now();renderDataList();scheduleWorkspacePersist();toast((stage==="final"?"Promoted ":"Moved to working · ")+d.name)}
 function openData(){ toggleLeft(true); ui.secData=true; applyUI(); saveUI(); renderDataList(); }
@@ -2374,11 +2541,11 @@ async function renderArtifactPreview(d,host){
 function renderArtifactRow(d){
   const row=document.createElement("div");row.className="data-row";const top=document.createElement("div");top.className="data-top";const meta=document.createElement("div");meta.className="data-meta";const nm=document.createElement("div");nm.className="data-name";nm.textContent=(d.name||"").split("/").pop();nm.title=d.name;const sub=document.createElement("div");sub.className="data-sub";sub.textContent=(fileExt(d.name)||"file").toUpperCase()+" · "+fmtBytes(d.size||0);const st=document.createElement("span");st.className="data-stage "+artifactStage(d);st.textContent=artifactStage(d);sub.appendChild(st);meta.append(nm,sub);
   const acts=document.createElement("div");acts.className="data-acts";const prev=document.createElement("div");prev.className="data-preview";
-  const pv=document.createElement("button");pv.className="data-act";pv.textContent="preview";pv.addEventListener("click",async()=>{if(!prev.classList.contains("open"))await renderArtifactPreview(d,prev);prev.classList.toggle("open")});acts.appendChild(pv);
+  const pv=document.createElement("button");pv.className="data-act";pv.textContent="preview";pv.addEventListener("click",async()=>{if(!prev.classList.contains("open"))await renderArtifactPreview(d,prev);prev.classList.toggle("open");pv.textContent=prev.classList.contains("open")?"hide":"preview"});acts.appendChild(pv);meta.title="Preview "+d.name;meta.addEventListener("click",()=>pv.click());
   const ins=document.createElement("button");ins.className="data-act";ins.textContent="insert";ins.addEventListener("click",()=>insertReadSnippet(d.name));acts.appendChild(ins);
   const cx=document.createElement("button");cx.className="data-act";cx.textContent=(getArtifactContextPolicy(d.id)==="pinned"?"pinned":getArtifactContextPolicy(d.id)==="excluded"?"excluded":"context");cx.addEventListener("click",()=>cycleArtifactContext(d.id));acts.appendChild(cx);
   if(artifactStage(d)!=="input"){const pr=document.createElement("button");pr.className="data-act";pr.textContent=artifactStage(d)==="final"?"working":"final";pr.addEventListener("click",()=>setArtifactStage(d.id,artifactStage(d)==="final"?"scratch":"final"));acts.appendChild(pr)}
-  const sv=document.createElement("button");sv.className="data-act";sv.textContent="save";sv.addEventListener("click",()=>downloadBlob(new Blob([d.bytes||new Uint8Array()],{type:d.type||"application/octet-stream"}),(d.name||"file").split("/").pop()));acts.appendChild(sv);
+  const sv=document.createElement("button");sv.className="data-act";sv.textContent="download";sv.addEventListener("click",()=>downloadBlob(new Blob([d.bytes||new Uint8Array()],{type:d.type||"application/octet-stream"}),(d.name||"file").split("/").pop()));acts.appendChild(sv);
   const rm=document.createElement("button");rm.className="data-act danger";rm.textContent="remove";rm.addEventListener("click",()=>removeData(d.id));acts.appendChild(rm);top.append(meta,acts);row.append(top,prev);return row;
 }
 function appendArtifactTree(host,items,prefix){
@@ -2387,6 +2554,7 @@ function appendArtifactTree(host,items,prefix){
   for(const d of files.sort((a,b)=>a.name.localeCompare(b.name)))host.appendChild(renderArtifactRow(d));
 }
 function renderDataList(){
+  renderWelcome();
   const host=$("#dataList"); if(!host) return; host.replaceChildren();
   if(!dataFiles.length){
     const e=document.createElement("div"); e.className="data-empty";
@@ -2895,6 +3063,7 @@ document.addEventListener("keydown", e=>{
     case "m": e.preventDefault(); convertTo(cell,"markdown"); break;
     case "y": e.preventDefault(); convertTo(cell,"code"); break;
     case "?": e.preventDefault(); openHelp(); break;
+    case "z": e.preventDefault(); undoDeleteCell(); break;
     case "i":
       if(pendingI){ clearTimeout(pendingITimer); pendingI=false; e.preventDefault(); interruptFromHuman(); }
       else { pendingI=true; pendingITimer=setTimeout(()=>{pendingI=false;}, 600); }
@@ -2931,7 +3100,10 @@ $("#btnMore").addEventListener("click", e=>{ e.stopPropagation(); toggleMenu(); 
 $("#moreMenu").addEventListener("click", e=>{
   const b=e.target.closest("[data-mi]"); if(!b) return; closeMenu();
   const a=b.dataset.mi;
-  if(a==="restartRun") restartAndRunAll();
+  if(a==="newNb") newNotebook();
+  else if(a==="openNb") $("#btnOpen").click();
+  else if(a==="saveZip") downloadWorkspaceZip();
+  else if(a==="restartRun") restartAndRunAll();
   else if(a==="splitOut") setSplitOutputs(!ui.splitOutputs);
   else if(a==="collapseAll") setAllCollapsed(true);
   else if(a==="expandAll") setAllCollapsed(false);
@@ -2968,6 +3140,45 @@ $("#fileIpynb").addEventListener("change", async e=>{
   }catch(err){ toast("Could not open notebook · "+String(err&&err.message?err.message:err),"err"); }
   e.target.value="";
 });
+/* ----- first-run welcome: shown only while the notebook is a single empty cell with no data ----- */
+function renderWelcome(){
+  let w=document.getElementById("welcome");
+  const first=cells[0],empty=cells.length<=1&&(!first||!String((first.taEl?first.taEl.value:first.source)||"").trim())&&!dataFiles.length;
+  if(!empty){ if(w) w.remove(); return; }
+  if(w||!nb.parentNode) return;
+  w=document.createElement("section"); w.id="welcome"; w.className="welcome";
+  w.innerHTML='<h2>Start exploring</h2><p>Python runs right here in your browser, and your data never leaves it. Bring a file or try the sample, then write code — or describe what you want and let the agent build the analysis with you.</p><div class="welcome-acts"><button class="btn primary" data-w="sample">Try a sample dataset</button><button class="btn" data-w="data">Upload data</button><button class="btn" data-w="open">Open a notebook</button><button class="btn" data-w="agent">Ask the agent</button></div><p class="welcome-tip">Drop files anywhere to mount them · ⇧⏎ runs a cell · press ? for every shortcut</p>';
+  w.addEventListener("click",e=>{ const b=e.target.closest("[data-w]"); if(!b) return; const k=b.dataset.w;
+    if(k==="sample") loadSampleDataset();
+    else if(k==="data"){ openData(); const up=$("#dataUpload"); if(up) up.click(); }
+    else if(k==="open"){ const o=$("#btnOpen"); if(o) o.click(); }
+    else if(k==="agent"&&typeof openAgent==="function"){ openAgent(); const inp=$("#agIn"); if(inp&&!inp.value){ inp.value="Explore the mounted data: describe its shape and quality, then chart the most interesting patterns."; inp.select(); } }
+  });
+  nb.parentNode.insertBefore(w,nb);
+}
+async function loadSampleDataset(){
+  if(!kernelReady){ toast("Kernel still booting — one moment.","err"); return; }
+  let seed=20250101; const rnd=()=>(seed=(Math.imul(seed,1103515245)+12345)>>>0)/4294967296;
+  const regions=["North","South","East","West"],channels=["Online","Retail","Partner"],products=[["Notebook",4.5],["Backpack",38],["Headphones",59],["Desk lamp",24],["Water bottle",12]],start=Date.UTC(2025,0,1),rows=["date,region,channel,product,units,unit_price,discount,returned"];
+  for(let i=0;i<600;i++){ const day=Math.floor(rnd()*365),date=new Date(start+day*86400000),r=regions[Math.floor(rnd()*4)],c=channels[Math.floor(rnd()*3)],[name,base]=products[Math.floor(rnd()*5)],season=1+0.3*Math.sin(date.getUTCMonth()/12*2*Math.PI),units=Math.max(1,Math.round((3+rnd()*9)*season*(c==="Online"?1.3:1))),discount=[0,0,0,0.05,0.1,0.15][Math.floor(rnd()*6)],price=(base*(0.9+rnd()*0.2)).toFixed(2),returned=rnd()<(c==="Online"?0.09:0.04)?1:0; rows.push([date.toISOString().slice(0,10),r,c,name,units,price,discount,returned].join(",")); }
+  await mountUploadedFiles([new File([rows.join("\n")+"\n"],"sample_sales.csv",{type:"text/csv"})],false);
+  const spec=[["markdown","# Sample sales\nA synthetic year of orders across regions, channels, and products. Edit any cell, or ask the agent to take the analysis further."],["code",'import pandas as pd\ndf = pd.read_csv("sample_sales.csv", parse_dates=["date"])\ndf["revenue"] = df.units * df.unit_price * (1 - df.discount)\ndf.head()'],["code",'df.pivot_table(index="region", columns="channel", values="revenue", aggfunc="sum").round(0)']];
+  const first=cells[0]; if(cells.length===1&&first&&!String((first.taEl?first.taEl.value:first.source)||"").trim()) cells.splice(0,1);
+  const made=spec.map(([type,source],i)=>{ const c=mkCell(type,source); cells.splice(i,0,c); return c; });
+  render(); if(nbName==="Untitled"){ nbName="sample-sales"; setNbTitle(); } persist();
+  for(const c of made){ if(c.type==="markdown") showRendered(c,true); else await runCell(c); }
+  selectCell(made[made.length-1].id,"command");
+}
+/* ----- drop files anywhere on the page to mount them (the agent panel keeps image drops for chat) ----- */
+(function(){
+  let depth=0,overlay=null;
+  const isFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes("Files");
+  const show=on=>{ if(!overlay){ overlay=document.createElement("div"); overlay.className="drop-overlay"; overlay.innerHTML="<div><b>Drop to mount files</b><span>Read them from Python by name, e.g. pd.read_csv(\"file.csv\")</span></div>"; document.body.appendChild(overlay); } overlay.classList.toggle("on",on); };
+  document.addEventListener("dragenter",e=>{ if(!isFiles(e)) return; depth++; show(!(e.target.closest&&e.target.closest("#agentPanel"))); });
+  document.addEventListener("dragleave",e=>{ if(!isFiles(e)) return; depth=Math.max(0,depth-1); if(!depth) show(false); });
+  document.addEventListener("dragover",e=>{ if(!isFiles(e)) return; e.preventDefault(); if(overlay) overlay.classList.toggle("on",!(e.target.closest&&e.target.closest("#agentPanel"))); });
+  document.addEventListener("drop",e=>{ depth=0; show(false); if(!isFiles(e)||e.defaultPrevented) return; e.preventDefault(); const files=[...e.dataTransfer.files]; if(files.length){ openData(); mountUploadedFiles(files,false); } });
+})();
 async function mountUploadedFiles(files,keepFolders){
   files=[...files];if(!files.length)return;
   if(!kernelReady){ toast("Kernel still booting — one moment.","err"); return; }
@@ -3106,6 +3317,8 @@ const cmp = {
 
 /* ===== variable inspector ===== */
 let lastVarRows=[];
+/* Open details stay open when the inspector refreshes after a run, so exploring a variable is a sequence of clicks. */
+const openVarDetails=new Set();
 function renderInspector(rows){
   rows=Array.isArray(rows)?rows:[];
   lastVarRows=rows;
@@ -3142,14 +3355,15 @@ function paintInspector(){
       row.addEventListener("click",()=>toggleVarDetail(r.name, item, det));
       item.appendChild(row); item.appendChild(det);
       frag.appendChild(item);
+      if(openVarDetails.has(r.name)) toggleVarDetail(r.name, item, det);
     }
     host.appendChild(frag);
   }
   if(count) count.textContent=lastVarRows.length+(lastVarRows.length===1?" name":" names")+(q?(" · "+rows.length+" shown"):"");
 }
 async function toggleVarDetail(name, item, det){
-  if(item.classList.contains("open")){ item.classList.remove("open"); return; }
-  item.classList.add("open");
+  if(item.classList.contains("open")){ item.classList.remove("open"); openVarDetails.delete(name); return; }
+  item.classList.add("open"); openVarDetails.add(name);
   if(det.dataset.loaded) return;
   if(!kernelReady){ det.innerHTML='<div class="var-loading">kernel not ready</div>'; return; }
   det.innerHTML='<div class="var-loading">loading detail…</div>';
@@ -3193,6 +3407,7 @@ function renderVarDetail(d, det){
   } else {
     const pre=document.createElement("pre"); pre.className="vd-repr"; pre.textContent=det.repr||"(no detail)"; d.appendChild(pre);
   }
+  const acts=exploreActions(det); if(acts) d.appendChild(acts);
 }
 function insertVarName(name){
   const cell=selectedId?findCell(selectedId):null;
@@ -3207,9 +3422,37 @@ function insertVarName(name){
   }
 }
 async function delVar(name){
-  if(!kernelReady || busy) return;
-  try{ await runPy("_del_var(__del_name)",{__del_name:name}); }catch(_){ }
-  refreshInspector(); toast("Deleted "+name);
+  if(!kernelReady){ toast("Python is still starting — one moment.","err"); return; }
+  if(busy){ toast("Wait for the running cell to finish.","err"); return; }
+  try{ await runPy("_del_var(__del_name)",{__del_name:name}); }catch(_){ toast("Could not delete "+name,"err"); return; }
+  const gen=kernelGeneration; refreshInspector();
+  toast("Deleted "+name, null, {action:{label:"Undo", run:()=>undoDelVar(name,gen)}});
+}
+async function undoDelVar(name,gen){
+  if(gen!==kernelGeneration||!kernelReady){ toast("Python restarted since then, so "+name+" is gone.","err"); return; }
+  if(busy){ toast("Wait for the running cell to finish.","err"); return; }
+  let r="gone"; try{ r=await runPy("_undel_var(__del_name)",{__del_name:name}); }catch(_){ }
+  if(r==="ok") toast("Restored "+name); else if(r==="exists") toast(name+" was defined again, so it was left as is."); else toast("Could not restore "+name,"err");
+  refreshInspector();
+}
+/* One-click exploration from the inspector: add a code cell after the selected cell (or at the end) and run it. */
+async function exploreWith(code){
+  if(!kernelReady){ toast("Python is still starting — one moment.","err"); return; }
+  if(busy){ toast("Wait for the running cell to finish.","err"); return; }
+  const sel=selectedId?findCell(selectedId):null;
+  const c=insertCell(sel?indexOf(sel)+1:cells.length,"code",false);
+  c.source=code; if(c.taEl) c.taEl.value=code; paint(c); recomputeDependencies(); renderWelcome(); schedulePersist(); scheduleWorkspacePersist();
+  if(c.el) c.el.scrollIntoView({block:"center",behavior:"smooth"});
+  await runCell(c);
+}
+function exploreActions(det){
+  const n=det&&det.name; if(!n||!/^[A-Za-z_]\w*$/.test(n)) return null;
+  const acts=det.kind==="dataframe"?[["head",n+".head(10)"],["describe",n+".describe(include=\"all\").T"],["missing values",n+".isna().sum().sort_values(ascending=False)"],["correlations",n+".corr(numeric_only=True).round(2)"]]
+    :det.kind==="series"?[["describe",n+".describe()"],["value counts",n+".value_counts().head(20)"],["histogram",n+".plot.hist(bins=30, title=\""+n+"\")"]]:null;
+  if(!acts) return null;
+  const w=document.createElement("div"); w.className="vd-acts";
+  for(const [label,code] of acts){ const b=document.createElement("button"); b.className="vd-act"; b.textContent=label; b.title="Add and run: "+code; b.addEventListener("click",ev=>{ ev.stopPropagation(); exploreWith(code); }); w.appendChild(b); }
+  return w;
 }
 function toggleInspector(){ toggleRight(); }
 function closeInspector(){ toggleRight(false); }
@@ -3282,9 +3525,9 @@ var DOCS="# Authoring great in-browser Python notebooks\n\nThe target is a rich 
 
 const AG_PROVIDER_KEY='kernel.agent.provider.v2',AG_CONFIG_KEY='kernel.agent.providers.v2',AG_AUTO='kernel.agent.autonomy',AG_MAX='kernel.agent.maxsteps',AG_BUDGET='kernel.agent.budgets.v3';
 const AG_PROVIDER_DEFS={
-  anthropic:{label:'Anthropic',base:'https://api.anthropic.com',model:'claude-opus-5-5',placeholder:'sk-ant-…',maxOut:64000,effort:'medium'},
-  openai:{label:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-5.6',placeholder:'sk-proj-…',maxOut:64000,effort:'off'},
-  xai:{label:'xAI',base:'https://api.x.ai/v1',model:'grok-4.6',placeholder:'xai-…',maxOut:32000,effort:'off'}
+  anthropic:{label:'Anthropic',base:'https://api.anthropic.com',model:'claude-opus-5-5',placeholder:'sk-ant-…',maxOut:64000,effort:'medium',keyUrl:'https://console.anthropic.com/settings/keys'},
+  openai:{label:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-5.6',placeholder:'sk-proj-…',maxOut:64000,effort:'off',keyUrl:'https://platform.openai.com/api-keys'},
+  xai:{label:'xAI',base:'https://api.x.ai/v1',model:'grok-4.6',placeholder:'xai-…',maxOut:32000,effort:'off',keyUrl:'https://console.x.ai'}
 };
 const AG_CONFIG_REV=4;
 let agProvider=localStorage.getItem(AG_PROVIDER_KEY)||'anthropic';if(!AG_PROVIDER_DEFS[agProvider])agProvider='anthropic';
@@ -3325,7 +3568,7 @@ function agentStateExclusionReason(name,inp){
   return 'BLOCKED: '+what+' share the live Python namespace/filesystem. Agent execution and runtime inspection are disabled so exclusion cannot be bypassed indirectly; re-include them to use this tool. Human-run cells remain available.';
 }
 function nextContextPolicy(v){return v==='auto'?'pinned':v==='pinned'?'excluded':'auto'}
-function updateCellContextButton(cell){if(!cell||!cell.ctxBtn)return;const p=getCellContextPolicy(cell.id);cell.ctxBtn.classList.toggle('pinned',p==='pinned');cell.ctxBtn.classList.toggle('excluded',p==='excluded');cell.ctxBtn.textContent=p==='pinned'?'pin':p==='excluded'?'off':'ctx';cell.ctxBtn.title='Agent context: '+p}
+function updateCellContextButton(cell){if(!cell||!cell.ctxBtn)return;const p=getCellContextPolicy(cell.id);cell.ctxBtn.classList.toggle('pinned',p==='pinned');cell.ctxBtn.classList.toggle('excluded',p==='excluded');cell.ctxBtn.textContent=p==='pinned'?'pin':p==='excluded'?'off':'ctx';cell.ctxBtn.title='Agent context: '+p+' — click to '+(p==='auto'?'pin (always send it)':p==='pinned'?'exclude (never send it)':'return to automatic')}
 function cycleCellContext(id){agContextPolicies.cells=agContextPolicies.cells||{};const p=nextContextPolicy(getCellContextPolicy(id));if(p==='auto')delete agContextPolicies.cells[id];else agContextPolicies.cells[id]=p;const c=findCell(id);updateCellContextButton(c);scheduleThreadSave();agLastContext=null;toast('Cell context · '+p)}
 function cycleArtifactContext(id){agContextPolicies.artifacts=agContextPolicies.artifacts||{};const p=nextContextPolicy(getArtifactContextPolicy(id));if(p==='auto')delete agContextPolicies.artifacts[id];else agContextPolicies.artifacts[id]=p;renderDataList();scheduleThreadSave();agLastContext=null;toast('Artifact context · '+p)}
 
@@ -3356,8 +3599,18 @@ function currentPlanStep(){return (agPlan||[]).find(s=>s.status==='in_progress')
 function renderPlanStrip(){const p=currentPlanStep(),el=$('#agPlanStrip');if(!el)return;el.classList.toggle('show',!!p);$('#agPlanCurrent').textContent=p?p.title:''}
 function renderRunUi(){
   const m=$('#agRunMetrics'),pause=$('#agPause'),rec=$('#agRecovery');if(!m)return;renderPlanStrip();const cp=$('#agCheckpoint'),pendingBoundary=!!(agRun&&agRun.pendingTools&&agRun.pendingTools.length);if(cp){cp.disabled=agRunning||busy||pendingBoundary;cp.title=pendingBoundary?'Resume or end the pending tool batch before checkpointing':'Create a point-in-time checkpoint'}
-  if(agRun){const tok=runTokens(agRun),mins=runElapsed(agRun)/60000,ext=agRun.autoExtensionsUsed?(' · AUTO +'+agRun.autoExtensionsUsed):'';m.textContent=(agRun.status||'').toUpperCase()+' · '+(agRun.toolCalls||0)+'/'+(agRun.budgets&&agRun.budgets.maxToolCalls||agMaxSteps)+' TOOLS · '+fmtTok(tok)+' EFF TOK · '+mins.toFixed(1)+' MIN'+ext;pause.hidden=!agRunning;pause.textContent=agPauseRequested?'PAUSING…':'PAUSE'}else{m.textContent='NO ACTIVE RUN';pause.hidden=true}
-  const recover=agRun&&['paused','failed','interrupted'].includes(agRun.status)&&!agRunning;rec.classList.toggle('show',!!recover);if(recover){$('#agRecoveryTitle').textContent=agRun.status.toUpperCase()+' · '+String(agRun.phase||'run').toUpperCase();$('#agRecoveryText').textContent=agRun.failure&&agRun.failure.message||agRun.pauseReason||'Continue from the last durable boundary.';const b=agRun.budgets||{},ratio=Math.max((b.maxToolCalls?(agRun.toolCalls||0)/b.maxToolCalls:0),(b.maxElapsedMs?runElapsed(agRun)/b.maxElapsedMs:0),(b.maxTotalTokens?runTokens(agRun)/b.maxTotalTokens:0));$('#agRecoveryBudget').firstElementChild.style.width=Math.min(100,ratio*100)+'%';$('#agRecoveryBudget').classList.toggle('warn',ratio>=.8)}
+  if(agRun){const tok=runTokens(agRun),mins=runElapsed(agRun)/60000,ext=agRun.autoExtensionsUsed?(' · AUTO +'+agRun.autoExtensionsUsed):'';m.textContent=(agRun.status||'').toUpperCase()+' · '+(agRun.toolCalls||0)+'/'+(agRun.budgets&&agRun.budgets.maxToolCalls||agMaxSteps)+' TOOLS · '+fmtTok(tok)+' TOK · '+mins.toFixed(1)+' MIN'+ext;m.title='Tool calls used / checkpoint · effective tokens (cache reads count 10%) · active minutes'+(ext?' · automatic extensions used':'');pause.hidden=!agRunning;pause.textContent=agPauseRequested?'PAUSING…':'PAUSE'}else{m.textContent='NO ACTIVE RUN';pause.hidden=true}
+  const recover=agRun&&['paused','failed','interrupted'].includes(agRun.status)&&!agRunning;rec.classList.toggle('show',!!recover);if(recover){const copy=recoveryCopy(agRun);rec.classList.toggle('calm',copy.calm);$('#agRecoveryTitle').textContent=copy.title;$('#agRecoveryText').textContent=copy.text;const b=agRun.budgets||{},ratio=Math.max((b.maxToolCalls?(agRun.toolCalls||0)/b.maxToolCalls:0),(b.maxElapsedMs?runElapsed(agRun)/b.maxElapsedMs:0),(b.maxTotalTokens?runTokens(agRun)/b.maxTotalTokens:0));$('#agRecoveryBudget').firstElementChild.style.width=Math.min(100,ratio*100)+'%';$('#agRecoveryBudget').classList.toggle('warn',ratio>=.8)}
+}
+/* Plain-language summary of why a run stopped and what Resume will do. */
+function recoveryCopy(r){
+  const reason=String(r.pauseReason||''),left=(agPlan||[]).filter(s=>s.status!=='completed');
+  if(r.status==='interrupted')return {calm:false,title:'INTERRUPTED',text:'The page closed while the agent was working. Resume continues from the last saved step'+(r.phase==='tool'?'; the agent will check the notebook first because the last action may not have finished.':'.')};
+  if(r.status==='failed')return {calm:false,title:'STOPPED BY AN ERROR',text:((r.failure&&r.failure.message)||'The provider request failed.')+' Resume retries from the last saved step.'};
+  if(r.phase==='completion')return {calm:true,title:'PLAN NOT FINISHED',text:'The agent stopped before completing its plan'+(left.length?' ('+left.length+' step'+(left.length===1?'':'s')+' left: '+left.map(s=>s.title||s.id).join('; ')+')':'')+'. Resume to let it continue, or end the run.'};
+  if(/budget reached/.test(reason))return {calm:true,title:'CHECKPOINT REACHED',text:'This run used its '+reason.replace(/ budget reached/g,'').replace(/ \+ /g,' and ')+' allowance. Resume to continue with a fresh allowance, or end the run.'};
+  if(/human/i.test(reason))return {calm:true,title:'PAUSED',text:'Resume whenever you are ready.'};
+  return {calm:true,title:'PAUSED',text:reason||'Resume to continue from the last saved step.'};
 }
 let runRenderSeq=0;
 function runRow(title,meta,body,actions){const el=document.createElement('div');el.className='run-row';const h=document.createElement('div');h.className='run-row-h';const b=document.createElement('b');b.textContent=title;h.appendChild(b);if(meta){const m=document.createElement('span');m.textContent=meta;h.appendChild(m)}el.appendChild(h);if(body){const p=document.createElement('div');p.className='run-row-p';p.textContent=body;el.appendChild(p)}if(actions&&actions.length){const a=document.createElement('div');a.className='run-row-actions';for(const spec of actions){const btn=document.createElement('button');btn.className='btn';btn.textContent=spec.label;for(const [k,v] of Object.entries(spec.data||{}))btn.dataset[k]=v;a.appendChild(btn)}el.appendChild(a)}return el}
@@ -3449,7 +3702,7 @@ function txDom(kind,content,restoring,meta){
   if(kind==='u'){el=document.createElement('div');el.className='ag-u';el.textContent=content;el.dataset.raw=content;el.dataset.turn=String(++agTurnSeq);const fk=document.createElement('button');fk.className='ag-fork';fk.textContent='⑂';fk.title='Fork from here — duplicate the notebook and rewind this thread';el.appendChild(fk)}
   else if(kind==='a'){el=document.createElement('div');el.className='ag-a';renderAgentMarkdown(el,content,false)}
   else if(kind==='r'){el=document.createElement('details');el.className='ag-reason';const s=document.createElement('summary');s.textContent='Reasoning summary';const b=document.createElement('div');b.className='ag-reason-body';renderAgentMarkdown(b,content,false);el.dataset.raw=content;el.append(s,b)}
-  else if(kind==='c'){el=document.createElement('div');el.className='ag-chips';fillTranscriptChips(el,content)}
+  else if(kind==='c'){const last=tx.lastElementChild;if(!restoring&&last&&last.dataset.k==='c'&&last.classList.contains('ag-chips')&&!last.dataset.ephemeral){fillTranscriptChips(last,content);tx.scrollTop=tx.scrollHeight;txPersist();return last}el=document.createElement('div');el.className='ag-chips';fillTranscriptChips(el,content)}
   else if(kind==='e'){el=document.createElement('div');el.className='ag-chips';el.dataset.raw=content;el.innerHTML='<span class="ag-chip err">'+agEsc(content)+'</span>'}
   else if(kind==='p'){el=document.createElement('div');el.className='ag-progress';el.textContent=content;el.dataset.raw=content}
   else if(kind==='w'){el=document.createElement('div');el.className='ag-working';el.innerHTML='<span class="dotp"></span>'+agEsc(content)}
@@ -3471,8 +3724,8 @@ $("#agTx").addEventListener('click',e=>{
 function agStateUi(){
   const st=$("#agState");
   if(agRunning){st.textContent='RUNNING · '+AG_PROVIDER_DEFS[agProvider].label.toUpperCase();st.className='ag-state run'}
-  else if(agKey){st.textContent='ARMED · '+AG_PROVIDER_DEFS[agProvider].label.toUpperCase();st.className='ag-state armed'}
-  else{st.textContent='OFFLINE';st.className='ag-state'}
+  else if(agKey){st.textContent='READY · '+AG_PROVIDER_DEFS[agProvider].label.toUpperCase();st.className='ag-state armed';st.title='Connected to '+AG_PROVIDER_DEFS[agProvider].label+' · '+agModel}
+  else{st.textContent='ADD API KEY';st.className='ag-state nokey';st.title='Add a provider key to start the agent'}
   $("#agMode").textContent=agAutonomy.toUpperCase();
   $("#agMode").classList.toggle('step',agAutonomy==='step');
   const mc=$("#agModelChip");
@@ -3574,13 +3827,14 @@ async function agRunCellsForTool(list){
   for(let i=0;i<list.length;i++){
     const cell=list[i];if(agStop){out.push({type:'text',text:'Stopped by the human before running '+list.slice(i).map(c=>c.id).join(', ')+'.'});break}
     if(!await agRunCell(cell)){out.push({type:'text',text:'ERROR: the kernel could not run cell '+cell.id+' (busy or not ready); nothing further was executed.'});break}
-    const hadErr=(cell.outputs||[]).some(o=>o.kind==='error');txDom('c',chip('▶ ran '+cellLabel(cell)+' · '+(cell.runtime!=null?fmtDur(cell.runtime):'—'),hadErr?'err':'run',cell.id));
+    const hadErr=(cell.outputs||[]).some(o=>o.kind==='error');txDom('c',chip('▶ ran '+cellTag(cell)+' · '+(cell.runtime!=null?fmtDur(cell.runtime):'—'),hadErr?'err':'run',cell.id));
     out.push({type:'text',text:'cell_id: '+cell.id},...await marshalCell(cell,budget));
     if(hadErr){if(i<list.length-1)out.push({type:'text',text:'Stopped at the first error; not run: '+list.slice(i+1).map(c=>c.id).join(', ')});break}
   }
   return out;
 }
 function cellLabel(cell){return '['+(indexOf(cell)+1)+']'}
+function cellTag(cell){return 'cell '+(indexOf(cell)+1)}
 function focusAgCell(cell){if(cell&&cell.el){selectCell(cell.id,'command');cell.el.scrollIntoView({block:'center',behavior:'smooth'})}}
 
 /* ── approval gates ── */
@@ -3627,7 +3881,7 @@ async function execTool(tu){
         paint(cell);
         if(type==='markdown')showRendered(cell,true);
         added.push({cell_id:cell.id,index:indexOf(cell),type});
-        txDom('c',chip('+ '+type+' '+cellLabel(cell),'',cell.id));
+        txDom('c',chip('+ '+type+' · '+cellTag(cell),'',cell.id));
       }
       schedulePersist();
       recomputeDependencies();
@@ -3642,7 +3896,7 @@ async function execTool(tu){
       if(cell.type!=='code')return [{type:'text',text:'Not a code cell.'}];
       if(!await agRunCell(cell))return [{type:'text',text:'ERROR: the kernel could not run this cell right now (busy or not ready). Nothing was executed.'}];
       const hadErr=cell.outputs&&cell.outputs.some(o=>o.kind==='error');
-      txDom('c',chip('▶ ran '+cellLabel(cell)+' · '+(cell.runtime!=null?fmtDur(cell.runtime):'—'),hadErr?'err':'run',cell.id));
+      txDom('c',chip('▶ ran '+cellTag(cell)+' · '+(cell.runtime!=null?fmtDur(cell.runtime):'—'),hadErr?'err':'run',cell.id));
       return await marshalCell(cell);
     }
     if(name==='run_all'){
@@ -3676,7 +3930,7 @@ async function execTool(tu){
       if(ce.type==='markdown')showRendered(ce,true);
       schedulePersist();
       recomputeDependencies();
-      txDom('c',chip('✎ edited '+cellLabel(ce),'',ce.id));
+      txDom('c',chip('✎ edited '+cellTag(ce),'',ce.id));
       if(inp.run===true&&ce.type==='code')return [{type:'text',text:'{"ok":true}'},...await agRunCellsForTool([ce])];
       return [{type:'text',text:'{"ok":true}'}];
     }
@@ -3684,7 +3938,7 @@ async function execTool(tu){
       const cr=findCell(inp.cell_id);
       if(!cr)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
       if(getCellContextPolicy(cr.id)==='excluded')return [{type:'text',text:'BLOCKED: the human excluded this cell from agent context.'}];
-      txDom('c',chip('👁 read '+cellLabel(cr),'',cr.id));
+      txDom('c',chip('read '+cellTag(cr),'',cr.id));
       let bb=[{type:'text',text:'source:\n'+agTrunc(cr.taEl?cr.taEl.value:cr.source,AG_MAX_TEXT)}];
       if(cr.type==='code')bb=bb.concat(await marshalCell(cr));
       return bb;
@@ -3751,7 +4005,7 @@ async function execTool(tu){
       const cd=findCell(inp.cell_id);
       if(!cd)return [{type:'text',text:'ERROR: no cell with id '+inp.cell_id}];
       if(getCellContextPolicy(cd.id)==='excluded')return [{type:'text',text:'BLOCKED: the human excluded this cell from agent context.'}];
-      const lbl=cellLabel(cd);
+      const lbl=cellTag(cd);
       deleteCell(cd);
       recomputeDependencies();
       txDom('c',chip('✕ deleted '+lbl));
@@ -3764,7 +4018,7 @@ async function execTool(tu){
       const i0=indexOf(cm),i1=Math.max(0,Math.min(cells.length-1,inp.to_index|0));
       cells.splice(i0,1);cells.splice(i1,0,cm);
       render();selectCell(cm.id,'command');schedulePersist();recomputeDependencies();
-      txDom('c',chip('⇅ moved to ['+(i1+1)+']',null,cm.id));
+      txDom('c',chip('⇅ moved to cell '+(i1+1),null,cm.id));
       return [{type:'text',text:'{"ok":true}'}];
     }
     return [{type:'text',text:'ERROR: unknown tool '+name}];
@@ -3946,7 +4200,7 @@ async function apiStreamWithRetry(){
 
 /* ── durable agent loop ── */
 function completionContractReason(){if(!agRun)return '';const planned=(agPlan||[]).length>0,worked=(agRun.toolCalls||0)>0;if(!planned&&!worked)return '';const unfinished=(agPlan||[]).filter(s=>s.status!=='completed');if(unfinished.length)return unfinished.length+' visible plan step'+(unfinished.length===1?' remains':'s remain')+' unfinished: '+unfinished.map(s=>s.id).join(', ');const accepted=agRun.completionAccepted;if(!accepted||accepted.planSignature!==runPlanSignature())return 'finish_run has not accepted executed evidence for the current completed plan';const checked=validateCompletionEvidence(accepted.evidence);if(checked.errors.length||checked.evidence.length!==(accepted.evidence||[]).length)return 'accepted completion evidence is no longer valid: '+(checked.errors.join('; ')||'an evidence item disappeared');const expected=accepted.evidenceSignature||completionEvidenceSignature(accepted.evidence);if(completionEvidenceSignature(checked.evidence)!==expected)return 'accepted completion evidence changed after validation';return ''}
-async function enforceCompletionContract(){const reason=completionContractReason();if(!reason)return 'accepted';const guard=await recordCompletionRejection(reason);if(guard.pause){agRun.completionPauseReason='';await pauseRun('Completion contract unmet after two automatic continuations: '+reason,'completion');return 'paused'}const instruction='KERNEL completion guard: the run is not complete because '+reason+'. Do not summarize or claim a pause/limit. Continue from the next unfinished step, update the visible plan from actual results, and call finish_run only after all promised work is complete.';agMsgs.push({role:'user',content:[{type:'text',text:instruction}]});txDom('s','completion blocked · continuing automatically · '+reason);await saveActiveThreadNow();return 'continue'}
+async function enforceCompletionContract(){const reason=completionContractReason();if(!reason)return 'accepted';const guard=await recordCompletionRejection(reason);if(guard.pause){agRun.completionPauseReason='';await pauseRun('Completion contract unmet after two automatic continuations: '+reason,'completion');return 'paused'}const instruction='KERNEL completion guard: the run is not complete because '+reason+'. Do not summarize or claim a pause/limit. Continue from the next unfinished step, update the visible plan from actual results, and call finish_run only after all promised work is complete.';agMsgs.push({role:'user',content:[{type:'text',text:instruction}]});txDom('s','not finished yet · continuing ('+reason+')');await saveActiveThreadNow();return 'continue'}
 async function completePendingTools(turnNb){
   const tus=agRun&&Array.isArray(agRun.pendingTools)?agRun.pendingTools:[];if(!tus.length)return true;agRun.pendingToolResults=agRun.pendingToolResults||{};agRun.pendingMutations=agRun.pendingMutations||[];let batchFailure='';
   for(let i=Math.max(0,agRun.nextToolIndex||0);i<tus.length;i++){
@@ -4004,7 +4258,7 @@ async function agentTurn(text,options){
 
 /* ── settings ── */
 function agEffortChoices(provider){return provider==='anthropic'?[['off','Provider default'],['low','Low'],['medium','Medium'],['high','High'],['xhigh','Extra high'],['max','Max']]:[['off','Provider default'],['low','Low'],['medium','Medium'],['high','High']]}
-function fillAgSettings(){const d=AG_PROVIDER_DEFS[agProvider],reason=$('#agReasoning'),choices=agEffortChoices(agProvider);$('#agProvider').value=agProvider;reason.replaceChildren(...choices.map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o}));reason.value=choices.some(c=>c[0]===agReasoning)?agReasoning:'off';reason.disabled=false;reason.title=agProvider==='anthropic'?'Claude adaptive thinking depth (output_config.effort). Claude Opus 5.5 always thinks; effort controls how much.':'Responses reasoning effort';$('#agCellMinutes').value=agCellMinutes;$('#agKeyLabel').textContent=d.label.toUpperCase()+' API KEY';$('#agKey').placeholder=d.placeholder;$('#agKey').value=agKey;$('#agBase').value=agBase;$('#agModel').value=agModel;$('#agOut').value=agMaxOut;$('#agCtxOverride').value=agCtxOverride||'';$('#agCompactAt').value=agCompactAt;$('#agMax').value=agMaxSteps;$('#agMinutes').value=agMaxMinutes;$('#agTokenBudget').value=agTokenBudget;$('#agAutoExtensions').value=agAutoExtensions;$('#agDiscovery').textContent=''}
+function fillAgSettings(){const d=AG_PROVIDER_DEFS[agProvider],reason=$('#agReasoning'),choices=agEffortChoices(agProvider);$('#agProvider').value=agProvider;reason.replaceChildren(...choices.map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o}));reason.value=choices.some(c=>c[0]===agReasoning)?agReasoning:'off';reason.disabled=false;reason.title=agProvider==='anthropic'?'Claude adaptive thinking depth (output_config.effort). Claude Opus 5.5 always thinks; effort controls how much.':'Responses reasoning effort';$('#agCellMinutes').value=agCellMinutes;$('#agKeyLabel').textContent=d.label.toUpperCase()+' API KEY';{const help=$('#agKeyHelp');if(help)help.href=d.keyUrl||'#'}$('#agKey').placeholder=d.placeholder;$('#agKey').value=agKey;$('#agBase').value=agBase;$('#agModel').value=agModel;$('#agOut').value=agMaxOut;$('#agCtxOverride').value=agCtxOverride||'';$('#agCompactAt').value=agCompactAt;$('#agMax').value=agMaxSteps;$('#agMinutes').value=agMaxMinutes;$('#agTokenBudget').value=agTokenBudget;$('#agAutoExtensions').value=agAutoExtensions;$('#agDiscovery').textContent=''}
 function captureAgSettings(){agKey=$('#agKey').value.trim();agBase=($('#agBase').value.trim()||AG_PROVIDER_DEFS[agProvider].base).replace(/\/+$/,'');agModel=$('#agModel').value.trim()||AG_PROVIDER_DEFS[agProvider].model;agMaxOut=Math.max(512,Math.min(128000,parseInt($('#agOut').value,10)||AG_PROVIDER_DEFS[agProvider].maxOut));const rawCtx=parseInt($('#agCtxOverride').value,10)||0;agCtxOverride=rawCtx?Math.max(8192,Math.min(4000000,rawCtx)):0;agCompactAt=Math.max(50,Math.min(95,parseInt($('#agCompactAt').value,10)||82));agMaxSteps=Math.max(4,Math.min(200,parseInt($('#agMax').value,10)||24));agMaxMinutes=Math.max(1,Math.min(720,parseInt($('#agMinutes').value,10)||30));agTokenBudget=Math.max(1000,Math.min(10000000,parseInt($('#agTokenBudget').value,10)||500000));agAutoExtensions=Math.max(0,Math.min(20,parseInt($('#agAutoExtensions').value,10)||0));agCellMinutes=Math.max(1,Math.min(240,parseInt($('#agCellMinutes').value,10)||10));agReasoning=$('#agReasoning').value||'off';agConfigs[agProvider]={key:agKey,base:agBase,model:agModel,maxOut:agMaxOut,ctxOverride:agCtxOverride,compactAt:agCompactAt,reasoning:agReasoning,rev:AG_CONFIG_REV}}
 function openAgSettings(){fillAgSettings();syncAgAuto();$('#agScrim').classList.add('show');$('#agKey').focus()}
 function closeAgSettings(){$("#agScrim").classList.remove('show')}
@@ -4012,6 +4266,7 @@ function syncAgAuto(){
   $("#agAutoBtn").classList.toggle('active',agAutonomy==='auto');
   $("#agStepBtn").classList.toggle('active',agAutonomy==='step');
 }
+$("#agState").addEventListener('click',()=>{if(!agKey&&!agRunning)openAgSettings()});
 $("#agSettings").addEventListener('click',()=>{if(agRunning){toast("Finish or stop the current turn first.","err");return}openAgSettings()});
 $("#agExport").addEventListener('click',agExportMd);
 $("#agX").addEventListener('click',closeAgSettings);
@@ -4139,6 +4394,13 @@ async function agFork(turn,checkpoint){
   toast('Forked — you are now on "'+ent.name+'". The original thread is untouched.');
 }
 
+function agFixCell(cell,o){
+  ui.agent=true;applyUI();saveUI();
+  const lines=String(o&&o.text||"").split("\n").map(s=>s.trim()).filter(Boolean),last=(lines[lines.length-1]||"").slice(0,220),inp=$("#agIn");
+  inp.value='Fix the error in cell '+(indexOf(cell)+1)+' (cell_id: '+cell.id+')'+(last?' — '+last:'')+'. Rerun it once it is fixed.';
+  inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length)}catch(e){}
+  if(!agKey)toast('Add an API key in agent settings to send this.','err');
+}
 function agAskAboutCell(cell){
   ui.agent=true;applyUI();saveUI();
   const i=indexOf(cell)+1;

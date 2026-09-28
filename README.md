@@ -113,6 +113,8 @@ What it does today, beyond the core loop:
 - **Read-only model comparison** — send the same notebook-grounded prompt to up to six configured provider/model profiles and compare answers, latency, and reported token use without giving contenders mutation tools.
 - **Notebook-isolated workspaces** — stable cell IDs, outputs, user uploads, and agent results are restored only with their notebook. Switching notebooks snapshots state and resets the Python namespace so data cannot leak across workspaces.
 - **Faster output and variable surfaces** — inline/panel output changes move existing DOM nodes instead of rebuilding rich output; the variable panel adds deterministic name/type/memory sorting and explicit refresh.
+- **Built for exploring** — a first-run card loads a sample dataset or your own files, and files dropped anywhere on the page are mounted. The variable inspector turns a DataFrame or Series into head, describe, missing-value, correlation, value-count, or histogram cells in one click. Tables copy as TSV or download as CSV, figures download as PNG, and long outputs collapse. Errors offer *Fix with agent*, and tracebacks name the notebook cell instead of an internal path.
+- **Undo instead of dialogs** — deleting a cell, a variable, or a data file, or clearing outputs, shows a toast with Undo (`z` restores the last deleted cell).
 - **Autonomy modes** — AUTO runs free with a Stop button; STEP gates execution behind Approve/Skip. Every cell has an *ai* button that drops a stable cell reference into the composer.
 - **Redacted diagnostics** — export an allowlisted support bundle with versions, counters, and sanitized run events, never prompts, source, file contents, tool payloads, or provider credentials.
 
