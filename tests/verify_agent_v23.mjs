@@ -468,7 +468,7 @@ const compare = functionSource(desktop, "compareProfile");
 assert.ok(compare.includes("read-only comparison mode") && !/\btools\s*:/.test(compare), "comparison profiles receive no mutation tools");
 
 const sw = fs.readFileSync("docs/kernel-agent-sw.js", "utf8");
-assert.ok(sw.includes("kernel-a-mobile-v231-1"), "service-worker cache is versioned for v2.3.1");
+assert.ok(sw.includes("kernel-a-mobile-v240-1"), "service-worker cache is versioned for v2.4.0");
 assert.ok(sw.includes("k.indexOf('kernel-a-mobile-')===0"), "activation deletes only KERNEL-owned caches");
 assert.ok(fs.readFileSync("AGENT-V23-SPEC.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
 
