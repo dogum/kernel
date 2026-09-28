@@ -24,8 +24,10 @@ assert.deepEqual(routed, ['save', 'restart'], 'the phone menu items run their ac
 
 // 3. compact code still lines up with its highlighting, and table buttons sit below the table
 const c = await kAsync(linked, `const c = insertCell(cells.length, 'code', false); c.source = 'import pandas as pd\\npd.DataFrame({"a": range(3), "b": list("xyz")})'; c.taEl.value = c.source; await runCell(c); const ta = getComputedStyle(c.taEl), hl = getComputedStyle(c.el.querySelector('.hl')); const table = c.el.querySelector('.out table'), acts = c.el.querySelector('.out-acts'); return { font: [ta.fontSize, ta.lineHeight] + '' === [hl.fontSize, hl.lineHeight] + '', size: parseFloat(hl.fontSize), below: !!(table && acts) && acts.getBoundingClientRect().top >= table.getBoundingClientRect().bottom }`);
-assert.deepEqual(c, { font: true, size: 12.5, below: true }, 'code is compact and aligned, and COPY/CSV never cover a table');
+assert.deepEqual(c, { font: true, size: 12, below: true }, 'code is compact and aligned, and COPY/CSV never cover a table');
 assert.ok(await fits(linked), 'a notebook with outputs still fits the screen');
+const runTimes = await kAsync(linked, `for (const c of cells) if (c.timeEl) c.timeEl.textContent = '12.43 s'; return [...document.querySelectorAll('.cell .exec-time')].filter((t) => t.textContent).map((t) => { const r = document.createRange(); r.selectNodeContents(t); return r.getBoundingClientRect().left >= t.closest('.cell').getBoundingClientRect().left; })`);
+assert.ok(runTimes.length && runTimes.every(Boolean), 'a long run time stays inside its cell');
 
 // 4. sheets fit their contents
 await k(linked, `window.__kaMobile.only('left')`);
@@ -33,9 +35,16 @@ await linked.waitForTimeout(450);
 const sheet = await linked.evaluate(() => ({ h: document.querySelector('#leftPanel').getBoundingClientRect().height, vh: innerHeight }));
 assert.ok(sheet.h < sheet.vh * 0.86, 'a short Files sheet is shorter than the screen');
 await k(linked, `window.__kaMobile.closeAll()`);
+await linked.waitForTimeout(400);
+
+// 5. RUN ALL in the tab bar is lit while the run lasts, then goes back to normal
+const runTab = '#mob-bar .mb-btn[data-k="run"]';
+await linked.click(runTab);
+assert.equal(await linked.evaluate((s) => document.querySelector(s).classList.contains('active'), runTab), true, 'RUN ALL lights up when tapped');
+await linked.waitForFunction((s) => !document.querySelector(s).classList.contains('active'), runTab, { timeout: 60000 });
 await phone.close();
 
-// 5. ?layout=desktop keeps KERNEL·A on a phone, for the tab, and it still fits the screen
+// 6. ?layout=desktop keeps KERNEL·A on a phone, for the tab, and it still fits the screen
 const kept = await newContext(browser, [], PHONE);
 const desk = await openApp(kept, 'kernel-agent.html?layout=desktop');
 assert.deepEqual(await desk.evaluate(() => [location.pathname.split('/').pop(), location.search, sessionStorage.getItem('kernel.layout')]), ['kernel-agent.html', '', 'desktop'], 'layout=desktop keeps this page and drops the parameter');

@@ -207,10 +207,11 @@
     if (!b) return;
     var k = b.dataset.k;
     if (k === "run") {
-      var r = el("#btnRunAll");
-      if (r) r.click();
+      // lit while the run lasts, then back to normal
       b.classList.add("active");
-      setTimeout(syncBar, 220);
+      Promise.resolve(runAll()).finally(function () {
+        b.classList.remove("active");
+      });
       return;
     }
     only(k);
