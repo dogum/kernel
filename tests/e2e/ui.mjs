@@ -129,6 +129,10 @@ assert.deepEqual(guarded, { same: true, books: true, told: true }, 'an active ru
 const midRun = await kAsync(page, `const before = nbId + cells.map((c) => c.id).join(); const realFetch = window.fetch; window.fetch = (...args) => new Promise((resolve) => setTimeout(() => { agRunning = true; resolve(realFetch(...args)); }, 50)); try { await openExample('lunar-settlement'); } finally { window.fetch = realFetch; agRunning = false; } return nbId + cells.map((c) => c.id).join() === before`);
 assert.equal(midRun, true, 'a run that starts during the download also blocks the import');
 assert.equal(await kAsync(page, `const id = nbId; agRunning = true; let made; try { made = await newNotebook(); } finally { agRunning = false; } return made === false && nbId === id`), true, 'newNotebook reports when it refuses');
+const stillBusy = await kAsync(page, `const before = nbId + cells.map((c) => c.id).join(); const books = readLib().notebooks.length; exampleWaitMs = 300; busy = true; try { await openExample('lunar-settlement'); } finally { busy = false; exampleWaitMs = 180000; } return nbId + cells.map((c) => c.id).join() === before && readLib().notebooks.length === books`);
+assert.equal(stillBusy, true, 'a kernel that stays busy (restart, running cell) blocks the import');
+const pausedBlank = await kAsync(page, `await newNotebook(); const blankId = nbId, books = readLib().notebooks.length; agRun = { id: 'paused-run', status: 'paused' }; await openExample('lunar-settlement'); return { moved: nbId !== blankId, added: readLib().notebooks.length === books + 1, blankKept: readLib().notebooks.some((n) => n.id === blankId), opened: nbName === 'lunar-settlement' }`);
+assert.deepEqual(pausedBlank, { moved: true, added: true, blankKept: true, opened: true }, 'a blank notebook with an unfinished run is left alone; the example opens in a new notebook');
 const fresh = await newContext(browser);
 const linked = await openApp(fresh, file + '?example=lunar-settlement');
 await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && cells.length > 3`));

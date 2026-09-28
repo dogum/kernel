@@ -3,6 +3,7 @@
    the outputs on screen are the ones the original run produced. A notebook that already has work in it is kept;
    the example opens in a new notebook. */
 const EXAMPLE_BASE = "https://raw.githubusercontent.com/dogum/kernel/main/examples/";
+let exampleWaitMs = 180000; // how long to wait for boot, a restart or a running cell before giving up
 
 function isBlankNotebook() {
   return (
@@ -11,12 +12,17 @@ function isBlankNotebook() {
   );
 }
 
+// A paused or failed run can be resumed and would run its pending tools against whatever the notebook then holds.
+function hasUnfinishedRun() {
+  return !!(agRun && !RUN_TERMINAL.has(agRun.status));
+}
+
 async function openExample(name) {
   if (!/^[a-z0-9-]{1,64}$/.test(String(name || ""))) {
     toast("That example link isn't valid.", "err");
     return;
   }
-  const refuse = () => toast("Finish or stop the current agent run before opening an example.", "err");
+  const refuse = () => toast("Finish or stop the current run before opening an example.", "err");
   if (agRunning) {
     refuse();
     return;
@@ -27,16 +33,12 @@ async function openExample(name) {
     const res = await fetch(EXAMPLE_BASE + name + "/result.ipynb", { cache: "no-cache" });
     if (!res.ok) throw new Error(res.status === 404 ? "there is no example called " + name : "HTTP " + res.status);
     const notebook = await res.json();
-    // Never import into a notebook the agent is working in; a run may have started during the download.
-    if (!isBlankNotebook()) {
-      // switching notebooks resets Python, so wait for boot (or a running cell) to finish first
-      for (let waited = 0; busy && waited < 180000; waited += 250) await new Promise((r) => setTimeout(r, 250));
-      if (agRunning || busy || !(await newNotebook())) {
-        closeToast();
-        refuse();
-        return;
-      }
-    } else if (agRunning) {
+    // Importing while Python boots, restarts or runs a cell would mix the example with that execution, and a run may
+    // have started during the download, so wait for the kernel and check again.
+    for (let waited = 0; busy && waited < exampleWaitMs; waited += 250) await new Promise((r) => setTimeout(r, 250));
+    // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
+    const reuse = isBlankNotebook() && !hasUnfinishedRun();
+    if (agRunning || busy || (!reuse && !(await newNotebook()))) {
       closeToast();
       refuse();
       return;
