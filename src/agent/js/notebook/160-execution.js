@@ -128,6 +128,11 @@ async function runCell(cell, opts) {
     toast("Kernel still booting — one moment.", "err");
     return false;
   }
+  // a switch resets Python partway through, which would cut this cell off or leave its state in the next notebook
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return false;
+  }
   if (busy) {
     toast("Kernel is busy with another cell.", "err");
     return false;

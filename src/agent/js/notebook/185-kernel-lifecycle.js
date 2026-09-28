@@ -64,6 +64,10 @@ function kernelInfoHasVer() {
   return /Python/.test($("#kernelInfo").textContent || "");
 }
 async function restartKernel() {
+  if (notebookSwitching) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return;
+  }
   if (!kernelReady) {
     if (!kw.worker && kw.mode === "worker") {
       await restartKernelHard("restart");

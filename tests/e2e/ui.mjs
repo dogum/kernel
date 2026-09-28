@@ -136,6 +136,8 @@ assert.deepEqual(pausedBlank, { moved: true, added: true, blankKept: true, opene
 await clearToasts();
 const locked = await kAsync(page, `notebookSwitching = true; try { await agentTurn('hello'); } finally { notebookSwitching = false; } return { running: agRunning, told: [...document.querySelectorAll('.toast')].some((t) => /notebook switch/.test(t.textContent)) }`);
 assert.deepEqual(locked, { running: false, told: true }, 'runs cannot start while notebooks switch');
+const cellsLocked = await kAsync(page, `const c = insertCell(cells.length, 'code', false); c.source = 'switch_probe = 1'; c.taEl.value = c.source; const gen = kernelGeneration; notebookSwitching = true; let ran; try { ran = await runCell(c); await restartKernel(); } finally { notebookSwitching = false; } return { ran, exec: c.execCount, sameKernel: kernelGeneration === gen }`);
+assert.deepEqual(cellsLocked, { ran: false, exec: null, sameKernel: true }, 'cells and restarts wait for a notebook switch too');
 const raced = await kAsync(page, `const realSave = saveWorkspaceState; let first = true; saveWorkspaceState = async (...args) => { if (first) { first = false; agRunning = true; } return realSave(...args); }; try { await openExample('regex-engine'); } finally { saveWorkspaceState = realSave; agRunning = false; } return { imported: nbName === 'regex-engine', blank: isBlankNotebook() }`);
 assert.deepEqual(raced, { imported: false, blank: true }, 'a run that gets going during the switch stops the import');
 const fresh = await newContext(browser);
