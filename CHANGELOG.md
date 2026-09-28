@@ -9,6 +9,9 @@ Notable changes to KERNEL, KERNEL·A (the agent), and KERNEL·M (the phone build
 - A demo of an agent run at the top of the README and the landing page, recorded by `npm run demo`.
 - The model chip in the agent composer stays on one line.
 
+### Fixed
+- An OpenAI or xAI tool call with malformed JSON arguments is refused instead of running with empty input. Before, a malformed `run_all` reran the whole notebook. (Reported by Codex review on #5.)
+
 ### For contributors
 - The agent pages are built from `src/` by `scripts/build.mjs`. The code is split into about 60 files: notebook, agent, startup, and mobile JavaScript, CSS, shared markup, and the Python harness as a real `.py` file. The build still produces one self-contained HTML file per page.
 - The source is formatted with Prettier. Checking every file's syntax tree before and after showed the formatting changed no code.

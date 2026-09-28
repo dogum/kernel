@@ -194,4 +194,14 @@ const exclusion = new Function(`let cells=[{id:"h",type:"code"}],dataFiles=[],ag
 assert.match(exclusion("add_cells", { run: true, cells: [] }), /BLOCKED/, "add-and-run respects the shared-runtime exclusion barrier");
 assert.equal(exclusion("add_cells", { cells: [] }), "", "staging cells without running stays allowed");
 
+// Responses tool calls with malformed arguments are refused, never run on an empty input
+const responsesOutput = new Function(`let agProvider="openai";const clonePlain=(v)=>JSON.parse(JSON.stringify(v));${functionSource(desktop, "canonicalResponseOutput")};return canonicalResponseOutput`)();
+const [badCall] = responsesOutput([{ type: "function_call", call_id: "c1", name: "run_all", arguments: '{"from_cell_id": "x"' }]);
+const [listCall] = responsesOutput([{ type: "function_call", call_id: "c2", name: "run_all", arguments: "[]" }]);
+const [goodCall] = responsesOutput([{ type: "function_call", call_id: "c3", name: "run_all", arguments: '{"from_cell_id":"x"}' }]);
+assert.equal(badCall.invalidInput, true, "unparseable Responses arguments are flagged");
+assert.equal(listCall.invalidInput, true, "non-object Responses arguments are flagged");
+assert.ok(!goodCall.invalidInput && goodCall.input.from_cell_id === "x", "valid Responses arguments pass through");
+assert.ok(has(functionSource(desktop, "execTool"), "if (tu.invalidInput)"), "execTool refuses flagged calls before running anything");
+
 console.log("KERNEL Agent v2.4.0 verification passed (cache-stable prompts, Claude adapter, retries, add-and-run, effective budgets, worker protocol, and content-addressed artifacts).");

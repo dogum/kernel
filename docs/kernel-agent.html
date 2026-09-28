@@ -10915,15 +10915,23 @@ function canonicalResponseOutput(items) {
         .join("");
       if (text) out.push({ type: "text", text });
     } else if (item.type === "function_call") {
-      let input = {};
+      // Unparseable arguments are flagged, as in the Anthropic adapter, so execTool refuses the call instead of
+      // running a tool with no required fields (run_all, say) on an empty input.
+      let input = {},
+        invalidInput = false;
       try {
         input = JSON.parse(item.arguments || "{}");
-      } catch (e) {}
+        if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("arguments are not an object");
+      } catch (e) {
+        input = {};
+        invalidInput = true;
+      }
       out.push({
         type: "tool_use",
         id: item.call_id || item.id,
         name: item.name,
         input,
+        ...(invalidInput ? { invalidInput: true } : {}),
         provider: agProvider,
         provider_item: clonePlain(item),
       });
