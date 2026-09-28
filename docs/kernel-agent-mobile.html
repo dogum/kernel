@@ -649,6 +649,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
     <button class="btn" id="btnData" title="Mount data files into the kernel">+ Data</button>
     <span class="tb-sep"></span>
     <button class="btn primary btn-chip" id="btnRunAll" title="Run every cell">Run all</button>
+    <button class="btn btn-chip" id="btnInterrupt" title="Interrupt the running cell (i i)" hidden>Interrupt</button>
     <button class="btn btn-chip" id="btnRestart" title="Restart kernel (clear all variables)">Restart</button>
     <button class="btn btn-chip" id="btnClear" title="Clear all outputs">Clear</button>
     <span class="tb-sep"></span>
@@ -1092,7 +1093,7 @@ async def _kernel_run(src, filename="<cell>"):
         if val is not None:
             _KNS["_"] = val
             _emit_obj(val)
-    except Exception:
+    except BaseException:
         error = _fmt_exc()
     finally:
         _flush_streams()
@@ -1273,7 +1274,7 @@ const ICON = {
 };
 
 /* ===== state ===== */
-let pyodide=null, kernelReady=false, busy=false;
+let kernelReady=false, busy=false;
 let cells=[], selectedId=null, mode="command", execCounter=0;
 let lastD=0; const dataFiles=[];
 let micropipReady=false, jediReady=false;
@@ -1451,7 +1452,7 @@ function toast(msg,kind){
   requestAnimationFrame(()=>t.classList.add("show"));
   setTimeout(()=>{t.classList.remove("show"); setTimeout(()=>t.remove(),250);}, kind==="err"?4200:2600);
 }
-function setStatus(text,s,full){ $("#statusText").textContent=text; $("#status").dataset.s=s; $("#status").title=full||""; }
+function setStatus(text,s,full){ $("#statusText").textContent=text; $("#status").dataset.s=s; $("#status").title=full||""; const ib=document.getElementById("btnInterrupt"); if(ib) ib.hidden=!(s==="busy"&&busy&&kernelReady); }
 function pkgSummary(verb,names){
   const list=(names||[]).map(x=>String(x).trim()).filter(Boolean);
   if(list.length<=3) return verb+" "+list.join(", ")+"…";
@@ -1949,7 +1950,8 @@ function provenanceInputs(cell){
   const artifacts=(cell.analysis&&cell.analysis.files||[]).map(path=>{const d=dataFiles.find(x=>x.name===path||x.path===path);return d?{artifactId:d.id||null,path:d.name,fingerprint:artifactFingerprint(d)}:{artifactId:null,path,fingerprint:null}});
   return {dependencies,artifacts};
 }
-function refreshReferencedArtifacts(cell){if(!pyodide||!pyodide.FS)return;for(const path of (cell.analysis&&cell.analysis.files||[])){const d=dataEntry(path);if(!d)continue;try{const raw=pyodide.FS.readFile(d.path||d.name),bytes=raw instanceof Uint8Array?raw.slice():new Uint8Array(raw),fingerprint=bytes.byteLength+":"+crc32(bytes);if(d.fingerprint!==fingerprint){d.bytes=bytes;d.size=bytes.byteLength;d.fingerprint=fingerprint;d.updatedAt=Date.now();if(/^(?:csv|tsv|tab|txt|md|log|json|py|yaml|yml|html|xml)$/.test(fileExt(d.name)))d.preview=new TextDecoder("utf-8",{fatal:false}).decode(bytes.slice(0,8192)).slice(0,4000)}}catch(e){}}}
+async function refreshArtifactFromKernel(d,stat){if(!kernelReady)return false;const path=d.path||d.name;if(!stat){try{stat=(await pyFS.stat([path]))[path]}catch(e){return false}}if(!stat)return false;if(d.bytes&&d.fsStat&&d.fsStat.size===stat.size&&d.fsStat.mtime===stat.mtime)return false;const raw=await pyFS.read(path),bytes=raw instanceof Uint8Array?raw:new Uint8Array(raw),fingerprint=bytes.byteLength+":"+crc32(bytes);d.fsStat={size:stat.size,mtime:stat.mtime};if(d.fingerprint===fingerprint&&d.bytes)return false;const changed=!!d.fingerprint;d.bytes=bytes;d.size=bytes.byteLength;d.fingerprint=fingerprint;d.blob=null;if(changed)d.updatedAt=Date.now();if(/^(?:csv|tsv|tab|txt|md|log|json|py|yaml|yml|html|xml)$/.test(fileExt(d.name)))try{d.preview=new TextDecoder("utf-8",{fatal:false}).decode(bytes.slice(0,8192)).slice(0,4000)}catch(e){}return true}
+async function refreshReferencedArtifacts(cell){if(!kernelReady)return;for(const path of (cell.analysis&&cell.analysis.files||[])){const d=dataEntry(path);if(!d)continue;try{await refreshArtifactFromKernel(d)}catch(e){}}}
 function extractPip(src){
   const re=/^\s*[%!]pip\s+install\s+(.+?)\s*$/;
   const pkgs=[], rest=[];
@@ -1962,7 +1964,7 @@ function extractPip(src){
 }
 async function ensureMicropip(){
   if(micropipReady) return;
-  await pyTask(()=>pyodide.loadPackage("micropip"));
+  await pyTask(()=>kwCall("loadPackage",{names:"micropip"}).then(r=>{kernelPackages=r.packages||kernelPackages}));
   micropipReady=true;
 }
 async function refreshInspector(){
@@ -1975,15 +1977,16 @@ async function runCell(cell,opts){
   if(!kernelReady){ toast("Kernel still booting — one moment.","err"); return false; }
   if(busy){ toast("Kernel is busy with another cell.","err"); return false; }
   cmp.hide();
-  let src=cell.taEl?cell.taEl.value:cell.source;const sourceAtRun=src;cell.source=src;recomputeDependencies();refreshReferencedArtifacts(cell);
+  let src=cell.taEl?cell.taEl.value:cell.source;const sourceAtRun=src;cell.source=src;recomputeDependencies();await refreshReferencedArtifacts(cell);if(busy){ toast("Kernel is busy with another cell.","err"); return false; }
   const lineage=provenanceInputs(cell),execCtx=activeToolContext||{runId:"exec_"+uid(),actor:"human",threadId:null,toolCallId:null};
   const inheritedStale=(cell.dependencies||[]).filter(id=>{const c=findCell(id);return c&&cellFreshness(c).state==="stale"}).map(id=>"upstream stale: "+id);
   if(!src.trim()){ cell.outputs=[]; cell.execCount=++execCounter; cell.runtime=null;cell.provenance=null;if(cell.timeEl) cell.timeEl.textContent=""; renderOutputs(cell); refreshExec(cell);refreshNotebookFreshness();schedulePersist(); scheduleWorkspacePersist(); return true; }
   busy=true;
   cell.el.classList.add("running"); cell.el.classList.remove("done"); cell.execEl.textContent="[*]";
   if(cell.timeEl) cell.timeEl.textContent="";
+  kernelInterruptReason="";if(kw.iv)kw.iv[0]=0;
   setStatus("Running…","busy"); progressOn();
-  const collected=[]; const t0=performance.now();
+  const collected=[]; const t0=performance.now(),limitTimer=opts.agent&&agCellMinutes?setTimeout(()=>{interruptKernel("timeout")},agCellMinutes*60000):null;
   try{
     const pip=extractPip(src);
     if(pip.pkgs.length){
@@ -1992,8 +1995,7 @@ async function runCell(cell,opts){
       cell.outputs=collected.slice(); renderOutputs(cell);
       try{
         await ensureMicropip();
-        pyodide.globals.set("__pip_pkgs", pip.pkgs);
-        await runPy("import micropip\nawait micropip.install(list(__pip_pkgs))");
+        await runPy("import micropip\nawait micropip.install(list(__pip_pkgs))",{__pip_pkgs:pip.pkgs});
         collected[collected.length-1]={kind:"stream", name:"stdout", text:"Installed "+pip.pkgs.join(", ")+"\n"};
         await captureEnvironment();
         src=pip.rest;
@@ -2005,20 +2007,20 @@ async function runCell(cell,opts){
     }
     if(src.trim()){
       setStatus("Running…","busy");
-      try{ await pyTask(()=>pyodide.loadPackagesFromImports(src, {messageCallback:m=>{ if(/^Loading/.test(m)){ const names=m.replace(/^Loading\s*/,"").split(/,\s*/); setStatus(pkgSummary("Loading", names),"busy",m); } }})); }catch(_){ }
+      try{ await pyTask(()=>kwCall("loadFromImports",{src},m=>{ if(/^Loading/.test(m)){ const names=m.replace(/^Loading\s*/,"").split(/,\s*/); setStatus(pkgSummary("Loading", names),"busy",m); } }).then(r=>{kernelPackages=r.packages||kernelPackages})); }catch(_){ }
       setStatus("Running…","busy");
-      pyodide.globals.set("__cell_src", src);
-      pyodide.globals.set("__cell_filename","kernel://"+nbId+"/"+cell.id);
-      const raw=await runPy("await _kernel_run(__cell_src, __cell_filename)");
+      const raw=await runPy("await _kernel_run(__cell_src, __cell_filename)",{__cell_src:src,__cell_filename:"kernel://"+nbId+"/"+cell.id});
       cell.outputs=collected.concat(buildOutputs(JSON.parse(raw)));
+      if(kernelInterruptReason)cell.outputs.push({kind:"stream",name:"stderr",text:"KERNEL interrupted this cell because "+interruptExplanation(kernelInterruptReason)+". Variables defined before the interrupt remain.\n"});
     } else {
       cell.outputs=collected.slice();
     }
     cell.execCount=++execCounter;
   }catch(err){
-    cell.outputs=collected.concat([{kind:"error", text:String(err&&err.message?err.message:err)}]); cell.execCount=++execCounter;
-    console.error(err);
+    cell.outputs=collected.concat([{kind:"error", text:(err&&err.name==="KernelRestart"?"KernelRestart: ":"")+String(err&&err.message?err.message:err)}]); cell.execCount=err&&err.name==="KernelRestart"?null:++execCounter;
+    if(!(err&&err.name==="KernelRestart"))console.error(err);
   }finally{
+    clearTimeout(limitTimer);kernelInterruptReason="";if(kw.iv)kw.iv[0]=0;
     const dt=performance.now()-t0; cell.runtime=dt;
     cell.provenance={runId:execCtx.runId,actor:execCtx.actor||"human",threadId:execCtx.threadId||null,toolCallId:execCtx.toolCallId||null,at:Date.now(),sourceHash:sourceHash(sourceAtRun),dependencies:lineage.dependencies,artifacts:lineage.artifacts,environmentHash:environmentSnapshot&&(environmentSnapshot.runtimeHash||environmentSnapshot.hash)||null,kernelGeneration,status:cell.outputs&&cell.outputs.some(o=>o.kind==="error")?"error":"success",staleReasons:inheritedStale};
     cell.el.classList.remove("running");
@@ -2073,8 +2075,65 @@ function toggleMenu(open){ const m=$("#moreMenu"); const show=(open!=null)?open:
 function closeMenu(){ toggleMenu(false); }
 
 /* ===== boot ===== */
+/* ----- Pyodide runs in a dedicated Web Worker so long or runaway cells never freeze the page, and can be interrupted.
+   kernelWorkerMain is serialized into the worker; when a worker cannot start (for example a restrictive file:// context) the
+   same function runs on the page thread with an identical message protocol, trading interruptibility for compatibility. ----- */
+function kernelWorkerMain(scope){
+  let py=null,chain=Promise.resolve();
+  const packages=()=>py&&py.loadedPackages?Object.keys(py.loadedPackages):[];
+  const plain=v=>{if(v&&typeof v.toJs==="function"){const out=v.toJs({dict_converter:Object.fromEntries});try{v.destroy()}catch(e){}return out}return v};
+  const parent=path=>{const i=path.lastIndexOf("/");if(i>0)py.FS.mkdirTree(path.slice(0,i))};
+  const ops={
+    async boot(a){await scope.load(a.indexURL+"pyodide.js");py=await globalThis.loadPyodide({indexURL:a.indexURL});if(a.interruptBuffer)py.setInterruptBuffer(a.interruptBuffer);await py.runPythonAsync(a.harness);const version=await py.runPythonAsync("import sys; sys.version.split()[0]");return {version:String(version),packages:packages(),interruptible:!!a.interruptBuffer}},
+    async run(a){for(const [k,v] of Object.entries(a.vars||{}))py.globals.set(k,v);return {value:plain(await py.runPythonAsync(a.code)),packages:packages()}},
+    async loadFromImports(a,id){await py.loadPackagesFromImports(a.src,{messageCallback:m=>scope.postMessage({id,progress:String(m)})});return {packages:packages()}},
+    async loadPackage(a){await py.loadPackage(a.names);return {packages:packages()}},
+    fsWrite(a){parent(a.path);py.FS.writeFile(a.path,a.bytes);return true},
+    fsRead(a){return py.FS.readFile(a.path)},
+    fsUnlink(a){try{py.FS.unlink(a.path)}catch(e){}return true},
+    fsStat(a){const out={};for(const path of a.paths||[]){try{const s=py.FS.stat(path);out[path]={size:s.size,mtime:+s.mtime}}catch(e){out[path]=null}}return out}
+  };
+  scope.onmessage=e=>{const d=e.data||{};chain=chain.then(async()=>{try{if(!ops[d.op])throw new Error("Unknown kernel operation "+d.op);if(d.op!=="boot"&&!py)throw new Error("Python is not initialized in this kernel");const result=await ops[d.op](d.args||{},d.id);scope.postMessage({id:d.id,ok:true,result},d.op==="fsRead"&&result&&result.buffer?[result.buffer]:[])}catch(err){scope.postMessage({id:d.id,ok:false,error:{name:err&&err.name||"Error",message:String(err&&err.message||err)}})}})};
+}
+const kw={mode:"",worker:null,pending:new Map(),seq:0,iv:null,interruptible:false,url:""};
+let kernelPackages=[],kernelInterruptReason="";
+function kwOnMessage(e){const d=e.data||{},p=kw.pending.get(d.id);if(!p)return;if(d.progress!=null){if(p.onProgress)p.onProgress(d.progress);return}kw.pending.delete(d.id);if(d.ok)p.resolve(d.result);else p.reject(Object.assign(new Error(d.error&&d.error.message||"Python worker error"),{name:d.error&&d.error.name||"Error"}))}
+function kwFailAll(err){const pending=[...kw.pending.values()];kw.pending=new Map();for(const p of pending)p.reject(err)}
+function kwCall(op,args,onProgress){return new Promise((resolve,reject)=>{if(!kw.worker){reject(new Error("Python kernel is not running"));return}const id=++kw.seq;kw.pending.set(id,{resolve,reject,onProgress});try{kw.worker.postMessage({id,op,args})}catch(e){kw.pending.delete(id);reject(e)}})}
+function kwStart(mode){
+  kw.pending=new Map();kw.iv=null;kw.interruptible=false;
+  if(mode!=="inline"&&typeof Worker!=="undefined"){
+    try{
+      const src="self.load=async u=>importScripts(u);("+kernelWorkerMain.toString()+")(self);";if(kw.url)URL.revokeObjectURL(kw.url);kw.url=URL.createObjectURL(new Blob([src],{type:"text/javascript"}));
+      const w=new Worker(kw.url);w.onmessage=kwOnMessage;w.onerror=ev=>{ev.preventDefault&&ev.preventDefault();kwFailAll(new Error("Python worker failed: "+(ev.message||"unknown error")))};
+      kw.worker=w;kw.mode="worker";if(typeof SharedArrayBuffer!=="undefined"&&globalThis.crossOriginIsolated)kw.iv=new Uint8Array(new SharedArrayBuffer(1));return;
+    }catch(e){console.warn("Web Worker unavailable; running Python on the page thread",e)}
+  }
+  const scope={load:loadScript,onmessage:null,postMessage:data=>queueMicrotask(()=>kwOnMessage({data}))};kernelWorkerMain(scope);
+  kw.worker={postMessage:data=>scope.onmessage({data}),terminate(){}};kw.mode="inline";
+}
+async function kwBoot(mode){kwStart(mode);const info=await kwCall("boot",{indexURL:PYODIDE_BASE,harness:HARNESS,interruptBuffer:kw.iv});kernelPackages=info.packages||[];kw.interruptible=!!info.interruptible&&kw.mode==="worker";return info}
+function kernelModeLabel(){return kw.mode==="worker"?(kw.interruptible?" · worker · interruptible":" · worker"):" · page thread"}
 function pyTask(fn){ const p=_pyChain.then(fn); _pyChain=p.catch(()=>{}); return p; }
-function runPy(code){ return pyTask(()=>pyodide.runPythonAsync(code)); }
+function runPy(code,vars){ return pyTask(()=>kwCall("run",{code,vars}).then(r=>{if(r&&r.packages)kernelPackages=r.packages;return r?r.value:undefined})); }
+const pyFS={write:(path,bytes)=>kwCall("fsWrite",{path,bytes}),read:path=>kwCall("fsRead",{path}),unlink:path=>kwCall("fsUnlink",{path}),stat:paths=>kwCall("fsStat",{paths})};
+async function remountArtifacts(){for(const d of dataFiles){try{if(d.bytes)await pyFS.write(d.path||d.name,d.bytes instanceof Uint8Array?d.bytes:new Uint8Array(d.bytes))}catch(e){console.warn("Could not remount",d.name,e)}}}
+function interruptExplanation(reason){return reason==="timeout"?"the agent cell time limit ("+agCellMinutes+" min) was reached":reason==="stop"?"the human pressed Stop":reason==="restart"?"the human restarted the kernel":"the human pressed Interrupt"}
+/* Soft interrupt (KeyboardInterrupt, namespace kept) when the page is cross-origin isolated; otherwise the worker is replaced,
+   artifacts are remounted, and every cell's execution count is cleared because the Python namespace is gone. */
+async function interruptKernel(reason,force){
+  if(!busy||kw.mode!=="worker")return false;kernelInterruptReason=reason||"human";
+  if(!force&&kw.interruptible&&kw.iv){kw.iv[0]=2;const t0=Date.now();while(busy&&Date.now()-t0<3000)await new Promise(r=>setTimeout(r,100));if(!busy)return true}
+  await restartKernelHard(kernelInterruptReason);return true;
+}
+async function restartKernelHard(reason){
+  kernelReady=false;setStatus("Restarting Python…","busy");
+  try{kw.worker.terminate()}catch(e){}kwFailAll(Object.assign(new Error("KERNEL restarted Python because "+interruptExplanation(reason)+". All variables were cleared; rerun upstream cells before continuing."),{name:"KernelRestart"}));_pyChain=Promise.resolve();micropipReady=false;jediReady=false;
+  kernelGeneration++;execCounter=0;for(const cell of cells){cell.execCount=null;if(cell.el)refreshExec(cell)}
+  try{await kwBoot(kw.mode);await remountArtifacts();kernelReady=true;setStatus("Ready","ok");$("#kernelInfo").textContent="Python restarted"+kernelModeLabel();try{await captureEnvironment()}catch(e){}refreshNotebookFreshness();loadExtras()}
+  catch(err){kernelReady=false;try{kw.worker.terminate()}catch(e){}kw.worker=null;kwFailAll(new Error("Python kernel is not running"));setStatus("Kernel failed","err");$("#kernelInfo").textContent="Python failed to restart · press Restart to try again";toast("Python could not restart · press Restart to try again · "+String(err&&err.message||err),"err")}
+  finally{try{await refreshInspector()}catch(_){}}
+}
 function loadScript(src){
   return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("Failed to load "+src)); document.head.appendChild(s); });
 }
@@ -2115,16 +2174,16 @@ async function typesetMarkdown(el){
 async function bootKernel(){
   setStatus("Loading Pyodide…","boot"); progressOn(); $("#kernelInfo").textContent="Pyodide · downloading runtime (~10 MB, cached after)";
   try{
-    if(typeof window.loadPyodide==="undefined") await loadScript(PYODIDE_BASE+"pyodide.js");
-    pyodide=await window.loadPyodide({indexURL:PYODIDE_BASE});
-    setStatus("Initializing…","boot");
-    await runPy(HARNESS);
-    const ver=await runPy("import sys; sys.version.split()[0]");
+    let mode="worker";try{if(localStorage.getItem("kernel.runtime")==="inline")mode="inline"}catch(e){}
+    let info;
+    try{info=await kwBoot(mode)}catch(err){if(kw.mode!=="worker")throw err;console.warn("Python worker failed to boot; using the page thread",err);try{kw.worker.terminate()}catch(e){}info=await kwBoot("inline")}
+    const ver=info.version;
     kernelReady=true; setStatus("Ready","ok");
-    $("#kernelInfo").textContent="Python "+ver+" · Pyodide 0.29.4";
+    $("#kernelInfo").textContent="Python "+ver+" · Pyodide 0.29.4"+kernelModeLabel();
     await restoreWorkspaceState(nbId);
     await captureEnvironment();refreshNotebookFreshness();
     if(agTxNb!==nbId)await activateNotebookAgent(nbId);
+    scheduleBlobGc(20000);
     toast("Kernel ready · Python "+ver);
     loadExtras();
   }catch(err){
@@ -2137,16 +2196,15 @@ async function loadExtras(){
   // background, lock-serialized so it never collides with a user run
   try{ await ensureMicropip(); }catch(e){ console.warn("micropip unavailable", e); }
   try{
-    pyodide.globals.set("__jedi_pkgs", ["jedi"]);
-    await runPy("import micropip\nawait micropip.install(list(__jedi_pkgs))\nimport jedi");
+    await runPy("import micropip\nawait micropip.install(list(__jedi_pkgs))\nimport jedi",{__jedi_pkgs:["jedi"]});
     jediReady=true;
     if(kernelInfoHasVer()) $("#kernelInfo").textContent += " · autocomplete ready";
   }catch(e){ jediReady=false; console.warn("jedi unavailable; autocomplete uses a basic fallback", e); }
 }
 function kernelInfoHasVer(){ return /Python/.test($("#kernelInfo").textContent||""); }
 async function restartKernel(){
-  if(!kernelReady){ toast("Kernel not ready.","err"); return; }
-  if(busy){ toast("Wait for the current run to finish.","err"); return; }
+  if(!kernelReady){ if(!kw.worker&&kw.mode==="worker"){ await restartKernelHard("restart"); return; } toast("Kernel not ready.","err"); return; }
+  if(busy){ if(kw.mode==="worker"&&confirm("Stop the running cell and restart Python? All variables will be cleared.")) await interruptKernel("restart",true); else if(kw.mode!=="worker") toast("Wait for the current run to finish.","err"); return; }
   cmp.hide();
   busy=true; setStatus("Restarting…","busy");
   try{
@@ -2270,7 +2328,7 @@ function safeArtifactPath(raw){
 }
 function collisionSafePath(raw,taken){const path=safeArtifactPath(raw),dot=path.lastIndexOf("."),slash=path.lastIndexOf("/"),base=dot>slash?path.slice(0,dot):path,ext=dot>slash?path.slice(dot):"";let out=path,n=2;while(taken(out))out=base+" ("+(n++)+")"+ext;return out}
 function uniqueArtifactPath(raw,ignoreId){return collisionSafePath(raw,out=>dataFiles.some(d=>(d.path||d.name)===out&&d.id!==ignoreId))}
-function ensureFsParent(path){const i=path.lastIndexOf("/");if(i>0&&pyodide&&pyodide.FS)pyodide.FS.mkdirTree(path.slice(0,i))}
+function ensureFsParent(path){/* the kernel worker creates parent folders on write */}
 function dataEntry(name){ return dataFiles.find(d=>d.id===name||d.name===name||d.path===name); }
 function artifactStage(d){return d.stage||(d.origin==="upload"?"input":"final")}
 function renderDataChips(){
@@ -2297,7 +2355,7 @@ function insertReadSnippet(name){
   closeData(); toast("Inserted read snippet for "+name);
 }
 async function removeData(name){
-  const d=dataEntry(name);if(!d)return;try{ if(pyodide&&pyodide.FS){ try{ pyodide.FS.unlink(d.name); }catch(_){ } } }catch(_){ }
+  const d=dataEntry(name);if(!d)return;try{ if(kernelReady) await pyFS.unlink(d.name); }catch(_){ }
   if(d._previewUrl)URL.revokeObjectURL(d._previewUrl);const i=dataFiles.indexOf(d); if(i>=0) dataFiles.splice(i,1);
   recomputeDependencies();
   renderDataChips(); renderDataList(); scheduleWorkspacePersist(); toast("Removed "+name);
@@ -2344,10 +2402,11 @@ function renderDataList(){
 }
 
 /* ===== durable per-notebook workspace (large state lives in IndexedDB) ===== */
-const KDB_NAME="kernel.workspace.v2",KDB_VERSION=2;
+const KDB_NAME="kernel.workspace.v2",KDB_VERSION=3;
 let kdbPromise=null,workspaceTimer=null,workspaceLoading=false,workspaceArchiveImport=false;
-const kdbMemory={workspaces:new Map(),threads:new Map(),runs:new Map(),checkpoints:new Map()};let kdbWarned=false,kdbLastError=null;
-function kdbFallback(error){if(!kdbWarned){kdbWarned=true;console.warn("Persistent workspace storage unavailable; using an in-memory fallback",error);toast("Persistent browser storage is unavailable · Save ZIP before closing.","err")}}
+const kdbMemory={workspaces:new Map(),threads:new Map(),runs:new Map(),checkpoints:new Map(),blobs:new Map()};let kdbWarned=false,kdbQuotaWarned=false,kdbLastError=null;
+function kdbFallback(error){kdbLastError=error||kdbLastError;const quota=error&&(error.name==="QuotaExceededError"||/quota/i.test(String(error.message||"")));if(quota&&!kdbQuotaWarned){kdbQuotaWarned=true;console.warn("Browser storage quota reached; keeping new workspace state in memory",error);toast("Browser storage is full · Save ZIP now, then delete old notebooks or checkpoints.","err");return}if(!kdbWarned){kdbWarned=true;console.warn("Persistent workspace storage unavailable; using an in-memory fallback",error);toast("Persistent browser storage is unavailable · Save ZIP before closing.","err")}}
+function kdbKey(value){return value&&(value.key||value.id||value.notebookId||value.hash)}
 function kdbClone(value){try{return structuredClone(value)}catch(e){return value}}
 function kdbOpen(){
   if(kdbPromise)return kdbPromise;
@@ -2362,6 +2421,7 @@ function kdbOpen(){
       }
       if(!db.objectStoreNames.contains("runs")){const st=db.createObjectStore("runs",{keyPath:"id"});st.createIndex("notebookId","notebookId",{unique:false});st.createIndex("threadKey","threadKey",{unique:false});st.createIndex("updated","updated",{unique:false})}
       if(!db.objectStoreNames.contains("checkpoints")){const st=db.createObjectStore("checkpoints",{keyPath:"id"});st.createIndex("notebookId","notebookId",{unique:false});st.createIndex("threadKey","threadKey",{unique:false});st.createIndex("created","created",{unique:false})}
+      if(!db.objectStoreNames.contains("blobs"))db.createObjectStore("blobs",{keyPath:"hash"});
     };
     req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>{db.close();kdbPromise=null};resolve(db)};req.onblocked=()=>{kdbPromise=null;reject(new Error("Close other KERNEL tabs to upgrade workspace storage"))};req.onerror=()=>{kdbLastError=req.error||new Error("Could not open workspace database");kdbPromise=null;reject(kdbLastError)};
   });
@@ -2375,20 +2435,24 @@ async function kdbRequest(store,mode,fn){
     req.onsuccess=()=>{result=req.result};req.onerror=()=>reject(req.error||new Error("Workspace database operation failed"));tx.oncomplete=()=>resolve(result);tx.onabort=()=>reject(tx.error||new Error("Workspace transaction aborted"));tx.onerror=()=>reject(tx.error||new Error("Workspace transaction failed"));
   });
 }
-async function kdbGet(store,key){try{return await kdbRequest(store,"readonly",st=>st.get(key))}catch(e){kdbFallback(e);return kdbClone(kdbMemory[store].get(key)||null)}}
-async function kdbPut(store,value){try{return await kdbRequest(store,"readwrite",st=>st.put(value))}catch(e){kdbFallback(e);const key=value.key||value.id||value.notebookId;kdbMemory[store].set(key,kdbClone(value));return key}}
+/* A value that failed to persist lives in kdbMemory and is always newer than its IndexedDB copy, so reads prefer it. */
+async function kdbGet(store,key){if(kdbMemory[store].has(key))return kdbClone(kdbMemory[store].get(key));try{return await kdbRequest(store,"readonly",st=>st.get(key))}catch(e){kdbFallback(e);return null}}
+async function kdbPut(store,value){const key=kdbKey(value);try{const out=await kdbRequest(store,"readwrite",st=>st.put(value));kdbMemory[store].delete(key);return out}catch(e){kdbFallback(e);kdbMemory[store].set(key,kdbClone(value));return key}}
+function kdbOverlay(store,rows,match){const byKey=new Map((rows||[]).map(r=>[kdbKey(r),r]));for(const [key,value] of kdbMemory[store])if(match(value))byKey.set(key,kdbClone(value));return [...byKey.values()]}
+async function kdbEach(store,fn){try{const db=await kdbOpen();await new Promise((resolve,reject)=>{const tx=db.transaction(store,"readonly"),req=tx.objectStore(store).openCursor();req.onsuccess=()=>{const c=req.result;if(c){fn(c.value);c.continue()}};req.onerror=()=>reject(req.error);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}catch(e){kdbFallback(e)}for(const value of kdbMemory[store].values())fn(value)}
+async function kdbAllKeys(store){let keys=[];try{keys=await kdbRequest(store,"readonly",st=>st.getAllKeys())}catch(e){kdbFallback(e)}return [...new Set([...keys,...kdbMemory[store].keys()])]}
 async function kdbDelete(store,key){kdbMemory[store].delete(key);try{return await kdbRequest(store,"readwrite",st=>st.delete(key))}catch(e){kdbFallback(e)}}
 async function kdbThreads(notebookId){
   try{
     const db=await kdbOpen();
     return await new Promise((resolve,reject)=>{
       const tx=db.transaction("threads","readonly"),idx=tx.objectStore("threads").index("notebookId"),req=idx.getAll(IDBKeyRange.only(notebookId));
-      req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error);
+      req.onsuccess=()=>resolve(kdbOverlay("threads",req.result||[],t=>t.notebookId===notebookId));req.onerror=()=>reject(req.error);
     });
   }catch(e){kdbFallback(e);return [...kdbMemory.threads.values()].filter(t=>t.notebookId===notebookId).map(kdbClone)}
 }
 async function kdbByIndex(store,index,value){
-  try{const db=await kdbOpen();return await new Promise((resolve,reject)=>{const tx=db.transaction(store,"readonly"),req=tx.objectStore(store).index(index).getAll(IDBKeyRange.only(value));let result=[];req.onsuccess=()=>{result=req.result||[]};req.onerror=()=>reject(req.error);tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error)})}
+  try{const db=await kdbOpen();return await new Promise((resolve,reject)=>{const tx=db.transaction(store,"readonly"),req=tx.objectStore(store).index(index).getAll(IDBKeyRange.only(value));let result=[];req.onsuccess=()=>{result=req.result||[]};req.onerror=()=>reject(req.error);tx.oncomplete=()=>resolve(kdbOverlay(store,result,x=>x&&x[index]===value));tx.onerror=()=>reject(tx.error)})}
   catch(e){kdbFallback(e);return [...kdbMemory[store].values()].filter(x=>x&&x[index]===value).map(kdbClone)}
 }
 function kdbRuns(notebookId,threadId){return kdbByIndex("runs",threadId?"threadKey":"notebookId",threadId?(notebookId+":"+threadId):notebookId)}
@@ -2399,14 +2463,38 @@ function scheduleWorkspacePersist(){
   clearTimeout(workspaceTimer);workspaceTimer=setTimeout(()=>saveWorkspaceState(),550);
   const el=$("#saveState");if(el)el.classList.add("workspace-saving");
 }
+/* ----- content-addressed artifact bytes: workspaces and checkpoints store {blob:hash} references, so a checkpoint
+   costs metadata instead of another copy of every file, and exports write each unique payload once ----- */
+const blobKnown=new Set(),blobSession=new Set();
+async function blobHash(bytes){try{if(globalThis.crypto&&crypto.subtle){const d=new Uint8Array(await crypto.subtle.digest("SHA-256",bytes));let hex="";for(const b of d)hex+=b.toString(16).padStart(2,"0");return "sha256:"+hex}}catch(e){}return "crc32:"+bytes.byteLength+":"+crc32(bytes).toString(16)}
+function sameBytes(a,b){if(!a||!b||a.byteLength!==b.byteLength)return false;for(let i=0;i<a.byteLength;i++)if(a[i]!==b[i])return false;return true}
+async function blobPut(bytes){bytes=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes||[]);let hash=await blobHash(bytes);blobSession.add(hash);if(blobKnown.has(hash))return hash;const existing=await kdbGet("blobs",hash);if(existing&&!hash.startsWith("sha256:")&&!sameBytes(existing.bytes instanceof Uint8Array?existing.bytes:new Uint8Array(existing.bytes||[]),bytes)){hash+=":"+Date.now().toString(36);blobSession.add(hash)}else if(existing){blobKnown.add(hash);return hash}await kdbPut("blobs",{hash,size:bytes.byteLength,bytes:bytes.slice(),created:Date.now()});blobKnown.add(hash);return hash}
+async function blobGet(hash){if(!hash)return null;const r=await kdbGet("blobs",hash);return r&&r.bytes?(r.bytes instanceof Uint8Array?r.bytes:new Uint8Array(r.bytes)):null}
+async function artifactBytes(f){if(!f)throw new Error("missing artifact");if(f.bytes)return f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes);if(f.blob){const live=dataFiles.find(d=>d.blob===f.blob&&d.bytes);if(live)return live.bytes instanceof Uint8Array?live.bytes:new Uint8Array(live.bytes);const b=await blobGet(f.blob);if(b)return b}throw new Error("artifact data is missing for "+(f.path||f.name||f.id))}
+async function externalizeArtifacts(list){const out=[];for(const f of (list||[])){if(!f)continue;const meta=Object.assign({},f);if(!meta.blob||meta.bytes)meta.blob=await blobPut(await artifactBytes(f));if(!Number.isFinite(meta.size)&&f.bytes)meta.size=f.bytes.byteLength;delete meta.bytes;delete meta.fsStat;out.push(meta)}return out}
+let blobGcTimer=null;
+function scheduleBlobGc(delay){clearTimeout(blobGcTimer);blobGcTimer=setTimeout(()=>{gcBlobs().catch(e=>console.warn("Artifact storage cleanup failed",e))},delay||4000)}
+/* Mark-and-sweep over workspace and checkpoint references. Legacy records that still embed bytes are migrated to blob references
+   one at a time, and blobs written during this session are never swept, so a save racing the sweep cannot lose data. */
+async function gcBlobs(){
+  const refs=new Set(blobSession),legacyWorkspaces=[],legacyCheckpoints=[];
+  const scan=(list,onLegacy)=>{let legacy=false;for(const f of (list||[])){if(f&&f.blob)refs.add(f.blob);if(f&&f.bytes)legacy=true}if(legacy)onLegacy()};
+  await kdbEach("workspaces",w=>scan(w.artifacts||w.files,()=>legacyWorkspaces.push(w.notebookId)));
+  await kdbEach("checkpoints",cp=>scan(cp.workspace&&(cp.workspace.artifacts||cp.workspace.files),()=>legacyCheckpoints.push(cp.id)));
+  for(const d of dataFiles)if(d.blob)refs.add(d.blob);
+  for(const id of legacyCheckpoints){const cp=await kdbGet("checkpoints",id);if(!cp||!cp.workspace)continue;cp.workspace.artifacts=await externalizeArtifacts(cp.workspace.artifacts||cp.workspace.files);delete cp.workspace.files;for(const f of cp.workspace.artifacts)refs.add(f.blob);await kdbPut("checkpoints",cp)}
+  for(const id of legacyWorkspaces){if(id===nbId)continue;const w=await kdbGet("workspaces",id);if(!w)continue;w.artifacts=await externalizeArtifacts(w.artifacts||w.files);delete w.files;for(const f of w.artifacts)refs.add(f.blob);await kdbPut("workspaces",w)}
+  let removed=0;for(const hash of await kdbAllKeys("blobs"))if(!refs.has(hash)){await kdbDelete("blobs",hash);blobKnown.delete(hash);removed++}
+  return {removed,migrated:legacyWorkspaces.length+legacyCheckpoints.length};
+}
 async function collectWorkspaceFiles(){
+  let stats={};if(kernelReady&&dataFiles.length){try{stats=await pyFS.stat(dataFiles.map(d=>d.path||d.name))}catch(e){}}
   const out=[];
   for(const d of dataFiles){
-    try{
-      const raw=pyodide&&pyodide.FS?pyodide.FS.readFile(d.name):(d.bytes||new Uint8Array());
-      const bytes=raw instanceof Uint8Array?raw.slice():new Uint8Array(raw);
-      const fingerprint=bytes.byteLength+":"+crc32(bytes),changed=d.fingerprint&&d.fingerprint!==fingerprint;d.bytes=bytes;d.size=bytes.byteLength;d.fingerprint=fingerprint;if(changed){d.updatedAt=Date.now();if(/^(?:csv|tsv|tab|txt|md|log|json|py|yaml|yml|html|xml)$/.test(fileExt(d.name)))try{d.preview=new TextDecoder("utf-8",{fatal:false}).decode(bytes.slice(0,8192)).slice(0,4000)}catch(e){}}out.push({id:d.id||artifactId(),name:d.name,path:d.name,size:bytes.byteLength,type:d.type||"",preview:d.preview||"",origin:d.origin||"upload",stage:artifactStage(d),createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt||Date.now(),fingerprint,producer:clonePlain(d.producer||null),derivedFrom:clonePlain(d.derivedFrom||[]),bytes});
-    }catch(e){if(d.bytes)out.push({id:d.id||artifactId(),name:d.name,path:d.name,size:d.bytes.byteLength,type:d.type||"",preview:d.preview||"",origin:d.origin||"upload",stage:artifactStage(d),createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt||Date.now(),fingerprint:d.fingerprint||artifactFingerprint(d),producer:clonePlain(d.producer||null),derivedFrom:clonePlain(d.derivedFrom||[]),bytes:d.bytes})}
+    try{await refreshArtifactFromKernel(d,stats[d.path||d.name])}catch(e){}
+    if(!d.bytes&&!d.blob)continue;
+    if(!d.blob)d.blob=await blobPut(d.bytes);
+    out.push({id:d.id||artifactId(),name:d.name,path:d.name,size:d.size||(d.bytes?d.bytes.byteLength:0),type:d.type||"",preview:d.preview||"",origin:d.origin||"upload",stage:artifactStage(d),createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt||Date.now(),fingerprint:d.fingerprint||artifactFingerprint(d),producer:clonePlain(d.producer||null),derivedFrom:clonePlain(d.derivedFrom||[]),blob:d.blob});
   }
   return out;
 }
@@ -2418,11 +2506,11 @@ async function saveWorkspaceState(id){
   return rec;
 }
 async function clearMountedData(){
-  if(pyodide&&pyodide.FS){for(const d of dataFiles){try{pyodide.FS.unlink(d.name)}catch(_){}}}
+  if(kernelReady){for(const d of dataFiles){try{await pyFS.unlink(d.name)}catch(_){}}}
   dataFiles.splice(0,dataFiles.length);renderDataChips();renderDataList();
 }
 async function isolateNotebookRuntime(){
-  if(kernelReady&&pyodide){try{await runPy("_kernel_reset()") }catch(e){console.warn("namespace reset failed",e)}}
+  if(kernelReady){try{await runPy("_kernel_reset()") }catch(e){console.warn("namespace reset failed",e)}}
   await clearMountedData();lastVarRows=[];paintInspector();
 }
 async function restoreWorkspaceState(id){
@@ -2432,9 +2520,9 @@ async function restoreWorkspaceState(id){
     const rec=await kdbGet("workspaces",id);
     const stored=rec&&(rec.artifacts||rec.files);if(Array.isArray(stored)){
       for(const f of stored){
-        const bytes=f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes||[]);
-        let path;try{path=safeArtifactPath(f.path||f.name)}catch(e){console.warn("Skipped unsafe artifact path",f.name);continue}try{if(kernelReady&&pyodide){ensureFsParent(path);pyodide.FS.writeFile(path,bytes)}}catch(e){console.warn("Could not remount",path,e)}
-        dataFiles.push({id:f.id||artifactId(),name:path,path,size:bytes.byteLength,type:f.type||"",preview:f.preview||"",origin:f.origin||"upload",stage:f.stage||(f.origin==="upload"?"input":"final"),createdAt:f.createdAt||Date.now(),updatedAt:f.updatedAt||Date.now(),fingerprint:f.fingerprint||bytes.byteLength+":"+crc32(bytes),producer:clonePlain(f.producer||null),derivedFrom:clonePlain(f.derivedFrom||[]),bytes});
+        let bytes;try{bytes=f.bytes?(f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes)):await blobGet(f.blob)}catch(e){bytes=null}if(!bytes){console.warn("Artifact bytes are missing",f.path||f.name);continue}
+        let path;try{path=safeArtifactPath(f.path||f.name)}catch(e){console.warn("Skipped unsafe artifact path",f.name);continue}try{if(kernelReady)await pyFS.write(path,bytes)}catch(e){console.warn("Could not remount",path,e)}
+        dataFiles.push({id:f.id||artifactId(),name:path,path,size:bytes.byteLength,type:f.type||"",preview:f.preview||"",origin:f.origin||"upload",stage:f.stage||(f.origin==="upload"?"input":"final"),createdAt:f.createdAt||Date.now(),updatedAt:f.updatedAt||Date.now(),fingerprint:f.fingerprint||bytes.byteLength+":"+crc32(bytes),producer:clonePlain(f.producer||null),derivedFrom:clonePlain(f.derivedFrom||[]),bytes,blob:f.bytes?null:(f.blob||null)});
       }
     }
     const byId=new Map(((rec&&rec.outputs)||[]).map(o=>[o.cellId,o]));
@@ -2448,11 +2536,11 @@ async function restoreWorkspaceState(id){
   }finally{workspaceLoading=false}
 }
 async function deleteNotebookWorkspace(id){
-  await kdbDelete("workspaces",id);for(const t of await kdbThreads(id))await kdbDelete("threads",t.key);for(const r of await kdbRuns(id))await kdbDelete("runs",r.id);for(const c of await kdbCheckpoints(id))await kdbDelete("checkpoints",c.id);
+  await kdbDelete("workspaces",id);for(const t of await kdbThreads(id))await kdbDelete("threads",t.key);for(const r of await kdbRuns(id))await kdbDelete("runs",r.id);for(const c of await kdbCheckpoints(id))await kdbDelete("checkpoints",c.id);scheduleBlobGc();
 }
 async function cloneNotebookWorkspace(fromId,toId){
   const src=fromId===nbId?await saveWorkspaceState(fromId):await kdbGet("workspaces",fromId);
-  if(src){const arts=(src.artifacts||src.files||[]).map(f=>Object.assign({},f,{bytes:(f.bytes instanceof Uint8Array?f.bytes.slice():new Uint8Array(f.bytes||[]))}));await kdbPut("workspaces",Object.assign({},src,{v:3,notebookId:toId,updated:Date.now(),artifacts:arts,files:undefined,outputs:clonePlain(src.outputs||[])}))}
+  if(src){const arts=await externalizeArtifacts(src.artifacts||src.files||[]);await kdbPut("workspaces",Object.assign({},src,{v:3,notebookId:toId,updated:Date.now(),artifacts:arts,files:undefined,outputs:clonePlain(src.outputs||[])}))}
   const idxRaw=localStorage.getItem("kernel.agent.threadindex."+fromId);if(idxRaw)localStorage.setItem("kernel.agent.threadindex."+toId,idxRaw);
   for(const t of await kdbThreads(fromId))await kdbPut("threads",Object.assign({},t,{key:toId+":"+t.id,notebookId:toId,updated:Date.now()}));
 }
@@ -2473,7 +2561,9 @@ function zipHeader(size){return new Uint8Array(size)}
 function z16(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint16(o,n,true)}
 function z32(v,o,n){new DataView(v.buffer,v.byteOffset,v.byteLength).setUint32(o,n>>>0,true)}
 function joinBytes(parts){let n=0;for(const p of parts)n+=p.byteLength;const out=new Uint8Array(n);let at=0;for(const p of parts){out.set(p,at);at+=p.byteLength}return out}
-function zipStore(entries){
+function zipStore(entries){return joinBytes(zipStoreParts(entries))}
+/* Parts go straight into new Blob([...]) so an export never needs one contiguous buffer the size of the whole archive. */
+function zipStoreParts(entries){
   const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;
   for(const ent of entries){
     const name=enc.encode(ent.name),data=ent.data instanceof Uint8Array?ent.data:new Uint8Array(ent.data),crc=crc32(data);
@@ -2483,7 +2573,7 @@ function zipStore(entries){
     centrals.push(ch,name);offset+=lh.length+name.length+data.length;
   }
   const central=joinBytes(centrals),end=zipHeader(22);z32(end,0,0x06054b50);z16(end,8,entries.length);z16(end,10,entries.length);z32(end,12,central.length);z32(end,16,offset);
-  return joinBytes([...locals,central,end]);
+  return [...locals,central,end];
 }
 function zipReadStore(bytes){
   bytes=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),dec=new TextDecoder();let end=-1;
@@ -2509,12 +2599,13 @@ async function downloadWorkspaceZip(options){
     persist();if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();const env=await captureEnvironment(),ws=await saveWorkspaceState(),threadIndex=readThreadIndex(nbId),threads=await kdbThreads(nbId),runs=await kdbRuns(nbId),checkpoints=includeCheckpoints?await kdbCheckpoints(nbId):[],enc=new TextEncoder(),entries=[];
     const manifest={format:"kernel-workspace",version:3,app:"KERNEL·A",app_version:"2.3.1",export_profile:includeCheckpoints?"full":"private-run",exported_at:new Date().toISOString(),notebook:{name:nbName},active_thread_id:threadIndex.active||null,thread_index:threadIndex,artifacts:[],runs:runs.map(r=>r.id),checkpoints:checkpoints.map(c=>c.id)};
     entries.push({name:"manifest.json",data:new Uint8Array()},{name:"notebook.ipynb",data:enc.encode(JSON.stringify(toIpynb(),null,1))},{name:"environment.json",data:enc.encode(JSON.stringify(env,null,2))},{name:"requirements.txt",data:enc.encode(requirementsSnapshot(env))});
-    for(let i=0;i<((ws&&ws.artifacts)||[]).length;i++){const f=ws.artifacts[i],stage=artifactStage(f),entry="data/"+(stage==='input'?'inputs':stage==='final'?'final':'scratch')+"/"+String(i+1).padStart(4,"0")+".bin",meta={id:f.id,path:f.path||f.name,type:f.type||"",origin:f.origin||"upload",stage,size:f.bytes.byteLength,preview:f.preview||"",createdAt:f.createdAt||null,updatedAt:f.updatedAt||null,fingerprint:f.fingerprint||"",producer:f.producer||null,derivedFrom:f.derivedFrom||[],entry};manifest.artifacts.push(meta);entries.push({name:entry,data:f.bytes})}
+    const written=new Map(),entryFor=async(f,fallbackName)=>{const bytes=await artifactBytes(f),hash=f.blob&&!f.bytes?f.blob:await blobHash(bytes);if(written.has(hash))return {entry:written.get(hash),bytes};written.set(hash,fallbackName);entries.push({name:fallbackName,data:bytes});return {entry:fallbackName,bytes}};
+    for(let i=0;i<((ws&&ws.artifacts)||[]).length;i++){const f=ws.artifacts[i],stage=artifactStage(f),{entry,bytes}=await entryFor(f,"data/"+(stage==='input'?'inputs':stage==='final'?'final':'scratch')+"/"+String(i+1).padStart(4,"0")+".bin"),meta={id:f.id,path:f.path||f.name,type:f.type||"",origin:f.origin||"upload",stage,size:bytes.byteLength,preview:f.preview||"",createdAt:f.createdAt||null,updatedAt:f.updatedAt||null,fingerprint:f.fingerprint||"",producer:f.producer||null,derivedFrom:f.derivedFrom||[],entry};manifest.artifacts.push(meta)}
     for(const t of threads)entries.push({name:"threads/"+encodeURIComponent(t.id)+".json",data:enc.encode(JSON.stringify(t))});
     for(const r of runs)entries.push({name:"runs/"+encodeURIComponent(r.id)+".json",data:enc.encode(JSON.stringify(r))});
-    for(const cp of checkpoints){const copy=kdbClone(cp),arts=(copy.workspace&&(copy.workspace.artifacts||copy.workspace.files))||[];if(copy.workspace){copy.workspace.artifacts=arts.map((f,i)=>{const entry="checkpoint-artifacts/"+encodeURIComponent(cp.id)+"/"+String(i+1).padStart(4,"0")+".bin";entries.push({name:entry,data:f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes||[])});const meta=Object.assign({},f,{entry});delete meta.bytes;return meta});delete copy.workspace.files}entries.push({name:"checkpoints/"+encodeURIComponent(cp.id)+".json",data:enc.encode(JSON.stringify(copy))})}
+    for(const cp of checkpoints){const copy=kdbClone(cp),arts=(copy.workspace&&(copy.workspace.artifacts||copy.workspace.files))||[];if(copy.workspace){const metas=[];for(let i=0;i<arts.length;i++){const f=arts[i],{entry,bytes}=await entryFor(f,"checkpoint-artifacts/"+encodeURIComponent(cp.id)+"/"+String(i+1).padStart(4,"0")+".bin"),meta=Object.assign({},f,{entry,size:bytes.byteLength});delete meta.bytes;delete meta.blob;metas.push(meta)}copy.workspace.artifacts=metas;delete copy.workspace.files}entries.push({name:"checkpoints/"+encodeURIComponent(cp.id)+".json",data:enc.encode(JSON.stringify(copy))})}
     entries[0]={name:"manifest.json",data:enc.encode(JSON.stringify(manifest,null,2))};entries.push({name:"README.txt",data:enc.encode(includeCheckpoints?"KERNEL·A portable workspace v3 (app 2.3.1)\n\nOpen this .kernel.zip in KERNEL·A to restore the notebook, rendered outputs and lineage, artifact workspace, environment snapshot, every chat thread, durable runs, usage counters, and checkpoints. API keys are intentionally excluded. The live Python namespace is recreated by rerunning notebook cells.\n":"KERNEL·A private run workspace v3 (app 2.3.1)\n\nContains the current notebook, rendered outputs and lineage, artifacts, full chat threads, durable run ledgers, usage, and environment, but omits historical checkpoints to keep review transfers compact. It is private, not redacted or share-safe. API keys are excluded.\n")});
-    const suffix=includeCheckpoints?".kernel.zip":".kernel-run.zip";downloadBlob(new Blob([zipStore(entries)],{type:"application/zip"}),agSlug()+suffix);toast((includeCheckpoints?"Full workspace":"Private run")+" ZIP saved · "+threads.length+" thread"+(threads.length===1?"":"s")+" · "+manifest.artifacts.length+" artifact"+(manifest.artifacts.length===1?"":"s")+(includeCheckpoints?" · "+checkpoints.length+" checkpoint"+(checkpoints.length===1?"":"s"):" · checkpoints omitted"));
+    const suffix=includeCheckpoints?".kernel.zip":".kernel-run.zip";downloadBlob(new Blob(zipStoreParts(entries),{type:"application/zip"}),agSlug()+suffix);toast((includeCheckpoints?"Full workspace":"Private run")+" ZIP saved · "+threads.length+" thread"+(threads.length===1?"":"s")+" · "+manifest.artifacts.length+" artifact"+(manifest.artifacts.length===1?"":"s")+(includeCheckpoints?" · "+checkpoints.length+" checkpoint"+(checkpoints.length===1?"":"s"):" · checkpoints omitted"));
   }catch(e){toast("Could not save workspace · "+String(e.message||e),"err")}finally{setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
 }
 function downloadPrivateRunZip(){return downloadWorkspaceZip({includeCheckpoints:false})}
@@ -2541,9 +2632,9 @@ async function importWorkspaceZip(file){
     const artifactSpecs=manifest.version===2?(manifest.files||[]).map(f=>({id:artifactId(),path:f.name,type:f.type,origin:f.origin,stage:f.origin==='result'?'final':'input',size:f.size,preview:f.preview,entry:f.path})):(manifest.artifacts||[]),archivePaths=new Set(),archiveIds=new Set();const artifacts=artifactSpecs.map(f=>{const path=collisionSafePath(f.path||f.name,p=>archivePaths.has(p));archivePaths.add(path);const id=manifest.version===3?archiveEntityId(f.id,"artifact ID"):(f.id||artifactId());if(archiveIds.has(id))throw new Error("archive contains duplicate artifact IDs");archiveIds.add(id);const bytes=entries.get(f.entry);if(!bytes)throw new Error("archive is missing artifact data for "+path);if(Number.isFinite(f.size)&&f.size!==bytes.byteLength)throw new Error("artifact size does not match for "+path);return {id,name:path,path,type:f.type||"",origin:f.origin||"upload",stage:f.stage||(f.origin==='upload'?'input':'final'),size:bytes.byteLength,preview:f.preview||"",createdAt:f.createdAt||Date.now(),updatedAt:f.updatedAt||Date.now(),fingerprint:f.fingerprint||bytes.byteLength+":"+crc32(bytes),producer:clonePlain(f.producer||null),derivedFrom:clonePlain(f.derivedFrom||[]),bytes:bytes.slice()}});
     const threadRows=[],runRows=[],checkpointRows=[],threadIds=new Set(),runIds=new Set(),checkpointIds=new Set();for(const [path,bytes] of entries){if(path.startsWith("threads/")&&path.endsWith(".json")){const t=JSON.parse(dec.decode(bytes)),id=archiveEntityId(t&&t.id,"thread ID");if(threadIds.has(id))throw new Error("archive contains duplicate thread IDs");if(!Array.isArray(t.messages)||!Array.isArray(t.transcript))throw new Error("archive contains an invalid thread");threadIds.add(id);threadRows.push(t)}else if(manifest.version===3&&path.startsWith("runs/")&&path.endsWith(".json")){const r=JSON.parse(dec.decode(bytes)),id=archiveEntityId(r&&r.id,"run ID");archiveEntityId(r&&r.threadId,"run thread ID");if(runIds.has(id))throw new Error("archive contains duplicate run IDs");if(!Array.isArray(r.events))throw new Error("archive contains an invalid run ledger");runIds.add(id);runRows.push(r)}else if(manifest.version===3&&path.startsWith("checkpoints/")&&path.endsWith(".json")){const cp=hydrateCheckpointArtifacts(JSON.parse(dec.decode(bytes)),entries);if(checkpointIds.has(cp.id))throw new Error("archive contains duplicate checkpoint IDs");checkpointIds.add(cp.id);checkpointRows.push(cp)}}
     if(typeof saveActiveThreadNow==="function")await saveActiveThreadNow();await saveWorkspaceState();await isolateNotebookRuntime();const id=createNotebook((manifest.notebook&&manifest.notebook.name)||"Imported workspace");applyNotebook(id);workspaceArchiveImport=true;fromIpynb(note);workspaceArchiveImport=false;nbName=(manifest.notebook&&manifest.notebook.name)||nbName;setNbTitle();persist();
-    dataFiles.splice(0,dataFiles.length,...artifacts);for(const f of artifacts)if(kernelReady){ensureFsParent(f.path);pyodide.FS.writeFile(f.path,f.bytes)}const outputs=cells.filter(c=>c.type==="code"&&(c.outputs.length||c.execCount!=null)).map(c=>({cellId:c.id,outputs:clonePlain(c.outputs),execCount:c.execCount,runtime:c.runtime||null,provenance:clonePlain(c.provenance||null)}));let env=null;try{if(entries.has("environment.json"))env=JSON.parse(dec.decode(entries.get("environment.json")))}catch(e){}environmentSnapshot=env||clonePlain(note.metadata&&note.metadata.kernel_environment||null);await kdbPut("workspaces",{v:3,notebookId:id,updated:Date.now(),artifacts,outputs,environment:environmentSnapshot});
+    const storedArtifacts=await externalizeArtifacts(artifacts);artifacts.forEach((f,i)=>{f.blob=storedArtifacts[i].blob});dataFiles.splice(0,dataFiles.length,...artifacts);for(const f of artifacts)if(kernelReady)await pyFS.write(f.path,f.bytes);const outputs=cells.filter(c=>c.type==="code"&&(c.outputs.length||c.execCount!=null)).map(c=>({cellId:c.id,outputs:clonePlain(c.outputs),execCount:c.execCount,runtime:c.runtime||null,provenance:clonePlain(c.provenance||null)}));let env=null;try{if(entries.has("environment.json"))env=JSON.parse(dec.decode(entries.get("environment.json")))}catch(e){}environmentSnapshot=env||clonePlain(note.metadata&&note.metadata.kernel_environment||null);await kdbPut("workspaces",{v:3,notebookId:id,updated:Date.now(),artifacts:storedArtifacts,outputs,environment:environmentSnapshot});
     const sourceIndex=manifest.thread_index&&Array.isArray(manifest.thread_index.threads)?manifest.thread_index:{active:null,threads:[]},sourceMeta=new Map(sourceIndex.threads.filter(x=>x&&threadIds.has(x.id)).map(x=>[x.id,x]));const idx={v:3,active:threadIds.has(sourceIndex.active)?sourceIndex.active:null,threads:[]};for(const t of threadRows){t.notebookId=id;t.key=id+":"+t.id;await kdbPut("threads",t);const meta=sourceMeta.get(t.id)||t;idx.threads.push({id:t.id,name:String(meta.name||t.name||'Thread').slice(0,80),created:Number(meta.created||t.created)||Date.now(),updated:Number(meta.updated||t.updated)||Date.now()})}if(!idx.active)idx.active=idx.threads[0]&&idx.threads[0].id;writeThreadIndex(idx,id);
-    const runMap=new Map(),checkpointMap=new Map();for(const r of runRows)runMap.set(r.id,runId());for(const cp of checkpointRows)checkpointMap.set(cp.id,checkpointId());for(const r of runRows){r.id=runMap.get(r.id);r.notebookId=id;r.threadKey=id+":"+r.threadId;r.checkpointId=checkpointMap.get(r.checkpointId)||null;await kdbPut("runs",r)}for(const cp of checkpointRows){cp.id=checkpointMap.get(cp.id);cp.notebookId=id;cp.threadKey=id+":"+cp.threadId;cp.runId=runMap.get(cp.runId)||null;if(cp.workspace)cp.workspace.notebookId=id;await kdbPut("checkpoints",cp)}
+    const runMap=new Map(),checkpointMap=new Map();for(const r of runRows)runMap.set(r.id,runId());for(const cp of checkpointRows)checkpointMap.set(cp.id,checkpointId());for(const r of runRows){r.id=runMap.get(r.id);r.notebookId=id;r.threadKey=id+":"+r.threadId;r.checkpointId=checkpointMap.get(r.checkpointId)||null;await kdbPut("runs",r)}for(const cp of checkpointRows){cp.id=checkpointMap.get(cp.id);cp.notebookId=id;cp.threadKey=id+":"+cp.threadId;cp.runId=runMap.get(cp.runId)||null;if(cp.workspace){cp.workspace.notebookId=id;cp.workspace.artifacts=await externalizeArtifacts(cp.workspace.artifacts||cp.workspace.files);delete cp.workspace.files}await kdbPut("checkpoints",cp)}
     renderDataChips();renderDataList();if(typeof activateNotebookAgent==="function")await activateNotebookAgent(id);if(ui.left)renderLibrary();toast("Workspace restored · "+nbName+" · "+artifacts.length+" artifacts · "+checkpointRows.length+" checkpoints");
   }catch(e){toast("Could not restore workspace · "+redactText(e&&e.message||e),"err")}finally{workspaceArchiveImport=false;setStatus(kernelReady?"Ready":"Kernel failed",kernelReady?"ok":"err");progressOff()}
 }
@@ -2551,7 +2642,7 @@ async function importWorkspaceZip(file){
 function redactClone(value,report,path){path=path||'$';if(typeof value==='string'){if(/^(?:data:image\/|[A-Za-z0-9+/]{1000,}={0,2}$)/.test(value)){report.unscanned.push(path);return value}const clean=redactText(value);if(clean!==value)report.redacted.push(path);return clean}if(Array.isArray(value))return value.map((v,i)=>redactClone(v,report,path+'['+i+']'));if(value&&typeof value==='object'){const out={};for(const [k,v] of Object.entries(value))out[k]=redactClone(v,report,path+'.'+k);return out}return value}
 async function downloadShareSafeZip(){
   if(agRunning||busy){toast('Finish the active run first.','err');return}progressOn();setStatus('Building share-safe archive…','busy');try{persist();const env=await captureEnvironment(),ws=await saveWorkspaceState(),enc=new TextEncoder(),report={format:'kernel-redaction-report',version:1,created_at:new Date().toISOString(),redacted:[],excluded:['API credentials','chat threads','run ledgers','checkpoints','uploaded inputs','working/scratch artifacts'],unscanned:[]},note=redactClone(toIpynb({includeConversation:false}),report,'notebook'),entries=[],manifest={format:'kernel-share',version:1,app_version:'2.3.1',exported_at:new Date().toISOString(),notebook:{name:redactText(nbName)},artifacts:[]};if(note.metadata){delete note.metadata.kernel_agent;if(note.metadata.kernel_environment&&note.metadata.kernel_environment.browser)delete note.metadata.kernel_environment.browser}
-    const finals=((ws&&ws.artifacts)||[]).filter(f=>artifactStage(f)==='final'),finalIds=new Set(finals.map(f=>f.id)),shareEnv=Object.assign({},env,{browser:undefined,artifacts:(env.artifacts||[]).filter(a=>finalIds.has(a.id))});if(note.metadata)note.metadata.kernel_environment=redactClone(shareEnv,report,'notebook.metadata.kernel_environment');entries.push({name:'manifest.json',data:new Uint8Array()},{name:'notebook.ipynb',data:enc.encode(JSON.stringify(note,null,1))},{name:'environment.json',data:enc.encode(JSON.stringify(redactClone(shareEnv,report,'environment'),null,2))},{name:'requirements.txt',data:enc.encode(requirementsSnapshot(env))});for(let i=0;i<finals.length;i++){const f=finals[i],entry='results/'+String(i+1).padStart(4,'0')+'.bin',ext=fileExt(f.path||f.name),textish=/^(?:txt|md|csv|tsv|json|jsonl|yaml|yml|xml|html|htm|py|sql|log)$/.test(ext)||/^text\//.test(f.type||'')||/json|xml|javascript/.test(f.type||''),raw=f.bytes instanceof Uint8Array?f.bytes:new Uint8Array(f.bytes||[]);let data=raw;if(textish){const original=new TextDecoder().decode(raw),clean=redactText(original);if(clean!==original)report.redacted.push('artifact://'+f.id);data=enc.encode(clean)}else report.unscanned.push('artifact://'+f.id+' (binary final result)');manifest.artifacts.push({id:f.id,path:redactText(f.path||f.name),type:f.type||'',stage:'final',size:data.byteLength,entry});entries.push({name:entry,data})}entries[0]={name:'manifest.json',data:enc.encode(JSON.stringify(manifest,null,2))};entries.push({name:'redaction-report.json',data:enc.encode(JSON.stringify(report,null,2))},{name:'README.txt',data:enc.encode('KERNEL·A share-safe archive\n\nContains the notebook without conversation metadata, a redacted environment snapshot, requirements, and final results only. Uploaded inputs, working artifacts, run ledgers, checkpoints, and API credentials are excluded. Review redaction-report.json before redistribution; binary/image content is listed as unscanned.\n')});if((report.redacted.length||report.unscanned.length)&&!confirm('Share-safe review: '+report.redacted.length+' text location(s) were redacted and '+report.unscanned.length+' binary/image location(s) could not be scanned. Continue and include the redaction report?')){toast('Share-safe export cancelled for review.');return}downloadBlob(new Blob([zipStore(entries)],{type:'application/zip'}),agSlug()+'.kernel-share.zip');toast('Share-safe ZIP saved · '+finals.length+' final result'+(finals.length===1?'':'s'))}catch(e){toast('Could not build share-safe ZIP · '+redactText(e&&e.message||e),'err')}finally{setStatus(kernelReady?'Ready':'Kernel failed',kernelReady?'ok':'err');progressOff()}
+    const finals=((ws&&ws.artifacts)||[]).filter(f=>artifactStage(f)==='final'),finalIds=new Set(finals.map(f=>f.id)),shareEnv=Object.assign({},env,{browser:undefined,artifacts:(env.artifacts||[]).filter(a=>finalIds.has(a.id))});if(note.metadata)note.metadata.kernel_environment=redactClone(shareEnv,report,'notebook.metadata.kernel_environment');entries.push({name:'manifest.json',data:new Uint8Array()},{name:'notebook.ipynb',data:enc.encode(JSON.stringify(note,null,1))},{name:'environment.json',data:enc.encode(JSON.stringify(redactClone(shareEnv,report,'environment'),null,2))},{name:'requirements.txt',data:enc.encode(requirementsSnapshot(env))});for(let i=0;i<finals.length;i++){const f=finals[i],entry='results/'+String(i+1).padStart(4,'0')+'.bin',ext=fileExt(f.path||f.name),textish=/^(?:txt|md|csv|tsv|json|jsonl|yaml|yml|xml|html|htm|py|sql|log)$/.test(ext)||/^text\//.test(f.type||'')||/json|xml|javascript/.test(f.type||''),raw=await artifactBytes(f);let data=raw;if(textish){const original=new TextDecoder().decode(raw),clean=redactText(original);if(clean!==original)report.redacted.push('artifact://'+f.id);data=enc.encode(clean)}else report.unscanned.push('artifact://'+f.id+' (binary final result)');manifest.artifacts.push({id:f.id,path:redactText(f.path||f.name),type:f.type||'',stage:'final',size:data.byteLength,entry});entries.push({name:entry,data})}entries[0]={name:'manifest.json',data:enc.encode(JSON.stringify(manifest,null,2))};entries.push({name:'redaction-report.json',data:enc.encode(JSON.stringify(report,null,2))},{name:'README.txt',data:enc.encode('KERNEL·A share-safe archive\n\nContains the notebook without conversation metadata, a redacted environment snapshot, requirements, and final results only. Uploaded inputs, working artifacts, run ledgers, checkpoints, and API credentials are excluded. Review redaction-report.json before redistribution; binary/image content is listed as unscanned.\n')});if((report.redacted.length||report.unscanned.length)&&!confirm('Share-safe review: '+report.redacted.length+' text location(s) were redacted and '+report.unscanned.length+' binary/image location(s) could not be scanned. Continue and include the redaction report?')){toast('Share-safe export cancelled for review.');return}downloadBlob(new Blob([zipStore(entries)],{type:'application/zip'}),agSlug()+'.kernel-share.zip');toast('Share-safe ZIP saved · '+finals.length+' final result'+(finals.length===1?'':'s'))}catch(e){toast('Could not build share-safe ZIP · '+redactText(e&&e.message||e),'err')}finally{setStatus(kernelReady?'Ready':'Kernel failed',kernelReady?'ok':'err');progressOff()}
 }
 function diagnosticSnapshot(){const ctx=prepareContext().stats||{},url=(()=>{try{return new URL(agBase).origin}catch(e){return 'custom'}})(),run=agRun?{id:agRun.id,status:agRun.status,phase:agRun.phase,provider:agRun.provider,model:agRun.model,started:agRun.started,updated:agRun.updated,toolCalls:agRun.toolCalls,modelCalls:agRun.modelCalls,attempt:agRun.attempt,budgets:agRun.budgets,autoExtensionsUsed:agRun.autoExtensionsUsed||0,completionAccepted:!!agRun.completionAccepted,elapsedMs:runElapsed(agRun),tokenDelta:runTokens(agRun),events:(agRun.events||[]).map(e=>({seq:e.seq,at:e.at,type:e.type,phase:e.phase,summary:e.summary}))}:null;return {format:'kernel-diagnostics',version:1,createdAt:new Date().toISOString(),appVersion:'2.3.1',browser:{userAgent:navigator.userAgent,language:navigator.language,online:navigator.onLine},storage:{indexedDbFallback:!!kdbLastError,lastError:kdbLastError?String(kdbLastError.message||kdbLastError):null},kernel:{ready:kernelReady,generation:kernelGeneration,environmentHash:environmentSnapshot&&environmentSnapshot.hash||null,pythonVersion:environmentSnapshot&&environmentSnapshot.pythonVersion||null,packageCount:environmentSnapshot&&environmentSnapshot.packages&&environmentSnapshot.packages.length||0},provider:{name:agProvider,model:agModel,apiOrigin:url,modelInfo:agModelInfo?{context:agModelInfo.max_input_tokens,source:agModelInfo.source}:null},notebook:{cellCount:cells.length,codeCells:cells.filter(c=>c.type==='code').length,fresh:cells.filter(c=>c.freshness==='fresh').length,stale:cells.filter(c=>c.freshness==='stale').length,historical:cells.filter(c=>c.freshness==='historical').length,artifactCounts:{input:dataFiles.filter(d=>artifactStage(d)==='input').length,scratch:dataFiles.filter(d=>artifactStage(d)==='scratch').length,final:dataFiles.filter(d=>artifactStage(d)==='final').length}},thread:{messageCount:agMsgs.length,transcriptRows:txEntries().length,usage:agUsage(),context:ctx,planSteps:agPlan.length},run}}
 function exportDiagnostics(){const clean=redactText(JSON.stringify(diagnosticSnapshot(),null,2));downloadBlob(new Blob([clean],{type:'application/json'}),agSlug()+'-diagnostics.json');toast('Diagnostics exported without keys, prompts, cell source, outputs, or artifact contents.')}
@@ -2778,7 +2869,7 @@ function openHelp(){ $("#helpScrim").classList.add("show"); }
 function closeHelp(){ $("#helpScrim").classList.remove("show"); }
 
 /* ===== global keyboard (command mode + save) ===== */
-let pendingD=false, pendingDTimer=null;
+let pendingD=false, pendingDTimer=null, pendingI=false, pendingITimer=null;
 document.addEventListener("keydown", e=>{
   if((e.metaKey||e.ctrlKey) && (e.key==="s"||e.key==="S")){ e.preventDefault(); downloadIpynb(); return; }
   if((e.metaKey||e.ctrlKey) && (e.key==="f"||e.key==="F")){ e.preventDefault(); find.open(); return; }
@@ -2806,6 +2897,10 @@ document.addEventListener("keydown", e=>{
     case "m": e.preventDefault(); convertTo(cell,"markdown"); break;
     case "y": e.preventDefault(); convertTo(cell,"code"); break;
     case "?": e.preventDefault(); openHelp(); break;
+    case "i":
+      if(pendingI){ clearTimeout(pendingITimer); pendingI=false; e.preventDefault(); interruptFromHuman(); }
+      else { pendingI=true; pendingITimer=setTimeout(()=>{pendingI=false;}, 600); }
+      break;
     case "d":
       if(pendingD){ clearTimeout(pendingDTimer); pendingD=false; e.preventDefault(); deleteCell(cell); }
       else { pendingD=true; pendingDTimer=setTimeout(()=>{pendingD=false;}, 600); }
@@ -2854,6 +2949,8 @@ $("#varsSort").addEventListener("change", paintInspector);
 $("#varsRefresh").addEventListener("click", refreshInspector);
 $("#btnRunAll").addEventListener("click", runAll);
 $("#btnRestart").addEventListener("click", restartKernel);
+async function interruptFromHuman(){if(!busy)return;if(kw.mode!=="worker"){toast("This browser is running Python on the page thread, so a running cell cannot be interrupted.","err");return}if(!kw.interruptible&&!confirm("This page is not cross-origin isolated, so interrupting restarts Python and clears all variables. Continue?"))return;await interruptKernel("human")}
+{const ib=document.getElementById("btnInterrupt");if(ib)ib.addEventListener("click",interruptFromHuman)}
 $("#btnClear").addEventListener("click", clearOutputs);
 $("#btnHelp").addEventListener("click", openHelp);
 $("#helpX").addEventListener("click", closeHelp);
@@ -2881,7 +2978,7 @@ async function mountUploadedFiles(files,keepFolders){
   for(const f of files){
     try{
       const buf=new Uint8Array(await f.arrayBuffer());
-      const proposed=keepFolders&&f.webkitRelativePath?f.webkitRelativePath:f.name,path=uniqueArtifactPath(proposed);ensureFsParent(path);pyodide.FS.writeFile(path, buf);
+      const proposed=keepFolders&&f.webkitRelativePath?f.webkitRelativePath:f.name,path=uniqueArtifactPath(proposed);await pyFS.write(path, buf);
       let preview="";
       if(TEXT.includes(fileExt(path))){
         try{ preview=new TextDecoder("utf-8",{fatal:false}).decode(buf.slice(0,8192)).slice(0,4000); }catch(_){ }
@@ -2951,8 +3048,7 @@ const cmp = {
     let items=[];
     if(jediReady){
       try{
-        pyodide.globals.set("__cmp_src", src); pyodide.globals.set("__cmp_line", line); pyodide.globals.set("__cmp_col", col);
-        const data=JSON.parse(await runPy("_complete(__cmp_src, __cmp_line, __cmp_col)"));
+        const data=JSON.parse(await runPy("_complete(__cmp_src, __cmp_line, __cmp_col)",{__cmp_src:src,__cmp_line:line,__cmp_col:col}));
         if(data && data.ready) items=data.items||[];
       }catch(e){ items=[]; }
     } else { items=this.fallback(before); }
@@ -3060,8 +3156,7 @@ async function toggleVarDetail(name, item, det){
   if(!kernelReady){ det.innerHTML='<div class="var-loading">kernel not ready</div>'; return; }
   det.innerHTML='<div class="var-loading">loading detail…</div>';
   try{
-    pyodide.globals.set("__det_name", name);
-    const raw=await runPy("_var_detail(__det_name)");
+    const raw=await runPy("_var_detail(__det_name)",{__det_name:name});
     renderVarDetail(det, JSON.parse(raw)); det.dataset.loaded="1";
   }catch(e){ det.innerHTML='<div class="var-loading">detail unavailable</div>'; }
 }
@@ -3115,7 +3210,7 @@ function insertVarName(name){
 }
 async function delVar(name){
   if(!kernelReady || busy) return;
-  try{ pyodide.globals.set("__del_name", name); await runPy("_del_var(__del_name)"); }catch(_){ }
+  try{ await runPy("_del_var(__del_name)",{__del_name:name}); }catch(_){ }
   refreshInspector(); toast("Deleted "+name);
 }
 function toggleInspector(){ toggleRight(); }
@@ -3283,7 +3378,7 @@ async function finalizeRun(status,summary){if(!agRun)return;agRun.activeElapsedM
 async function createCheckpoint(label,reason,run){
   if(!nbId||busy)return null;if(run&&run.pendingTools&&run.pendingTools.length){toast('Resume or end the pending tool batch before checkpointing.','err');return null}persist();await saveActiveThreadNow();const ws=await saveWorkspaceState(),id=checkpointId(),cp={id,notebookId:nbId,threadId:agThreadId,threadKey:nbId+':'+agThreadId,runId:run&&run.id||null,created:Date.now(),label:String(label||'Checkpoint').slice(0,100),reason:reason||'manual',cells:clonePlain(cellPayload()),workspace:kdbClone(ws),thread:{id:agThreadId,name:(readThreadIndex(nbId).threads.find(t=>t.id===agThreadId)||{}).name||'Thread',messages:clonePlain(agMsgs),transcript:txEntries(),usage:agUsage(),provider:agProvider,model:agModel,plan:clonePlain(agPlan),contextPolicies:clonePlain(agContextPolicies)},environment:clonePlain(environmentSnapshot||null)};await kdbPut('checkpoints',cp);agCurrentCheckpoint=id;if(run){run.checkpointId=id;await runEvent('checkpoint_created',cp.label,{checkpointId:id})}renderRunControl();return cp;
 }
-async function discardCompletionCheckpoint(cp,previousRunCheckpoint,previousCurrent,reason){if(!cp)return;await kdbDelete('checkpoints',cp.id);if(agRun&&agRun.checkpointId===cp.id)agRun.checkpointId=previousRunCheckpoint||null;if(agCurrentCheckpoint===cp.id)agCurrentCheckpoint=previousCurrent||null;await runEvent('checkpoint_discarded','Completion candidate discarded: '+String(reason||'evidence changed').slice(0,380),{checkpointId:cp.id});renderRunControl()}
+async function discardCompletionCheckpoint(cp,previousRunCheckpoint,previousCurrent,reason){if(!cp)return;await kdbDelete('checkpoints',cp.id);scheduleBlobGc();if(agRun&&agRun.checkpointId===cp.id)agRun.checkpointId=previousRunCheckpoint||null;if(agCurrentCheckpoint===cp.id)agCurrentCheckpoint=previousCurrent||null;await runEvent('checkpoint_discarded','Completion candidate discarded: '+String(reason||'evidence changed').slice(0,380),{checkpointId:cp.id});renderRunControl()}
 async function repairInterruptedRun(r){
   if(!r||!['running','pausing'].includes(r.status))return r;r.status='interrupted';r.phase=r.phase||'model';r.activeElapsedMs=runElapsed(r);r.activeSince=null;r.failure={message:r.phase==='tool'?'A tool was active when the page closed; its outcome may be unknown.':'The page closed before the run reached a terminal state.'};agRun=r;await runEvent('recovery_detected',r.failure.message);
   const calls=[];for(const m of agMsgs)for(const b of (m.content||[]))if(b.type==='tool_use')calls.push(b);const done=new Set();for(const m of agMsgs)for(const b of (m.content||[]))if(b.type==='tool_result')done.add(b.tool_use_id);const missing=calls.filter(c=>!done.has(c.id));if(missing.length){const blocks=missing.map(c=>({type:'tool_result',tool_use_id:c.id,content:(r.completedToolResults&&r.completedToolResults[c.id])||[{type:'text',text:'KERNEL recovery: execution outcome was not durably confirmed. Inspect notebook state before repeating this action.'}]}));agMsgs.push({role:'user',content:blocks});r.pendingTools=[];r.pendingToolResults={};r.pendingMutations=[];r.nextToolIndex=0;await runEvent('tool_batch_repaired',missing.length+' missing tool result'+(missing.length===1?'':'s')+' repaired');await saveActiveThreadNow()}
@@ -3335,7 +3430,7 @@ async function activateNotebookAgent(id){
 async function switchAgentThread(id){if(agRunning||id===agThreadId)return;await saveActiveThreadNow();const idx=readThreadIndex(nbId);if(!idx.threads.some(t=>t.id===id))return;idx.active=id;writeThreadIndex(idx,nbId);await activateNotebookAgent(nbId)}
 async function createAgentThread(){if(agRunning)return;await saveActiveThreadNow();const idx=await ensureThreadIndex(nbId),m=newThreadMeta('Thread '+(idx.threads.length+1));idx.threads.push(m);idx.active=m.id;writeThreadIndex(idx,nbId);await kdbPut('threads',{key:threadKey(m.id),notebookId:nbId,id:m.id,name:m.name,created:m.created,updated:m.updated,messages:[],transcript:[],usage:{},plan:[],comparisons:[],contextPolicies:{cells:{},artifacts:{}}});await activateNotebookAgent(nbId);$('#agIn').focus()}
 async function renameAgentThread(){const idx=readThreadIndex(nbId),m=idx.threads.find(t=>t.id===agThreadId);if(!m)return;const name=await appPrompt('Rename chat thread',m.name,'Rename');if(name==null)return;m.name=name.trim().slice(0,80)||'Thread';m.updated=Date.now();writeThreadIndex(idx,nbId);renderThreadSelect();await saveActiveThreadNow()}
-async function deleteAgentThread(){if(agRunning)return;let idx=readThreadIndex(nbId);if(idx.threads.length===1){toast("Keep at least one thread.","err");return}const m=idx.threads.find(t=>t.id===agThreadId);if(!m||!confirm('Delete thread "'+m.name+'" and its run/checkpoint history?'))return;const [runs,checkpoints]=await Promise.all([kdbRuns(nbId,m.id),kdbCheckpoints(nbId,m.id)]);await kdbDelete('threads',threadKey(m.id));for(const r of runs)await kdbDelete('runs',r.id);for(const cp of checkpoints)await kdbDelete('checkpoints',cp.id);idx.threads=idx.threads.filter(t=>t.id!==m.id);idx.active=idx.threads[0].id;writeThreadIndex(idx,nbId);await activateNotebookAgent(nbId)}
+async function deleteAgentThread(){if(agRunning)return;let idx=readThreadIndex(nbId);if(idx.threads.length===1){toast("Keep at least one thread.","err");return}const m=idx.threads.find(t=>t.id===agThreadId);if(!m||!confirm('Delete thread "'+m.name+'" and its run/checkpoint history?'))return;const [runs,checkpoints]=await Promise.all([kdbRuns(nbId,m.id),kdbCheckpoints(nbId,m.id)]);await kdbDelete('threads',threadKey(m.id));for(const r of runs)await kdbDelete('runs',r.id);for(const cp of checkpoints)await kdbDelete('checkpoints',cp.id);scheduleBlobGc();idx.threads=idx.threads.filter(t=>t.id!==m.id);idx.active=idx.threads[0].id;writeThreadIndex(idx,nbId);await activateNotebookAgent(nbId)}
 function agExportBundle(){const tx=txEntries();if(!tx.length&&!agMsgs.length)return null;return {v:3,saved:new Date().toISOString(),notebook:nbName,thread:{id:agThreadId,name:(readThreadIndex(nbId).threads.find(t=>t.id===agThreadId)||{}).name},transcript:tx,messages:clonePlain(agMsgs),usage:agUsage(),plan:clonePlain(agPlan),comparisons:clonePlain(agComparisons),contextPolicies:clonePlain(agContextPolicies)}}
 function agImportMeta(meta){if(!meta||typeof meta!=='object')return;queueMicrotask(async()=>{const idx=await ensureThreadIndex(nbId),m=newThreadMeta((meta.thread&&meta.thread.name)||'Imported thread');idx.threads.push(m);idx.active=m.id;writeThreadIndex(idx,nbId);await kdbPut('threads',{key:threadKey(m.id),notebookId:nbId,id:m.id,name:m.name,created:m.created,updated:m.updated,messages:clonePlain(meta.messages||[]),transcript:clonePlain(meta.transcript||[]),usage:clonePlain(meta.usage||{}),plan:clonePlain(meta.plan||[]),comparisons:clonePlain(meta.comparisons||[]),contextPolicies:clonePlain(meta.contextPolicies||{cells:{},artifacts:{}})});await activateNotebookAgent(nbId);txDom('s','conversation restored from notebook',true)})}
 function agSlug(){return (nbName||'kernel-notebook').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'kernel-notebook'}
@@ -3626,8 +3721,8 @@ async function execTool(tu){
       let fname;try{fname=safeArtifactPath(inp.filename)}catch(e){return [{type:'text',text:'ERROR: '+e.message}]}
       const existing=dataEntry(fname);if(existing&&getArtifactContextPolicy(existing.id)==='excluded')return [{type:'text',text:'BLOCKED: the human excluded this artifact from agent context.'}];
       try{
-        ensureFsParent(fname);if(inp.content!=null)pyodide.FS.writeFile(fname,new TextEncoder().encode(String(inp.content)));
-        const buf=pyodide.FS.readFile(fname);
+        if(inp.content!=null)await pyFS.write(fname,new TextEncoder().encode(String(inp.content)));
+        const buf=await pyFS.read(fname);
         let preview='';
         try{preview=new TextDecoder('utf-8',{fatal:false}).decode(buf.slice(0,8192)).slice(0,4000)}catch(e){}
         const old=dataEntry(fname),rec={id:old&&old.id||artifactId(),name:fname,path:fname,size:buf.length,type:'',preview,origin:'agent',stage:inp.lifecycle==='final'?'final':'scratch',createdAt:old&&old.createdAt||Date.now(),updatedAt:Date.now(),fingerprint:buf.length+':'+crc32(buf),producer:{runId:agRun&&agRun.id||null,cellId:inp.source_cell_id||null,threadId:agThreadId,toolCallId:tu.id,actor:'agent',at:Date.now()},bytes:buf.slice()};
@@ -3693,7 +3788,7 @@ function agOutline(){
 function pinnedOutputText(c){return (c.outputs||[]).map(o=>o.kind==='error'?(o.text||''):o.kind==='stream'||o.kind==='text'?o.text:o.kind==='html'?(String(o.html||'').replace(/<[^>]+>/g,' ')):o.kind==='image'?'[figure handle: cell://'+c.id+'/outputs]':o.kind==='iframe_html'?'[interactive output handle: cell://'+c.id+'/outputs]':'').filter(Boolean).join('\n')}
 function buildPinnedContext(){const parts=[];for(const c of cells)if(getCellContextPolicy(c.id)==='pinned'){parts.push('### Pinned cell '+c.id+' · '+c.type+' · '+(c.freshness||'never')+'\n'+agTrunc(c.taEl?c.taEl.value:c.source,8000)+(c.type==='code'?'\nOutput handle: cell://'+c.id+'/outputs\n'+agTrunc(pinnedOutputText(c),3500):''))}for(const d of dataFiles)if(getArtifactContextPolicy(d.id)==='pinned')parts.push('### Pinned artifact artifact://'+d.id+'\npath: '+d.name+'\nstage: '+artifactStage(d)+'\nsize: '+d.size+' bytes\nfingerprint: '+artifactFingerprint(d)+(d.preview?'\npreview:\n'+agTrunc(d.preview,3500):''));return parts.length?'## Human-pinned active context\n'+parts.join('\n\n'):''}
 function agRunControlContext(){if(!agRun)return '## KERNEL-authoritative run control\nNo durable run is active.';const b=agRun.budgets||{},hits=runBudgetReasons(agRun),pending=(agPlan||[]).filter(s=>s.status!=='completed'),tools=Math.max(0,(b.maxToolCalls||0)-(agRun.toolCalls||0)),mins=Math.max(0,((b.maxElapsedMs||0)-runElapsed(agRun))/60000),tokens=Math.max(0,(b.maxTotalTokens||0)-runTokens(agRun));return '## KERNEL-authoritative run control\nstatus: '+agRun.status+' · phase: '+agRun.phase+' · autonomy: '+(agRun.autonomy||agAutonomy)+'\nremaining before current checkpoint: '+tools+' tools · '+mins.toFixed(1)+' active minutes · '+fmtTok(tokens)+' effective tokens (cache reads count 10%)\nautomatic progress extensions: '+(agRun.autoExtensionsUsed||0)+'/'+(b.maxAutoExtensions||0)+' used\nagent cell time limit: '+agCellMinutes+' min\nauthoritative boundary: '+(hits.length?hits.join(' + '):'none')+'\nunfinished visible plan steps: '+(pending.length?pending.map(s=>s.id).join(', '):'none')+'\nOnly KERNEL may report that a run paused, stopped, timed out, or hit a budget. Never invent or infer such a limit. For any tool-using or planned task, complete every promised step, call finish_run with executed evidence, and only then return the final user-facing answer.'}
-function loadedPackageNames(){try{return pyodide&&pyodide.loadedPackages?Object.keys(pyodide.loadedPackages):[]}catch(e){return []}}
+function loadedPackageNames(){return kernelPackages.slice()}
 /* Live notebook state travels as an append-only <kernel_state> block on the newest user-role message instead of in the system prompt, so the system prompt, tools, and every earlier turn stay byte-stable for prompt caching and for Claude's conversation-bound thinking blocks. */
 function agStateParts(){const visible=dataFiles.filter(d=>getArtifactContextPolicy(d.id)!=='excluded'),packages=loadedPackageNames(),notebook='## Notebook\nname: '+nbName+' · kernel: '+(kernelReady?'ready':'booting')+(kernelGeneration?' · kernel generation '+kernelGeneration:'')+(environmentSnapshot?' · environment '+environmentSnapshot.hash:'')+'\n'+agOutline()+'\n\n## Artifacts\n'+(visible.length?visible.map(d=>'artifact://'+d.id+' '+d.name+' ('+artifactStage(d)+', '+fmtBytes(d.size||0)+')').join('\n')+(visible.length<dataFiles.length?'\n('+(dataFiles.length-visible.length)+' excluded artifact(s) omitted)':''):'(none visible)')+'\n\n## Loaded Python packages\n'+(packages.length?packages.join(', '):'(none yet)'),plan=(agPlan&&agPlan.length)?'## Visible plan\n'+agPlan.map(s=>'['+s.status+'] '+s.id+' · '+s.title).join('\n')+'\n\n':'';return {key:sourceHash(notebook),notebook,control:plan+agRunControlContext()}}
 function stampKernelState(){let last=agMsgs[agMsgs.length-1];if(!last)return null;if(last.role!=='user'){last={role:'user',content:[{type:'text',text:'Continue from the current notebook state.'}]};agMsgs.push(last)}last.content=(Array.isArray(last.content)?last.content:[]).filter(b=>b.kernel!=='state');let prevKey='';for(let i=agMsgs.length-2;i>=0&&!prevKey;i--)for(const b of (agMsgs[i].content||[]))if(b.kernel==='state'&&b.stateKey)prevKey=b.stateKey;const s=agStateParts(),block={type:'text',kernel:'state',stateKey:s.key,text:'<kernel_state>\n'+(prevKey===s.key?'Notebook, artifacts, and packages are unchanged since the previous kernel_state.':s.notebook)+'\n\n'+s.control+'\n</kernel_state>'};last.content.push(block);return block}
@@ -3951,7 +4046,7 @@ async function compareProfile(profile,prompt){
 }
 async function runComparison(){if(agRunning||busy){toast('Finish the active run first.','err');return}const profiles=comparisonProfiles(),prompt=$('#comparePrompt').value.trim();if(!profiles.length||!prompt){toast('Add at least one provider:model profile and a prompt.','err');return}const btn=$('#compareRun');btn.disabled=true;btn.textContent='COMPARING…';agComparisons=[];renderComparisonResults();try{const settled=await Promise.all(profiles.map(async p=>{try{return await compareProfile(p,prompt)}catch(e){return {provider:p.provider,model:p.model,error:redactText(e&&e.message||e),at:Date.now()}}}));agComparisons=settled;await saveActiveThreadNow();renderComparisonResults();toast('Read-only comparison complete · '+settled.length+' profile'+(settled.length===1?'':'s'))}finally{btn.disabled=false;btn.textContent='Run comparison'}}
 async function applyCheckpointSnapshot(cp,targetId,name){
-  const payload={v:3,name,cells:clonePlain(cp.cells||[]),updated:Date.now()};localStorage.setItem(nbKey(targetId),JSON.stringify(payload));const ws=kdbClone(cp.workspace||{v:3,artifacts:[],outputs:[]});ws.v=3;ws.notebookId=targetId;ws.updated=Date.now();ws.artifacts=(ws.artifacts||ws.files||[]).map(f=>Object.assign({},f,{bytes:f.bytes instanceof Uint8Array?f.bytes.slice():new Uint8Array(f.bytes||[])}));delete ws.files;await kdbPut('workspaces',ws);
+  const payload={v:3,name,cells:clonePlain(cp.cells||[]),updated:Date.now()};localStorage.setItem(nbKey(targetId),JSON.stringify(payload));const ws=kdbClone(cp.workspace||{v:3,artifacts:[],outputs:[]});ws.v=3;ws.notebookId=targetId;ws.updated=Date.now();ws.artifacts=await externalizeArtifacts(ws.artifacts||ws.files||[]);delete ws.files;await kdbPut('workspaces',ws);
   const th=cp.thread||{},tid=th.id||('t_'+uid()),meta={id:tid,name:th.name||'Checkpoint thread',created:cp.created||Date.now(),updated:Date.now()};let idx=readThreadIndex(targetId);const old=idx.threads.find(x=>x.id===tid);if(old)Object.assign(old,meta);else idx.threads.push(meta);idx.active=tid;idx.v=3;writeThreadIndex(idx,targetId);await kdbPut('threads',{key:threadKey(tid,targetId),notebookId:targetId,id:tid,name:meta.name,created:meta.created,updated:meta.updated,messages:clonePlain(th.messages||[]),transcript:clonePlain(th.transcript||[]),usage:clonePlain(th.usage||{}),provider:th.provider||agProvider,model:th.model||agModel,plan:clonePlain(th.plan||[]),comparisons:[],contextPolicies:clonePlain(th.contextPolicies||{cells:{},artifacts:{}})});
 }
 async function restoreCheckpoint(cpId,fork){
@@ -3970,7 +4065,7 @@ function agSendMsg(){
   agentTurn(v);
 }
 $("#agSend").addEventListener('click',agSendMsg);
-$("#agStop").addEventListener('click',()=>{agStop=true;agAbortReason='user_stop';resolveApproval(false);if(agAbort){try{agAbort.abort()}catch(e){}}$("#agStop").textContent='STOPPING…';setTimeout(()=>{$("#agStop").textContent='STOP'},1500)});
+$("#agStop").addEventListener('click',()=>{agStop=true;agAbortReason='user_stop';resolveApproval(false);if(busy&&activeToolContext)interruptKernel('stop');if(agAbort){try{agAbort.abort()}catch(e){}}$("#agStop").textContent='STOPPING…';setTimeout(()=>{$("#agStop").textContent='STOP'},1500)});
 $("#agMode").addEventListener('click',()=>{agAutonomy=agAutonomy==='auto'?'step':'auto';try{localStorage.setItem(AG_AUTO,agAutonomy)}catch(e){}agStateUi()});
 $("#agModelChip").addEventListener('click',()=>{if(agRunning){toast("Finish the current turn first.","err");return}openAgSettings()});
 $("#agIn").addEventListener('keydown',e=>{

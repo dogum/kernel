@@ -73,6 +73,11 @@ if (!target.includes('id="dataFolderUpload"')) {
   if (!folderButton) throw new Error("Missing desktop folder-upload button");
   target = target.replace(/(^\s*<button class="panel-add" id="dataUpload"[^\n]*$)/m, `$1\n${folderButton}`);
 }
+if (!target.includes('id="btnInterrupt"')) {
+  const interruptButton = source.match(/^\s*<button class="btn btn-chip" id="btnInterrupt"[^\n]*$/m)?.[0];
+  if (!interruptButton) throw new Error("Missing desktop interrupt button");
+  target = target.replace(/(^\s*<button class="btn btn-chip" id="btnRestart"[^\n]*$)/m, `${interruptButton}\n$1`);
+}
 if (!target.includes('data-mi="shareZip"')) {
   const shareItems = source.match(/^\s*<button class="menu-item" data-mi="shareZip"[^\n]*\n\s*<button class="menu-item" data-mi="diagnostics"[^\n]*$/m)?.[0];
   if (!shareItems) throw new Error("Missing desktop share/diagnostics menu items");
