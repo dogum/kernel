@@ -136,6 +136,7 @@ const contextFactory = new Function(`
   ${functionSource(desktop, "estBlocks")}
   ${functionSource(desktop, "agEstCtx")}
   ${functionSource(desktop, "isHumanMessage")}
+  ${functionSource(desktop, "agPruneHorizon")}
   ${functionSource(desktop, "prunedMessages")}
   ${functionSource(desktop, "summarizeSegments")}
   ${functionSource(desktop, "prepareContext")}
