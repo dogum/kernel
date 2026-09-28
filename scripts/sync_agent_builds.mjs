@@ -55,8 +55,8 @@ target = target.replace(
   '  initPanels();\n  activateNotebookAgent(nbId);\n  bootKernel();\n})();\n\n/* ===== mobile UI controller',
 );
 
-target = target.replace(/<title>[^<]*<\/title>/, '<title>KERNEL·A v2.3.1 — agentic notebook · mobile (PWA)</title>');
-target = target.replace(/<h1>KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span><\/h1>/, '<h1>KERNEL<span class="brand-a">·A v2.3.1</span></h1>');
+target = target.replace(/<title>[^<]*<\/title>/, '<title>KERNEL·A v2.4.0 — agentic notebook · mobile (PWA)</title>');
+target = target.replace(/KERNEL<span class="brand-a">·A(?: v[\d.]+)?<\/span>/, 'KERNEL<span class="brand-a">·A v2.4.0</span>');
 target = target.replace('id="btnOpen" title="Open .ipynb"', 'id="btnOpen" title="Open .ipynb or .kernel.zip"');
 if (!target.includes('id="btnWorkspace"')) {
   const zipButton = source.match(/^\s*<button class="btn" id="btnWorkspace"[^\n]*$/m)?.[0];
@@ -72,6 +72,11 @@ if (!target.includes('id="dataFolderUpload"')) {
   const folderButton = source.match(/^\s*<button class="panel-add" id="dataFolderUpload"[^\n]*$/m)?.[0];
   if (!folderButton) throw new Error("Missing desktop folder-upload button");
   target = target.replace(/(^\s*<button class="panel-add" id="dataUpload"[^\n]*$)/m, `$1\n${folderButton}`);
+}
+if (!target.includes('id="btnInterrupt"')) {
+  const interruptButton = source.match(/^\s*<button class="btn btn-chip" id="btnInterrupt"[^\n]*$/m)?.[0];
+  if (!interruptButton) throw new Error("Missing desktop interrupt button");
+  target = target.replace(/(^\s*<button class="btn btn-chip" id="btnRestart"[^\n]*$)/m, `${interruptButton}\n$1`);
 }
 if (!target.includes('data-mi="shareZip"')) {
   const shareItems = source.match(/^\s*<button class="menu-item" data-mi="shareZip"[^\n]*\n\s*<button class="menu-item" data-mi="diagnostics"[^\n]*$/m)?.[0];
@@ -93,8 +98,8 @@ else target = target.replace(/(^<input type="file" id="fileData"[^\n]*$)/m, `$1\
 
 if (check) {
   if (target !== originalTarget) throw new Error(`${targetPath} is out of sync; run node scripts/sync_agent_builds.mjs`);
-  console.log(`KERNEL·A v2.3.1 desktop/mobile sync verified for ${targetPath}`);
+  console.log(`KERNEL·A v2.4.0 desktop/mobile sync verified for ${targetPath}`);
 } else {
   fs.writeFileSync(targetPath, target);
-  console.log(`Synced shared KERNEL·A v2.3.1 runtime and UI into ${targetPath}`);
+  console.log(`Synced shared KERNEL·A v2.4.0 runtime and UI into ${targetPath}`);
 }

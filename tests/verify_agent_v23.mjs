@@ -164,8 +164,10 @@ deps.recomputeDependencies();
 assert.equal(imported[0].freshness, "historical", "outputs without lineage are historical, not falsely fresh");
 
 const runFactory = new Function(`
-  let agUseIn=0,agUseOut=0,agRun=null;const saved=[];
+  let agUseIn=0,agUseOut=0,agUseCr=0,agUseCw=0,agUseReason=0,agRun=null;const saved=[];
   ${functionSource(desktop, "runElapsed")}
+  ${functionSource(desktop, "agUsage")}
+  ${functionSource(desktop, "effectiveTokens")}
   ${functionSource(desktop, "runTokens")}
   ${functionSource(desktop, "runBudgetReasons")}
   ${functionSource(desktop, "runBudgetReason")}
@@ -185,9 +187,11 @@ assert.deepEqual([ev1.seq, ev2.seq], [1, 2], "event sequence is monotonic and ca
 assert.deepEqual([ev1.type, ev2.type], ["one", "two"], "event type cannot be overridden");
 
 const adaptiveBudgetFactory = new Function(`
-  let agUseIn=0,agUseOut=0,agRun=null,agAutonomy="auto",agMaxSteps=10,agMaxMinutes=30,agTokenBudget=500000;const events=[];
+  let agUseIn=0,agUseOut=0,agUseCr=0,agUseCw=0,agUseReason=0,agRun=null,agAutonomy="auto",agMaxSteps=10,agMaxMinutes=30,agTokenBudget=500000;const events=[];
   const fmtTok=(n)=>String(n);
   ${functionSource(desktop, "runElapsed")}
+  ${functionSource(desktop, "agUsage")}
+  ${functionSource(desktop, "effectiveTokens")}
   ${functionSource(desktop, "runTokens")}
   ${functionSource(desktop, "runBudgetReasons")}
   ${functionSource(desktop, "runBudgetReason")}
@@ -408,6 +412,7 @@ const contextFactory = new Function(`
   let agMsgs=[],cells=[],dataFiles=[],agContextPolicies={cells:{},artifacts:{}};
   const getCellContextPolicy=(id)=>agContextPolicies.cells[id]||"auto",getArtifactContextPolicy=(id)=>agContextPolicies.artifacts[id]||"auto";
   ${functionSource(desktop, "isHumanMessage")}
+  ${functionSource(desktop, "agPruneHorizon")}
   ${functionSource(desktop, "prunedMessages")}
   return {prune:(messages,nextCells,nextFiles,policies)=>{agMsgs=messages;cells=nextCells;dataFiles=nextFiles;agContextPolicies=policies;return prunedMessages()}};
 `);
@@ -432,6 +437,7 @@ const contextBudgetFactory=new Function(`
   ${functionSource(desktop,"estBlocks")}
   ${functionSource(desktop,"agEstCtx")}
   ${functionSource(desktop,"isHumanMessage")}
+  ${functionSource(desktop,"agPruneHorizon")}
   ${functionSource(desktop,"prunedMessages")}
   ${functionSource(desktop,"summarizeSegments")}
   ${functionSource(desktop,"prepareContext")}
@@ -462,7 +468,7 @@ const compare = functionSource(desktop, "compareProfile");
 assert.ok(compare.includes("read-only comparison mode") && !/\btools\s*:/.test(compare), "comparison profiles receive no mutation tools");
 
 const sw = fs.readFileSync("docs/kernel-agent-sw.js", "utf8");
-assert.ok(sw.includes("kernel-a-mobile-v231-1"), "service-worker cache is versioned for v2.3.1");
+assert.ok(sw.includes("kernel-a-mobile-v240-1"), "service-worker cache is versioned for v2.4.0");
 assert.ok(sw.includes("k.indexOf('kernel-a-mobile-')===0"), "activation deletes only KERNEL-owned caches");
 assert.ok(fs.readFileSync("AGENT-V23-SPEC.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
 

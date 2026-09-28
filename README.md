@@ -8,7 +8,7 @@ This repo bundles a few things that belong together:
 
 1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
 2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent v2.3.1** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)).
+3. **KERNEL Agent v2.4** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md) on the [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md) foundation).
 4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
 5. **Real agent runs** — four curated, reproducible examples spanning autonomous software construction, synthetic operations, uncertain systems modeling, and wide public-data analysis ([`examples/`](examples/)).
 
@@ -51,6 +51,7 @@ kernel-notebooks.skill .... packaged skill, ready to upload to Claude.ai
 AGENT-SPEC.md ............. original Anthropic-only agent specification
 AGENT-V2-SPEC.md .......... provider, thread, context and workspace architecture
 AGENT-V23-SPEC.md ......... durable runs, lineage, artifacts and handoff architecture
+AGENT-V24-SPEC.md ......... cache-stable prompts, interruptible worker, retries, blob storage
 skill/
 ├── SKILL.md .............. runtime contract, the live-in-the-loop + multimodal sections,
 │                           narrative craft, output discipline
@@ -72,7 +73,9 @@ scripts/
 tests/
 ├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
 ├── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
-└── verify_examples.mjs ....... curated notebook shape, privacy and artifact checks
+├── verify_agent_v24.mjs ...... caching, Claude adapter, retries, worker and storage checks
+├── verify_examples.mjs ....... curated notebook shape, privacy and artifact checks
+└── e2e/ ...................... Playwright suites that drive both builds against a mock provider
 examples/
 ├── ares-station/ ............. 180-sol colony operations intelligence system
 ├── regex-engine/ ............. from-scratch engine with differential testing
@@ -82,21 +85,26 @@ examples/
 
 `SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
 
-## KERNEL Agent v2.3.1
+## KERNEL Agent v2.4
 
 KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures), and iterates with you in the loop. It is a client-only, bring-your-own-key design with first-class adapters for Anthropic, OpenAI, and xAI/Grok. Keys remain in browser storage and requests go directly to the API base you select.
 
-Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md) is the current release contract. [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider/thread foundation, and [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
+Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md) is the current release contract, layered on [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md). [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider/thread foundation, and [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
 
 What it does today, beyond the core loop:
 
+- **Cache-stable, cost-aware runs** — the system prompt and tools stay byte-identical for a thread; live notebook state rides on the newest message as an append-only `<kernel_state>` block, and older rich results compress in fixed epochs, so long runs keep hitting provider prompt caches. Budgets count effective tokens (cache reads at 10%).
+- **Add-and-run tools** — `add_cells` and `edit_cell` accept `run: true`, so writing or repairing a cell and seeing its outputs takes one tool call instead of two.
+- **Resilient provider calls** — rate limits, overloads, server errors, dropped streams, and stalls retry automatically with backoff that honors `retry-after`; a response cut off by the output limit retries with a larger cap.
+- **Claude Opus 5.5 by default** — adaptive thinking with explicit effort, summarized reasoning and progress updates in the transcript, thinking blocks replayed unchanged across tool steps, conversation-bound thinking that degrades safely, and server-side refusal fallbacks.
+- **Interruptible Python** — Pyodide runs in a Web Worker, so a slow or runaway cell never freezes the page. Interrupt from the toolbar or with `i i`; agent-run cells have a time limit. On cross-origin-isolated hosts interrupts keep your variables; elsewhere KERNEL restarts Python and remounts your files.
 - **Provider parity** — Anthropic uses the native Messages API; OpenAI and xAI use the Responses API with the same KERNEL tool loop, multimodal results, stop behavior, and token accounting. Responses calls set `store: false`, and encrypted reasoning continuation items are preserved locally when returned.
 - **Live Markdown transcript** — narration streams token-by-token and renders headings, tables, code, math, and Mermaid when complete. Reasoning summaries use a separate progressive-disclosure panel; tool calls remain compact, click-to-cell action chips.
 - **Multiple threads per notebook** — create, rename, switch, or delete independent threads without mixing notebooks. Full messages and transcripts live in IndexedDB rather than a size-capped localStorage string.
 - **Durable runs and recovery** — every request has a persisted run, phase, event timeline, visible plan, token/tool/time budgets, safe pause/resume, and recovery after reload. An ambiguous interrupted mutation is never silently repeated.
 - **Completion-safe autonomy** — a tool-using or planned run must complete its visible plan and pass the `finish_run` evidence contract. A provider merely stopping tool calls cannot create a false success; AUTO extends tool/time checkpoints only while durable progress continues, while the token budget remains a hard cost boundary.
 - **Notebook intelligence** — KERNEL tracks conservative Python dependencies, cell/file/environment provenance, and `fresh`, `stale`, or `historical` output state. Structured tracebacks navigate back to the exact cell and source line.
-- **Artifact workspace** — uploads, working files, and final results have stable IDs, safe folder paths, previews, lifecycle controls, provenance, and notebook isolation. Folder upload preserves relative paths and collisions never silently overwrite data.
+- **Artifact workspace** — uploads, working files, and final results have stable IDs, safe folder paths, previews, lifecycle controls, provenance, and notebook isolation. Folder upload preserves relative paths and collisions never silently overwrite data. Payloads are stored once by content hash, so checkpoints and ZIP exports don't duplicate your files.
 - **Exact checkpoints and forks** — runs checkpoint notebook cells, rendered outputs, artifacts, environment, and thread state. Restore in place or fork a new notebook from that exact point without changing the source.
 - **Conversations that persist and travel** — one-click `.kernel.zip` export carries the notebook, outputs, all threads, artifacts, durable runs, usage, environment, and checkpoints; open it elsewhere to resume. A separate share-safe ZIP strips chat/run history and inputs, scans copied text, and includes approved final results only.
 - **Compact private run handoff** — a checkpoint-free `.kernel-run.zip` preserves the current notebook, outputs, artifacts, complete threads, and run ledgers for debugging or review without repeatedly embedding every historical checkpoint. It remains private and unredacted.
@@ -105,6 +113,8 @@ What it does today, beyond the core loop:
 - **Read-only model comparison** — send the same notebook-grounded prompt to up to six configured provider/model profiles and compare answers, latency, and reported token use without giving contenders mutation tools.
 - **Notebook-isolated workspaces** — stable cell IDs, outputs, user uploads, and agent results are restored only with their notebook. Switching notebooks snapshots state and resets the Python namespace so data cannot leak across workspaces.
 - **Faster output and variable surfaces** — inline/panel output changes move existing DOM nodes instead of rebuilding rich output; the variable panel adds deterministic name/type/memory sorting and explicit refresh.
+- **Built for exploring** — a first-run card loads a sample dataset or your own files, and files dropped anywhere on the page are mounted. The variable inspector turns a DataFrame or Series into head, describe, missing-value, correlation, value-count, or histogram cells in one click. Tables copy as TSV or download as CSV, figures download as PNG, and long outputs collapse. Errors offer *Fix with agent*, and tracebacks name the notebook cell instead of an internal path.
+- **Undo instead of dialogs** — deleting a cell, a variable, or a data file, or clearing outputs, shows a toast with Undo (`z` restores the last deleted cell).
 - **Autonomy modes** — AUTO runs free with a Stop button; STEP gates execution behind Approve/Skip. Every cell has an *ai* button that drops a stable cell reference into the composer.
 - **Redacted diagnostics** — export an allowlisted support bundle with versions, counters, and sanitized run events, never prompts, source, file contents, tool payloads, or provider credentials.
 
@@ -116,8 +126,13 @@ Release checks:
 node scripts/sync_agent_builds.mjs --check
 node tests/verify_agent_v2.mjs
 node tests/verify_agent_v23.mjs
+node tests/verify_agent_v24.mjs
 node tests/verify_examples.mjs
+# browser end-to-end (needs Playwright + Chromium)
+npm install --no-save playwright && npx playwright install chromium && node tests/e2e/run.mjs
 ```
+
+GitHub Actions runs the same checks on every push and pull request.
 
 ## Real-world examples
 
