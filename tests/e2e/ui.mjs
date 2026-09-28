@@ -150,6 +150,9 @@ const typed = await kAsync(page, `await newNotebook(); const realIsolate = isola
 assert.deepEqual(typed, { imported: false, kept: true }, 'work added while Python resets is not replaced by the example');
 const chatted = await kAsync(page, `await newNotebook(); const id = nbId; agMsgs.push({ role: 'user', content: 'an earlier question' }); await openExample('regex-engine'); return { moved: nbId !== id, opened: nbName === 'regex-engine', freshThread: agMsgs.length === 0 }`);
 assert.deepEqual(chatted, { moved: true, opened: true, freshThread: true }, 'a blank notebook with agent history is kept; the example opens in a new notebook and thread');
+const typedNew = await kAsync(page, `const c = insertCell(cells.length, 'code', false); c.source = 'keep_old = 1'; c.taEl.value = c.source; const realActivate = activateNotebookAgent; let typedIn = null; activateNotebookAgent = async (...args) => { typedIn = nbId; cells[0].source = 'typed_in_new = 1'; cells[0].taEl.value = cells[0].source; return realActivate(...args); }; try { await openExample('regex-engine'); } finally { activateNotebookAgent = realActivate; } return { imported: nbName === 'regex-engine', inNew: nbId === typedIn, kept: cells.length === 1 && cells[0].taEl.value === 'typed_in_new = 1' }`);
+assert.deepEqual(typedNew, { imported: false, inNew: true, kept: true }, 'work typed into the new notebook while it opens is not replaced by the example');
+assert.ok(await page.locator('.toast', { hasText: 'was added to the notebook while the example was opening' }).count(), 'the refusal says the notebook was kept because work was added');
 await clearToasts();
 await kAsync(page, `await openExample('fleet-dna')`);
 assert.equal(await toastAct('needs public data').textContent(), 'Where to get them', 'an example that needs outside data says so and links to where to get it');
