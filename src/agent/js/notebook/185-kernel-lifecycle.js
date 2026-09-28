@@ -1,8 +1,10 @@
 /* ===== kernel lifecycle: boot, extras, restart, clear outputs ===== */
 /* Startup restores the open notebook's saved files only after Python boots; until then dataFiles is empty even for a
-   notebook that has files. startupRestored says the restore happened, startupSettled that boot finished either way. */
+   notebook that has files. startupRestored says the restore happened, startupSettled that boot finished either way.
+   startupAgent is init's activation of the notebook's agent, which loads its saved run; boot waits for it too. */
 let startupSettled = false,
-  startupRestored = false;
+  startupRestored = false,
+  startupAgent = null;
 async function bootKernel() {
   setStatus("Loading Pyodide…", "boot");
   progressOn();
@@ -31,6 +33,8 @@ async function bootKernel() {
     startupRestored = true;
     await captureEnvironment();
     refreshNotebookFreshness();
+    // a paused run has to be known before startup counts as settled, or the notebook can look free when it isn't
+    if (startupAgent) await startupAgent.catch((e) => console.warn("Agent activation failed at startup", e));
     if (agTxNb !== nbId) await activateNotebookAgent(nbId);
     scheduleBlobGc(20000);
     toast("Kernel ready · Python " + ver);

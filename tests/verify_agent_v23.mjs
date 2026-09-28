@@ -25,8 +25,8 @@ for (const [file, text] of [[desktopPath, desktop], [mobilePath, mobile]]) {
   assert.equal(new Set(ids).size, ids.length, `${file} has unique DOM ids`);
 }
 assert.equal(sharedRuntime(desktop), sharedRuntime(mobile), "desktop and mobile have a byte-identical core");
-assert.ok(has(desktop, "initPanels(); activateNotebookAgent(nbId); bootKernel();"), "desktop initializes the active notebook thread");
-assert.ok(has(mobile, "initPanels(); activateNotebookAgent(nbId); bootKernel();"), "mobile initializes the active notebook thread");
+assert.ok(has(desktop, "initPanels(); startupAgent = activateNotebookAgent(nbId); bootKernel();"), "desktop initializes the active notebook thread");
+assert.ok(has(mobile, "initPanels(); startupAgent = activateNotebookAgent(nbId); bootKernel();"), "mobile initializes the active notebook thread");
 assert.ok(!has(functionSource(desktop,"cloneNotebookWorkspace"), "id:artifactId()"), "notebook duplication preserves artifact IDs used by lineage and context policy");
 assert.ok(has(functionSource(desktop,"kdbOpen"), "db.close();kdbPromise=null"), "a version-changed IndexedDB connection can reopen cleanly");
 const deleteThread=functionSource(desktop,"deleteAgentThread");

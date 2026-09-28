@@ -168,6 +168,34 @@ await reopened.waitForFunction(() => window.__k(`nbName === 'lunar-settlement'`)
 const kept = await kAsync(reopened, `const w = await kdbGet('workspaces', ${JSON.stringify(savedId)}); return { files: ((w && w.artifacts) || []).map((a) => a.name), moved: nbId !== ${JSON.stringify(savedId)} }`);
 assert.deepEqual(kept, { files: ['keep.csv'], moved: true }, 'the saved notebook keeps its files and the example opens in a new notebook');
 await saved.close();
+// a linked example waits for startup to load the notebook's saved run, so a blank notebook with a paused run is kept
+const pausedCtx = await newContext(browser);
+const seed = await openApp(pausedCtx, file);
+const pausedId = await kAsync(seed, `agRun = { id: 'boot-paused', notebookId: nbId, threadId: agThreadId, threadKey: nbId + ':' + agThreadId, status: 'paused', started: Date.now() }; await saveRun(agRun); persist(); return nbId`);
+await seed.close();
+// hold back reads of saved runs until three seconds after Python is ready, as a slow IndexedDB would
+const slowRuns = () => {
+  const handler = Object.getOwnPropertyDescriptor(IDBTransaction.prototype, 'oncomplete');
+  let gate = null;
+  const afterBoot = () => new Promise((resolve) => {
+    const t = setInterval(() => { try { if (window.__k && window.__k('kernelReady')) { clearInterval(t); setTimeout(resolve, 3000); } } catch (e) {} }, 50);
+  });
+  Object.defineProperty(IDBTransaction.prototype, 'oncomplete', {
+    configurable: true,
+    get() { return handler.get.call(this); },
+    set(fn) {
+      if (!fn || this.mode !== 'readonly' || !this.objectStoreNames.contains('runs')) return handler.set.call(this, fn);
+      gate = gate || afterBoot();
+      const tx = this;
+      handler.set.call(this, (e) => gate.then(() => fn.call(tx, e)));
+    },
+  });
+};
+const slow = await openApp(pausedCtx, file + '?example=lunar-settlement', { init: slowRuns });
+await slow.waitForFunction(() => window.__k(`nbName === 'lunar-settlement'`), null, { timeout: 60000 });
+const pausedKept = await k(slow, `({ moved: nbId !== ${JSON.stringify(pausedId)}, kept: readLib().notebooks.some((n) => n.id === ${JSON.stringify(pausedId)}) })`);
+assert.deepEqual(pausedKept, { moved: true, kept: true }, 'a blank notebook whose paused run loads late is kept; the example opens in a new notebook');
+await pausedCtx.close();
 
 console.log('UI E2E passed for', file);
 await browser.close(); srv.close();
