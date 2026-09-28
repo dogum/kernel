@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/sync_agent_builds.mjs --check
+      - run: node scripts/build.mjs --check
       - run: node tests/verify_agent_v2.mjs
       - run: node tests/verify_agent_v23.mjs
       - run: node tests/verify_agent_v24.mjs

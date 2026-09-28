@@ -64,12 +64,23 @@ skill/
 docs/
 ├── index.html ................. the landing / launch page
 ├── kernel.html ................ the notebook
-├── kernel-agent.html .......... the agentic notebook (bring your own key)
-├── kernel-agent-mobile.html ... the mobile / PWA build of the agent
+├── kernel-agent.html .......... the agentic notebook (bring your own key) · built from src/
+├── kernel-agent-mobile.html ... the mobile / PWA build of the agent · built from src/
 ├── kernel-agent-sw.js ......... service worker (offline cache for the PWA)
 └── .nojekyll
+src/ .......................... source of the two agent pages (see src/README.md)
+├── agent/desktop.html ......... page template for kernel-agent.html
+├── agent/mobile.html .......... page template for kernel-agent-mobile.html
+├── agent/css/ ................. styles (base, layout, agent, desktop-only, mobile-only)
+├── agent/markup/ .............. markup shared by both pages (agent panel, modals)
+├── agent/js/notebook/ ......... the notebook: cells, execution, worker, storage, panels
+├── agent/js/agent/ ............ the agent: runs, threads, tools, providers, loop, composer
+├── agent/js/app/ .............. theme and startup
+├── agent/js/mobile/ ........... phone controller and PWA layer
+├── agent/python/harness.py .... Python that runs inside Pyodide at boot
+└── suite/ ..................... app menu and design tokens shared by the KERNEL pages
 scripts/
-└── sync_agent_builds.mjs ..... syncs the shared desktop/mobile runtime
+└── build.mjs ................. builds docs/kernel-agent*.html from src/ (--check in CI)
 tests/
 ├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
 ├── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
@@ -123,7 +134,7 @@ Provider model discovery is available from settings. Custom API base URLs are su
 Release checks:
 
 ```bash
-node scripts/sync_agent_builds.mjs --check
+node scripts/build.mjs --check
 node tests/verify_agent_v2.mjs
 node tests/verify_agent_v23.mjs
 node tests/verify_agent_v24.mjs

@@ -1,0 +1,7 @@
+.status{flex:0 0 auto}
+.cell-tools{top:-20px;right:12px}
+.menu-item.narrow-only,.menu-sep.narrow-only{display:none}
+@media (max-width:1280px){
+  .toolbar #btnNew,.toolbar #btnOpen,.toolbar #btnWorkspace,.toolbar #btnClear{display:none}
+  .menu-item.narrow-only{display:block}.menu-sep.narrow-only{display:block}
+}

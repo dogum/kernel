@@ -271,8 +271,7 @@ compressed ZIPs.
 - old lossy transcript/message caps are absent;
 - a Unicode/binary ZIP fixture round-trips with valid CRCs.
 
-`node scripts/sync_agent_builds.mjs` updates the mobile build from the desktop source before
-verification. Provider live calls require user-owned keys and are not part of repository CI.
+`node scripts/build.mjs` builds both pages from `src/` before verification. Provider live calls require user-owned keys and are not part of repository CI.
 
 ## 12. Official API references used
 

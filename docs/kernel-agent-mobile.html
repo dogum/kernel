@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Built by scripts/build.mjs from src/agent/mobile.html. Edit the files in src/, then run: node scripts/build.mjs -->
 <html lang="en">
 <head>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
@@ -466,7 +467,7 @@ body.resizing{cursor:col-resize; user-select:none}
 /* ── v7 polish · in-app prompt dialog ── */
 .prompt-input{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:9px 11px;outline:none;caret-color:var(--accent)}
 .prompt-input:focus{border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
-.prompt-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.prompt-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}
 
 /* ===== KERNEL·A agent panel ===== */
 .brand-a{color:var(--accent);font-weight:800;letter-spacing:0}
@@ -1213,19 +1214,19 @@ def _inspect_ns():
         info = ""
         try:
             if tn == "DataFrame":
-                info = "%d \u00d7 %d" % (v.shape[0], v.shape[1])
+                info = "%d \\u00d7 %d" % (v.shape[0], v.shape[1])
             elif tn == "Series":
                 info = "%d values" % len(v)
             elif tn == "ndarray":
                 sh = getattr(v, "shape", None)
-                info = " \u00d7 ".join(str(int(n)) for n in sh) if sh else "scalar"
+                info = " \\u00d7 ".join(str(int(n)) for n in sh) if sh else "scalar"
             elif tn in ("list", "tuple", "set", "dict", "frozenset"):
                 info = "%d items" % len(v)
             elif tn in ("str", "bytes"):
                 info = "%d chars" % len(v)
             else:
                 r = repr(v)
-                info = r if len(r) <= 60 else (r[:59] + "\u2026")
+                info = r if len(r) <= 60 else (r[:59] + "\\u2026")
         except Exception:
             info = ""
         b = _var_bytes(v, tn)
@@ -1258,7 +1259,7 @@ def _short(x):
         s = str(x)
     except Exception:
         s = "?"
-    return s if len(s) <= 40 else (s[:39] + "\u2026")
+    return s if len(s) <= 40 else (s[:39] + "\\u2026")
 
 def _var_detail(name):
     v = _KNS.get(name, None)
@@ -1326,7 +1327,7 @@ def _var_detail(name):
         else:
             out["kind"] = "scalar"
             r = repr(v)
-            out["repr"] = r if len(r) <= 600 else (r[:600] + "\u2026")
+            out["repr"] = r if len(r) <= 600 else (r[:600] + "\\u2026")
     except Exception as e:
         out["kind"] = "other"
         out["repr"] = "detail unavailable: %s" % e
