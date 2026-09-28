@@ -34,11 +34,18 @@ async function openExample(name) {
     if (!res.ok) throw new Error(res.status === 404 ? "there is no example called " + name : "HTTP " + res.status);
     const notebook = await res.json();
     // Importing while Python boots, restarts or runs a cell would mix the example with that execution, and a run may
-    // have started during the download, so wait for the kernel and check again.
-    for (let waited = 0; busy && waited < exampleWaitMs; waited += 250) await new Promise((r) => setTimeout(r, 250));
+    // have started during the download, so wait for the kernel and check again. Until startup has restored this
+    // notebook's saved files it can look blank when it isn't, so wait for that too.
+    for (let waited = 0; (busy || cellStarting || !startupSettled) && waited < exampleWaitMs; waited += 250)
+      await new Promise((r) => setTimeout(r, 250));
+    if (!startupRestored) {
+      closeToast();
+      toast("Python hasn't started, so the example can't open safely. Reload the page and try again.", "err");
+      return;
+    }
     // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
     const reuse = isBlankNotebook() && !hasUnfinishedRun();
-    if (agRunning || busy || (!reuse && !(await newNotebook())) || agRunning || busy) {
+    if (agRunning || busy || cellStarting || (!reuse && !(await newNotebook())) || agRunning || busy || cellStarting) {
       // the last check covers a run or cell that got going during the switch's awaits
       closeToast();
       refuse();

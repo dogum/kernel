@@ -138,6 +138,8 @@ const locked = await kAsync(page, `notebookSwitching = true; try { await agentTu
 assert.deepEqual(locked, { running: false, told: true }, 'runs cannot start while notebooks switch');
 const cellsLocked = await kAsync(page, `const c = insertCell(cells.length, 'code', false); c.source = 'switch_probe = 1'; c.taEl.value = c.source; const gen = kernelGeneration; notebookSwitching = true; let ran; try { ran = await runCell(c); await restartKernel(); } finally { notebookSwitching = false; } return { ran, exec: c.execCount, sameKernel: kernelGeneration === gen }`);
 assert.deepEqual(cellsLocked, { ran: false, exec: null, sameKernel: true }, 'cells and restarts wait for a notebook switch too');
+const claimed = await kAsync(page, `const c = insertCell(cells.length, 'code', false); c.source = 'claim_probe = 2'; c.taEl.value = c.source; const id = nbId; const realRefresh = refreshReferencedArtifacts; let switched; refreshReferencedArtifacts = async (...args) => { switched = await newNotebook(); return realRefresh(...args); }; let ran; try { ran = await runCell(c); } finally { refreshReferencedArtifacts = realRefresh; } return { switched, ran, sameNotebook: nbId === id }`);
+assert.deepEqual(claimed, { switched: false, ran: true, sameNotebook: true }, 'a switch cannot start while a cell prepares its files');
 const raced = await kAsync(page, `const realSave = saveWorkspaceState; let first = true; saveWorkspaceState = async (...args) => { if (first) { first = false; agRunning = true; } return realSave(...args); }; try { await openExample('regex-engine'); } finally { saveWorkspaceState = realSave; agRunning = false; } return { imported: nbName === 'regex-engine', blank: isBlankNotebook() }`);
 assert.deepEqual(raced, { imported: false, blank: true }, 'a run that gets going during the switch stops the import');
 const fresh = await newContext(browser);
@@ -146,6 +148,17 @@ await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && 
 assert.equal(await notebooks(linked), 1, 'a blank browser opens the example in its empty notebook');
 assert.equal(await linked.evaluate(() => location.search), '', 'the link parameter is removed after use');
 await fresh.close();
+// a linked example waits for startup to restore saved files, so a notebook with files but blank cells is never overwritten
+const saved = await newContext(browser);
+const first = await openApp(saved, file);
+await kAsync(first, `await mountUploadedFiles([new File(['a,b\\n1,2\\n'], 'keep.csv', { type: 'text/csv' })], false); persist(); await saveWorkspaceState();`);
+const savedId = await k(first, `nbId`);
+await first.close();
+const reopened = await openApp(saved, file + '?example=lunar-settlement');
+await reopened.waitForFunction(() => window.__k(`nbName === 'lunar-settlement'`), null, { timeout: 60000 });
+const kept = await kAsync(reopened, `const w = await kdbGet('workspaces', ${JSON.stringify(savedId)}); return { files: ((w && w.artifacts) || []).map((a) => a.name), moved: nbId !== ${JSON.stringify(savedId)} }`);
+assert.deepEqual(kept, { files: ['keep.csv'], moved: true }, 'the saved notebook keeps its files and the example opens in a new notebook');
+await saved.close();
 
 console.log('UI E2E passed for', file);
 await browser.close(); srv.close();

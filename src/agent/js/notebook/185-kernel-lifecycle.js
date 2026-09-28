@@ -1,4 +1,8 @@
 /* ===== kernel lifecycle: boot, extras, restart, clear outputs ===== */
+/* Startup restores the open notebook's saved files only after Python boots; until then dataFiles is empty even for a
+   notebook that has files. startupRestored says the restore happened, startupSettled that boot finished either way. */
+let startupSettled = false,
+  startupRestored = false;
 async function bootKernel() {
   setStatus("Loading Pyodide…", "boot");
   progressOn();
@@ -24,6 +28,7 @@ async function bootKernel() {
     setStatus("Ready", "ok");
     $("#kernelInfo").textContent = "Python " + ver + " · Pyodide 0.29.4" + kernelModeLabel();
     await restoreWorkspaceState(nbId);
+    startupRestored = true;
     await captureEnvironment();
     refreshNotebookFreshness();
     if (agTxNb !== nbId) await activateNotebookAgent(nbId);
@@ -41,6 +46,7 @@ async function bootKernel() {
     );
     console.error(err);
   } finally {
+    startupSettled = true;
     progressOff();
   }
 }

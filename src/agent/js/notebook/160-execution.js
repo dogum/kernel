@@ -116,6 +116,8 @@ async function refreshInspector() {
     renderInspector(JSON.parse(await runPy("_inspect_ns()")));
   } catch (e) {}
 }
+// Set while a cell that passed its checks prepares its files, before it claims `busy`; notebook switches wait for it.
+let cellStarting = false;
 async function runCell(cell, opts) {
   opts = opts || {};
   if (cell.type === "markdown") {
@@ -142,7 +144,16 @@ async function runCell(cell, opts) {
   const sourceAtRun = src;
   cell.source = src;
   recomputeDependencies();
-  await refreshReferencedArtifacts(cell);
+  cellStarting = true;
+  try {
+    await refreshReferencedArtifacts(cell);
+  } finally {
+    cellStarting = false;
+  }
+  if (notebookSwitching || !cells.includes(cell)) {
+    toast("Wait for the notebook switch to finish.", "err");
+    return false;
+  }
   if (busy) {
     toast("Kernel is busy with another cell.", "err");
     return false;

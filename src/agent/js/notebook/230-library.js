@@ -180,7 +180,7 @@ async function newNotebook() {
     toast("Wait for the notebook switch to finish.", "err");
     return false;
   }
-  if (agRunning || busy) {
+  if (agRunning || busy || cellStarting) {
     toast("Finish or stop the current run first.", "err");
     return false;
   }
@@ -216,7 +216,7 @@ async function switchNotebook(id) {
     toast("Wait for the notebook switch to finish.", "err");
     return;
   }
-  if (agRunning || busy) {
+  if (agRunning || busy || cellStarting) {
     toast("Finish or stop the current run first.", "err");
     return;
   }
