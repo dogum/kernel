@@ -31,9 +31,20 @@ async function resetBlankNotebook() {
   }
 }
 
-// A paused or failed run can be resumed and would run its pending tools against whatever the notebook then holds.
-function hasUnfinishedRun() {
-  return !!(agRun && !RUN_TERMINAL.has(agRun.status));
+// The agent's history counts as work too. An earlier conversation would be sent as context with the next request
+// about the example, and a paused or failed run could be resumed against it.
+function hasAgentHistory() {
+  return !!(
+    agMsgs.length ||
+    agPlan.length ||
+    agComparisons.length ||
+    agRun ||
+    readThreadIndex(nbId).threads.length > 1
+  );
+}
+
+function canReuseNotebook() {
+  return isBlankNotebook() && !hasAgentHistory();
 }
 
 async function openExample(name) {
@@ -62,15 +73,15 @@ async function openExample(name) {
       toast("Python hasn't started, so the example can't open safely. Reload the page and try again.", "err");
       return;
     }
-    // Reuse the current notebook only when it is empty and its agent has nothing unfinished; otherwise open a new one.
-    const reuse = isBlankNotebook() && !hasUnfinishedRun();
+    // Reuse the current notebook only when it and its agent have no work in them; otherwise open a new one.
+    const reuse = canReuseNotebook();
     if (
       agRunning ||
       notebookOccupied() ||
       !(await (reuse ? resetBlankNotebook() : newNotebook())) ||
       agRunning ||
       notebookOccupied() ||
-      (reuse && !isBlankNotebook())
+      (reuse && !canReuseNotebook())
     ) {
       // the last checks cover a run or cell that got going, or work added, during the reset's or switch's awaits
       closeToast();

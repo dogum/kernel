@@ -148,6 +148,8 @@ const reset = await kAsync(page, `const c = insertCell(cells.length, 'code', fal
 assert.deepEqual(reset, { blank: true, reused: true, imported: true, stale: false }, 'an example reusing a blank notebook starts from a clean Python namespace');
 const typed = await kAsync(page, `await newNotebook(); const realIsolate = isolateNotebookRuntime; isolateNotebookRuntime = async (...args) => { cells[0].source = 'typed_meanwhile = 1'; cells[0].taEl.value = cells[0].source; return realIsolate(...args); }; try { await openExample('regex-engine'); } finally { isolateNotebookRuntime = realIsolate; } return { imported: nbName === 'regex-engine', kept: cells.length === 1 && cells[0].taEl.value === 'typed_meanwhile = 1' }`);
 assert.deepEqual(typed, { imported: false, kept: true }, 'work added while Python resets is not replaced by the example');
+const chatted = await kAsync(page, `await newNotebook(); const id = nbId; agMsgs.push({ role: 'user', content: 'an earlier question' }); await openExample('regex-engine'); return { moved: nbId !== id, opened: nbName === 'regex-engine', freshThread: agMsgs.length === 0 }`);
+assert.deepEqual(chatted, { moved: true, opened: true, freshThread: true }, 'a blank notebook with agent history is kept; the example opens in a new notebook and thread');
 await clearToasts();
 await kAsync(page, `await openExample('fleet-dna')`);
 assert.equal(await toastAct('needs public data').textContent(), 'Where to get them', 'an example that needs outside data says so and links to where to get it');
