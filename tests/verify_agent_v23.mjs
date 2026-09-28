@@ -41,7 +41,7 @@ for (const id of [
 assert.ok(has(desktop, 'data-mi="runZip"') && has(mobile, 'data-mi="runZip"'), "private run ZIP is available in both More menus");
 
 for (const [label, needle] of [
-  ["v2.3 contract", "AGENT-V23-SPEC.md"],
+  ["v2.3 contract", "specs/agent-v2.3.md"],
   ["run store", 'createObjectStore("runs"'],
   ["checkpoint store", 'createObjectStore("checkpoints"'],
   ["run recovery", "repairInterruptedRun"],
@@ -458,6 +458,6 @@ assert.ok(has(compare, "read-only comparison mode") && !/\btools\s*:/.test(compa
 const sw = fs.readFileSync("docs/kernel-agent-sw.js", "utf8");
 assert.ok(sw.includes("kernel-a-mobile-v240-1"), "service-worker cache is versioned for v2.4.0");
 assert.ok(sw.includes("k.indexOf('kernel-a-mobile-')===0"), "activation deletes only KERNEL-owned caches");
-assert.ok(fs.readFileSync("AGENT-V23-SPEC.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
+assert.ok(fs.readFileSync("specs/agent-v2.3.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
 
 console.log("KERNEL Agent v2.3.1 verification passed (completion integrity, adaptive budgets, durability, lineage, portability, security, and desktop/mobile parity).");

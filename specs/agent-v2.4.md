@@ -2,7 +2,7 @@
 
 Status: implemented on `claude/python-notebook-project-review-ppwmbf`.
 
-v2.4 keeps every v2.3 contract ([`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md)): durable runs, lineage,
+v2.4 keeps every v2.3 contract ([`agent-v2.3.md`](agent-v2.3.md)): durable runs, lineage,
 checkpoints, completion-safe autonomy, and portable handoff. It changes how a run *spends* time and
 money, and how the runtime behaves when Python misbehaves. The four curated examples motivated each
 change: their runs reported 1–4% prompt-cache hits, one tool call per model call, token budgets that

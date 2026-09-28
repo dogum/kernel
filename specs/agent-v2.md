@@ -3,10 +3,10 @@
 Status: implemented on `feat/kernel-agent-v2` (September 2026).
 
 This is the compatibility foundation retained by v2.3. The current durability, lineage,
-artifact, checkpoint, comparison, and handoff contract is [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md).
+artifact, checkpoint, comparison, and handoff contract is [`agent-v2.3.md`](agent-v2.3.md).
 
 This remains the provider/thread foundation for `docs/kernel-agent.html` and
-`docs/kernel-agent-mobile.html`. The original [`AGENT-SPEC.md`](AGENT-SPEC.md) still explains
+`docs/kernel-agent-mobile.html`. The original [`agent-v1.md`](agent-v1.md) still explains
 the notebook tool contract and human-in-the-loop philosophy; this document superseded its
 Anthropic-only, single-thread, and localStorage persistence assumptions.
 

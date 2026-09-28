@@ -4,12 +4,12 @@ Thanks for helping. The bar: KERNEL stays a notebook you can open as one HTML fi
 
 ## Layout
 
-- `src/` is the source of the two agent pages. `scripts/build.mjs` builds them into `docs/kernel-agent.html` and `docs/kernel-agent-mobile.html`, so never edit those two by hand. [`src/README.md`](src/README.md) maps the tree: which folder holds the notebook, the agent, the Python harness, the CSS, and the shared markup.
+- `src/` is the source of the two agent pages. `scripts/build.mjs` builds them into `docs/kernel-agent.html` and `docs/kernel-agent-mobile.html`, so never edit those two by hand. [`src/README.md`](../src/README.md) maps the tree: which folder holds the notebook, the agent, the Python harness, the CSS, and the shared markup.
 - `docs/` is the GitHub Pages site. `kernel.html` (the notebook without the agent), `index.html`, the service worker, and the icons are edited directly.
-- `skill/` is the `kernel-notebooks` Claude skill; `kernel-notebooks.skill` is the same folder zipped, and CI checks that they match.
+- `skill/` is the `kernel-notebooks` Claude skill. `docs/kernel-notebooks.skill` is the same folder zipped for Claude.ai uploads (the site serves it), and CI checks that they match.
 - `tests/verify_*.mjs` are static and fixture checks. `tests/e2e/` drives both builds in Chromium against a mock model provider. `tests/lib/source.mjs` has the helpers for reading the app's code.
 - `examples/` holds curated agent runs, checked by `tests/verify_examples.mjs`.
-- `AGENT-V24-SPEC.md` is the agent's current contract, on top of the earlier specs.
+- `specs/` holds the agent's contracts. `specs/agent-v2.4.md` is current, on top of the earlier ones.
 
 ## Before you open a PR
 
@@ -35,7 +35,7 @@ Then look at your change in a browser: `python3 -m http.server -d docs` and open
 - **One file, no server.** A built page loads only from the CDNs it already uses (Pyodide, KaTeX, Mermaid, fonts). Adding a runtime dependency needs a strong reason.
 - **Keys stay in the browser** and go only to the API base the person chose. Exports and diagnostics never include them, and tests check this.
 - **Desktop and mobile share code.** Shared behavior goes in `src/agent/js/` or `src/agent/markup/`; only phone-specific layout goes in `mobile.css` or `js/mobile/`.
-- **Keep the agent's contracts.** Durable runs, checkpoints, the completion check, and context exclusions are specified in the `AGENT-V*-SPEC.md` files. If a change alters one, update the current spec in the same PR.
+- **Keep the agent's contracts.** Durable runs, checkpoints, the completion check, and context exclusions are specified in `specs/`. If a change alters one, update the current spec in the same PR.
 - **Plain language in the UI.** Say what happened and what to do next. Offer Undo rather than a confirmation dialog when the action can be undone.
 
 ## Releasing

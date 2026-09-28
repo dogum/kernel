@@ -18,5 +18,10 @@
     "playwright": "1.56.1",
     "pngjs": "7.0.0",
     "prettier": "3.9.9"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "trailingComma": "all",
+    "arrowParens": "always"
   }
 }

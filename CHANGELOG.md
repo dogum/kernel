@@ -18,6 +18,7 @@ Notable changes to KERNEL, KERNEL·A (the agent), and KERNEL·M (the phone build
 - Tests read the app through a JavaScript parser (`tests/lib/source.mjs`) instead of regexes, so formatting can't break them.
 - `npm run build | check | format | test | test:e2e`, plus a CONTRIBUTING guide, issue templates, and a release workflow.
 - The version lives in `package.json` and is filled in at build time.
+- A tidier root: the agent specs moved to `specs/` (with an index), the packaged skill to `docs/` (the site serves it for download), the contributing guide to `.github/`, and the Prettier settings into `package.json`. The README is shorter.
 
 ## [2.4.0] - 2026-09-28
 
@@ -44,10 +45,10 @@ Notable changes to KERNEL, KERNEL·A (the agent), and KERNEL·M (the phone build
 - Completion-safe autonomy: a run that used tools must finish its visible plan and pass the `finish_run` evidence check, so a model that simply stops calling tools can't claim success.
 
 ## [2.3.0] - 2026-09-03
-- Durable runs with checkpoints, pause and resume, and recovery after reload. Cell and file lineage with stale-output detection. An artifact workspace. Exact checkpoints and forks. Portable `.kernel.zip` handoff. See [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md).
+- Durable runs with checkpoints, pause and resume, and recovery after reload. Cell and file lineage with stale-output detection. An artifact workspace. Exact checkpoints and forks. Portable `.kernel.zip` handoff. See [`specs/agent-v2.3.md`](specs/agent-v2.3.md).
 
 ## [2.0.0] - 2026-09-03
-- KERNEL Agent v2: Anthropic, OpenAI, and xAI adapters, several threads per notebook, and portable workspaces. See [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md).
+- KERNEL Agent v2: Anthropic, OpenAI, and xAI adapters, several threads per notebook, and portable workspaces. See [`specs/agent-v2.md`](specs/agent-v2.md).
 
 ## 2026-06-19
 - KERNEL·M, the agent as an installable, offline-capable phone app.
