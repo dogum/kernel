@@ -9,11 +9,14 @@
     "check": "node scripts/build.mjs --check && prettier --check \"src/**/*.js\"",
     "format": "prettier --write \"src/**/*.js\" && node scripts/build.mjs",
     "test": "node tests/verify_agent_v2.mjs && node tests/verify_agent_v23.mjs && node tests/verify_agent_v24.mjs && node tests/verify_examples.mjs",
-    "test:e2e": "node tests/e2e/run.mjs"
+    "test:e2e": "node tests/e2e/run.mjs",
+    "demo": "node scripts/record-demo.mjs"
   },
   "devDependencies": {
     "acorn": "8.18.0",
+    "gifenc": "1.0.3",
     "playwright": "1.56.1",
+    "pngjs": "7.0.0",
     "prettier": "3.9.9"
   }
 }

@@ -74,7 +74,8 @@
 .ag-mode{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
   border:1px solid var(--line-2);border-radius:3px;background:var(--surface);padding:5px 8px;cursor:pointer}
 .ag-mode.step{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
-.ag-steps{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-4)}
+.ag-steps{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-4);white-space:nowrap}
+#agModelChip{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-usage{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--ink-3);flex:1;text-align:right;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ag-usage:hover{color:var(--accent)}
 .ag-stop{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.10em;color:var(--err);

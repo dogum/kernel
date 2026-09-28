@@ -15,7 +15,7 @@ function renderWelcome() {
   w.id = "welcome";
   w.className = "welcome";
   w.innerHTML =
-    '<h2>Start exploring</h2><p>Python runs right here in your browser, and your data never leaves it. Bring a file or try the sample, then write code — or describe what you want and let the agent build the analysis with you.</p><div class="welcome-acts"><button class="btn primary" data-w="sample">Try a sample dataset</button><button class="btn" data-w="data">Upload data</button><button class="btn" data-w="open">Open a notebook</button><button class="btn" data-w="agent">Ask the agent</button></div><p class="welcome-tip">Drop files anywhere to mount them · ⇧⏎ runs a cell · press ? for every shortcut</p>';
+    '<h2>Start exploring</h2><p>Python runs right here in your browser, and your data never leaves it. Bring a file or try the sample, then write code — or describe what you want and let the agent build the analysis with you.</p><div class="welcome-acts"><button class="btn primary" data-w="sample">Try a sample dataset</button><button class="btn" data-w="data">Upload data</button><button class="btn" data-w="open">Open a notebook</button><button class="btn" data-w="agent">Ask the agent</button><button class="btn" data-w="example">See a real agent run</button></div><p class="welcome-tip">Drop files anywhere to mount them · ⇧⏎ runs a cell · press ? for every shortcut</p>';
   w.addEventListener("click", (e) => {
     const b = e.target.closest("[data-w]");
     if (!b) return;
@@ -28,6 +28,8 @@ function renderWelcome() {
     } else if (k === "open") {
       const o = $("#btnOpen");
       if (o) o.click();
+    } else if (k === "example") {
+      openExample("fleet-dna");
     } else if (k === "agent" && typeof openAgent === "function") {
       openAgent();
       const inp = $("#agIn");

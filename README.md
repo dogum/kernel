@@ -1,16 +1,41 @@
+<div align="center">
+
 # KERNEL
 
-A complete Python notebook that runs entirely in your browser, from **one self-contained HTML file**. Pyodide under the hood — no install, no build step, no server, and nothing leaves your machine.
+**A Python notebook in one HTML file, with an agent that writes, runs and checks the analysis with you.**
 
-**[→ Launch it / see it live](https://dogum.github.io/kernel/)**
+No install, no server, no account. Python runs in your browser through Pyodide, and your data stays there.
 
-This repo bundles a few things that belong together:
+<a href="https://dogum.github.io/kernel/kernel-agent.html"><img src="docs/media/agent-demo.gif" alt="KERNEL·A loads a sample sales dataset; asked which region and channel bring in the most revenue, the agent writes and runs a pivot table and a stacked bar chart, then summarizes what stands out." width="840"></a>
 
-1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
-2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent v2.4** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md) on the [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md) foundation).
-4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
-5. **Real agent runs** — four curated, reproducible examples spanning autonomous software construction, synthetic operations, uncertain systems modeling, and wide public-data analysis ([`examples/`](examples/)).
+[![verify](https://github.com/dogum/kernel/actions/workflows/verify.yml/badge.svg)](https://github.com/dogum/kernel/actions/workflows/verify.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
+**[Open KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html)** · **[KERNEL without the agent](https://dogum.github.io/kernel/kernel.html)** · **[On your phone](https://dogum.github.io/kernel/kernel-agent-mobile.html)** · **[Real agent runs](#real-agent-runs)** · **[Changelog](CHANGELOG.md)**
+
+</div>
+
+---
+
+| | What it is |
+|---|---|
+| **KERNEL** · [`docs/kernel.html`](docs/kernel.html) | The notebook: Python and markdown cells, plots, DataFrames, KaTeX, Mermaid, a data workspace, a variable inspector, and `.ipynb` round-trip. One file you can open, host or fork. |
+| **KERNEL·A** · [`docs/kernel-agent.html`](docs/kernel-agent.html) | The notebook with a bring-your-own-key agent (Anthropic, OpenAI, xAI). It plans, writes and runs cells, sees text and figures, and recovers safely after interruption. Architecture in [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md). |
+| **KERNEL·M** · [`docs/kernel-agent-mobile.html`](docs/kernel-agent-mobile.html) | KERNEL·A for phones: bottom sheets, a tab bar, installable, and offline after the first load. |
+| **`kernel-notebooks`** · [`skill/`](skill/) | A Claude skill for writing notebooks that make the most of this runtime. |
+
+## Real agent runs
+
+Four unedited runs, with their prompts, decisions, corrections and rough edges kept. **Open in KERNEL·A** loads the notebook with the outputs the run produced; nothing runs until you ask.
+
+| Run | What the agent did | |
+|---|---|---|
+| [Fleet electrification](examples/fleet-dna/) | Real, wide public data on commercial-vehicle duty cycles: data-quality forensics, leakage-safe modeling, three duty-cycle archetypes | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=fleet-dna) |
+| [Regex engine](examples/regex-engine/) | A from-scratch NFA/DFA engine, three repaired semantic bugs, 20,000 consecutive agreements with Python `re.fullmatch` | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=regex-engine) |
+| [Lunar settlement launches](examples/lunar-settlement/) | A bottom-up launch model with explicit assumptions: baseline 121 launches, P10/P50/P90 of 112/134/161 | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=lunar-settlement) |
+| [Ares Station operations](examples/ares-station/) | A 4,320-hour colony twin, seven diagnosed incidents, a maintenance model and a stress-tested operating policy | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=ares-station) |
+
+They were captured with KERNEL Agent 2.3.0. The published notebooks keep the visible cells and outputs, and drop the private chat and provider metadata, run identifiers and checkpoint duplicates. [`examples/`](examples/) has each run's prompt, usage and limitations.
 
 ## What KERNEL is
 
@@ -67,6 +92,7 @@ docs/
 ├── kernel-agent.html .......... the agentic notebook (bring your own key) · built from src/
 ├── kernel-agent-mobile.html ... the mobile / PWA build of the agent · built from src/
 ├── kernel-agent-sw.js ......... service worker (offline cache for the PWA)
+├── media/agent-demo.gif ....... the demo in this README (npm run demo re-records it)
 └── .nojekyll
 src/ .......................... source of the two agent pages (see src/README.md)
 ├── agent/desktop.html ......... page template for kernel-agent.html
@@ -80,7 +106,8 @@ src/ .......................... source of the two agent pages (see src/README.md
 ├── agent/python/harness.py .... Python that runs inside Pyodide at boot
 └── suite/ ..................... app menu and design tokens shared by the KERNEL pages
 scripts/
-└── build.mjs ................. builds docs/kernel-agent*.html from src/ (--check in CI)
+├── build.mjs ................. builds docs/kernel-agent*.html from src/ (--check in CI)
+└── record-demo.mjs ........... records docs/media/agent-demo.gif against a mock model
 tests/
 ├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
 ├── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
@@ -141,12 +168,6 @@ npx playwright install chromium && npm run test:e2e   # both builds in a real br
 ```
 
 GitHub Actions runs the same checks on every push and pull request.
-
-## Real-world examples
-
-[`examples/`](examples/) contains four captured KERNEL Agent 2.3.0 runs with their exact prompts, curated `.ipynb` results, representative figures, original final artifacts where recovered, provider-reported usage, and candid limitations. They include a 53-cell Mars-operations simulation, a self-repairing regex-engine build, a Monte Carlo lunar-settlement launch model, and a 61-cell Fleet DNA analysis over a 4,705 × 372 public dataset.
-
-The published notebooks retain visible cells and outputs while removing private chat/provider metadata, internal run identifiers, browser fingerprints, and checkpoint duplication. Full workspace ZIPs remain recovery artifacts rather than repository examples.
 
 ## Mobile / PWA (KERNEL·M)
 

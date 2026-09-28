@@ -7,4 +7,5 @@
   initPanels();
   activateNotebookAgent(nbId);
   bootKernel();
+  openLinkedExample();
 })();

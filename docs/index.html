@@ -75,6 +75,9 @@ p.intro{color:var(--ink-2); max-width:44em; margin:0 0 1.6rem}
 
 /* launch cards */
 .cards{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+.demo{margin:2.4rem 0 0}
+.demo img{display:block; width:100%; height:auto; border:1px solid var(--line-2); border-radius:10px; box-shadow:0 24px 60px -34px rgba(20,22,30,.45); background:var(--surface)}
+.demo figcaption{font:13px/1.5 var(--mono); color:var(--ink-3); margin-top:.8em}
 @media (max-width:680px){.cards{grid-template-columns:1fr}}
 .card{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:1.4rem 1.5rem; display:flex; flex-direction:column}
 .card h3{font:700 1.15rem var(--disp); margin:0 0 .2em; display:flex; align-items:center; gap:.6em}
@@ -123,6 +126,10 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
     <a class="secondary" href="https://github.com/dogum/kernel">View source</a>
   </div>
   <p class="note">Pyodide downloads ~10&nbsp;MB of WebAssembly on first run (cached after). Desktop browser recommended.</p>
+  <figure class="demo">
+    <img src="media/agent-demo.gif" width="1200" height="720" alt="KERNEL·A loads a sample sales dataset; asked which region and channel bring in the most revenue, the agent writes and runs a pivot table and a stacked bar chart, then summarizes what stands out.">
+    <figcaption>The agent answering a question about the sample dataset. It writes the cells, runs them, reads the results, and says what they show.</figcaption>
+  </figure>
 </div></header>
 
 <section><div class="wrap">
@@ -147,6 +154,34 @@ footer .wrap{display:flex; justify-content:space-between; gap:1em; flex-wrap:wra
       <p class="keynote">Installable · offline-capable · touch-first</p>
     </div>
   </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="shead"><h2>Real agent runs</h2><span class="tag">open one in your browser</span></div>
+  <p class="lead" style="margin-top:0">Four unedited runs, kept with their prompts, decisions, corrections and rough edges. Opening one loads the notebook with the outputs it produced; nothing runs until you ask.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>Fleet electrification</h3>
+      <p>Real, wide public data on commercial-vehicle duty cycles: dictionary interpretation, data-quality forensics, leakage-safe modeling, and three duty-cycle archetypes with engineering recommendations.</p>
+      <a class="go primary" href="kernel-agent.html?example=fleet-dna">Open in KERNEL·A →</a>
+    </div>
+    <div class="card">
+      <h3>Regex engine</h3>
+      <p>Software built from scratch in the notebook: an NFA/DFA engine, three semantic bugs found and repaired, and 20,000 consecutive agreements with Python's <code>re.fullmatch</code>.</p>
+      <a class="go primary" href="kernel-agent.html?example=regex-engine">Open in KERNEL·A →</a>
+    </div>
+    <div class="card">
+      <h3>Lunar settlement launches</h3>
+      <p>Assumption management and Monte Carlo uncertainty: a bottom-up launch model with a baseline of 121 launches and P10/P50/P90 of 112/134/161.</p>
+      <a class="go primary" href="kernel-agent.html?example=lunar-settlement">Open in KERNEL·A →</a>
+    </div>
+    <div class="card">
+      <h3>Ares Station operations</h3>
+      <p>A long open-ended simulation: a 4,320-hour colony twin, seven diagnosed incidents, a time-aware maintenance model, and a stress-tested operating policy.</p>
+      <a class="go primary" href="kernel-agent.html?example=ares-station">Open in KERNEL·A →</a>
+    </div>
+  </div>
+  <p class="note">Prompts, run notes and figures for each are in <a href="https://github.com/dogum/kernel/tree/main/examples">examples/</a>.</p>
 </div></section>
 
 <section><div class="wrap">

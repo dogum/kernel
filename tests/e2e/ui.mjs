@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { staticServer, launch, openApp, k, kAsync } from './harness.mjs';
+import { staticServer, launch, newContext, openApp, k, kAsync } from './harness.mjs';
 const srv = await staticServer(8765);
 const { browser, context } = await launch();
 const file = process.argv[2] || 'kernel-agent.html';
@@ -110,5 +110,25 @@ if (mobile) {
   assert.ok(await k(page, `document.getElementById('agSend').getBoundingClientRect().bottom <= document.getElementById('mob-bar').getBoundingClientRect().top`), 'SEND above the tab bar');
   await kAsync(page, `ui.agent=false; applyUI();`);
 }
+// 9. example links open a curated run without running it, and never overwrite work in progress
+const notebooks = (p) => k(p, `readLib().notebooks.length`);
+const count9 = await notebooks(page), current9 = await k(page, `nbId`);
+await kAsync(page, `await openExample('regex-engine');`);
+assert.equal(await notebooks(page), count9 + 1, 'a notebook with work opens the example in a new notebook');
+assert.equal(await k(page, `nbName`), 'regex-engine');
+assert.ok(await k(page, `cells.length > 5 && cells.some((c) => (c.outputs || []).length)`), 'the original outputs are shown');
+assert.ok(await k(page, `readLib().notebooks.some((n) => n.id === ${JSON.stringify(current9)})`), 'the previous notebook is kept');
+await clearToasts();
+await kAsync(page, `await openExample('../secrets');`);
+assert.ok(await k(page, `[...document.querySelectorAll('.toast')].some((t) => /isn't valid/.test(t.textContent))`), 'only example names are accepted');
+await kAsync(page, `await openExample('no-such-example');`);
+assert.ok(await k(page, `[...document.querySelectorAll('.toast')].some((t) => /no example called/.test(t.textContent))`), 'a missing example says so');
+const fresh = await newContext(browser);
+const linked = await openApp(fresh, file + '?example=lunar-settlement');
+await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && cells.length > 3`));
+assert.equal(await notebooks(linked), 1, 'a blank browser opens the example in its empty notebook');
+assert.equal(await linked.evaluate(() => location.search), '', 'the link parameter is removed after use');
+await fresh.close();
+
 console.log('UI E2E passed for', file);
 await browser.close(); srv.close();

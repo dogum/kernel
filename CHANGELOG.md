@@ -4,6 +4,11 @@ Notable changes to KERNEL, KERNEL·A (the agent), and KERNEL·M (the phone build
 
 ## [Unreleased]
 
+### Getting started
+- Example links: `kernel-agent.html?example=<name>` opens one of the curated runs in `examples/` with its original outputs, in a new notebook if the current one has work in it. The welcome card has a *See a real agent run* button, and the landing page and README link all four.
+- A demo of an agent run at the top of the README and the landing page, recorded by `npm run demo`.
+- The model chip in the agent composer stays on one line.
+
 ### For contributors
 - The agent pages are built from `src/` by `scripts/build.mjs`. The code is split into about 60 files: notebook, agent, startup, and mobile JavaScript, CSS, shared markup, and the Python harness as a real `.py` file. The build still produces one self-contained HTML file per page.
 - The source is formatted with Prettier. Checking every file's syntax tree before and after showed the formatting changed no code.

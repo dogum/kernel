@@ -520,7 +520,8 @@ body.resizing{cursor:col-resize; user-select:none}
 .ag-mode{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
   border:1px solid var(--line-2);border-radius:3px;background:var(--surface);padding:5px 8px;cursor:pointer}
 .ag-mode.step{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line-2))}
-.ag-steps{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-4)}
+.ag-steps{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-4);white-space:nowrap}
+#agModelChip{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-usage{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--ink-3);flex:1;text-align:right;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ag-usage:hover{color:var(--accent)}
 .ag-stop{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.10em;color:var(--err);
@@ -6383,7 +6384,7 @@ function renderWelcome() {
   w.id = "welcome";
   w.className = "welcome";
   w.innerHTML =
-    '<h2>Start exploring</h2><p>Python runs right here in your browser, and your data never leaves it. Bring a file or try the sample, then write code — or describe what you want and let the agent build the analysis with you.</p><div class="welcome-acts"><button class="btn primary" data-w="sample">Try a sample dataset</button><button class="btn" data-w="data">Upload data</button><button class="btn" data-w="open">Open a notebook</button><button class="btn" data-w="agent">Ask the agent</button></div><p class="welcome-tip">Drop files anywhere to mount them · ⇧⏎ runs a cell · press ? for every shortcut</p>';
+    '<h2>Start exploring</h2><p>Python runs right here in your browser, and your data never leaves it. Bring a file or try the sample, then write code — or describe what you want and let the agent build the analysis with you.</p><div class="welcome-acts"><button class="btn primary" data-w="sample">Try a sample dataset</button><button class="btn" data-w="data">Upload data</button><button class="btn" data-w="open">Open a notebook</button><button class="btn" data-w="agent">Ask the agent</button><button class="btn" data-w="example">See a real agent run</button></div><p class="welcome-tip">Drop files anywhere to mount them · ⇧⏎ runs a cell · press ? for every shortcut</p>';
   w.addEventListener("click", (e) => {
     const b = e.target.closest("[data-w]");
     if (!b) return;
@@ -6396,6 +6397,8 @@ function renderWelcome() {
     } else if (k === "open") {
       const o = $("#btnOpen");
       if (o) o.click();
+    } else if (k === "example") {
+      openExample("fleet-dna");
     } else if (k === "agent" && typeof openAgent === "function") {
       openAgent();
       const inp = $("#agIn");
@@ -12517,6 +12520,63 @@ window.addEventListener("ut-theme", function () {
     });
   } catch (e) {}
 });
+/* ===== example links: ?example=<name> opens a curated agent run from the repository ===== */
+/* Only names of folders in examples/ are accepted, the notebook is fetched from this repository, and nothing runs:
+   the outputs on screen are the ones the original run produced. A notebook that already has work in it is kept;
+   the example opens in a new notebook. */
+const EXAMPLE_BASE = "https://raw.githubusercontent.com/dogum/kernel/main/examples/";
+
+function isBlankNotebook() {
+  return (
+    !dataFiles.length &&
+    cells.every((c) => !String((c.taEl ? c.taEl.value : c.source) || "").trim() && !(c.outputs || []).length)
+  );
+}
+
+async function openExample(name) {
+  if (!/^[a-z0-9-]{1,64}$/.test(String(name || ""))) {
+    toast("That example link isn't valid.", "err");
+    return;
+  }
+  const closeToast = toast("Opening the " + name + " example…");
+  progressOn();
+  try {
+    const res = await fetch(EXAMPLE_BASE + name + "/result.ipynb", { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status === 404 ? "there is no example called " + name : "HTTP " + res.status);
+    const notebook = await res.json();
+    if (!isBlankNotebook()) {
+      // switching notebooks resets Python, so wait for boot (or a running cell) to finish first
+      for (let waited = 0; busy && waited < 180000; waited += 250) await new Promise((r) => setTimeout(r, 250));
+      await newNotebook();
+    }
+    fromIpynb(notebook);
+    nbName = name;
+    setNbTitle();
+    persist();
+    await saveWorkspaceState();
+    if (ui.left) renderLibrary();
+    closeToast();
+    toast("Opened the " + name + " example. The outputs are from the original agent run; Run all recomputes them.");
+  } catch (err) {
+    closeToast();
+    toast("Could not open the example · " + String(err && err.message ? err.message : err), "err");
+  } finally {
+    progressOff();
+  }
+}
+
+function openLinkedExample() {
+  let name = null;
+  try {
+    name = new URL(location.href).searchParams.get("example");
+  } catch (e) {}
+  if (!name) return;
+  // drop the parameter so a reload doesn't import the example again
+  try {
+    history.replaceState(null, "", location.pathname + location.hash);
+  } catch (e) {}
+  openExample(name);
+}
 /* ===== init ===== */
 (function init() {
   initLibrary();
@@ -12526,6 +12586,7 @@ window.addEventListener("ut-theme", function () {
   initPanels();
   activateNotebookAgent(nbId);
   bootKernel();
+  openLinkedExample();
 })();
 })();
 </script>

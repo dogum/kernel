@@ -22,7 +22,7 @@ npx playwright install chromium   # once
 npm run test:e2e      # both builds in a real browser, a few minutes
 ```
 
-Then look at your change in a browser: `python3 -m http.server -d docs` and open `http://localhost:8000/kernel-agent.html`. Check a phone width too (the mobile build is `kernel-agent-mobile.html`). For anything visible, put a before and after screenshot in the PR.
+Then look at your change in a browser: `python3 -m http.server -d docs` and open `http://localhost:8000/kernel-agent.html`. Check a phone width too (the mobile build is `kernel-agent-mobile.html`). For anything visible, put a before and after screenshot in the PR. If the change shows up in the demo, re-record it with `npm run demo`: it plays a scripted agent run against a local mock model and rewrites `docs/media/agent-demo.gif`, with no API key needed.
 
 ## Writing tests
 
