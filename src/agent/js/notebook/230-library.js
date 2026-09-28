@@ -172,10 +172,11 @@ function createNotebook(name) {
   return id;
 }
 
+// Resolves to false, and changes nothing, when a run or cell is active.
 async function newNotebook() {
   if (agRunning || busy) {
     toast("Finish or stop the current run first.", "err");
-    return;
+    return false;
   }
   persist();
   await saveActiveThreadNow();
@@ -190,6 +191,7 @@ async function newNotebook() {
   refreshInspector();
   if (ui.left) renderLibrary();
   toast("New notebook");
+  return true;
 }
 async function switchNotebook(id) {
   if (id === nbId) {

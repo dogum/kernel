@@ -16,16 +16,30 @@ async function openExample(name) {
     toast("That example link isn't valid.", "err");
     return;
   }
+  const refuse = () => toast("Finish or stop the current agent run before opening an example.", "err");
+  if (agRunning) {
+    refuse();
+    return;
+  }
   const closeToast = toast("Opening the " + name + " example…");
   progressOn();
   try {
     const res = await fetch(EXAMPLE_BASE + name + "/result.ipynb", { cache: "no-cache" });
     if (!res.ok) throw new Error(res.status === 404 ? "there is no example called " + name : "HTTP " + res.status);
     const notebook = await res.json();
+    // Never import into a notebook the agent is working in; a run may have started during the download.
     if (!isBlankNotebook()) {
       // switching notebooks resets Python, so wait for boot (or a running cell) to finish first
       for (let waited = 0; busy && waited < 180000; waited += 250) await new Promise((r) => setTimeout(r, 250));
-      await newNotebook();
+      if (agRunning || busy || !(await newNotebook())) {
+        closeToast();
+        refuse();
+        return;
+      }
+    } else if (agRunning) {
+      closeToast();
+      refuse();
+      return;
     }
     fromIpynb(notebook);
     nbName = name;

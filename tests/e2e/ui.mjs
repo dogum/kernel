@@ -123,6 +123,12 @@ await kAsync(page, `await openExample('../secrets');`);
 assert.ok(await k(page, `[...document.querySelectorAll('.toast')].some((t) => /isn't valid/.test(t.textContent))`), 'only example names are accepted');
 await kAsync(page, `await openExample('no-such-example');`);
 assert.ok(await k(page, `[...document.querySelectorAll('.toast')].some((t) => /no example called/.test(t.textContent))`), 'a missing example says so');
+// an agent run (or a cell still running) never lets an example replace the notebook it is working in
+const guarded = await kAsync(page, `const before = nbId + cells.map((c) => c.id).join(); const books = readLib().notebooks.length; agRunning = true; try { await openExample('lunar-settlement'); } finally { agRunning = false; } return { same: nbId + cells.map((c) => c.id).join() === before, books: readLib().notebooks.length === books, told: [...document.querySelectorAll('.toast')].some((t) => /Finish or stop/.test(t.textContent)) }`);
+assert.deepEqual(guarded, { same: true, books: true, told: true }, 'an active run blocks opening an example');
+const midRun = await kAsync(page, `const before = nbId + cells.map((c) => c.id).join(); const realFetch = window.fetch; window.fetch = (...args) => new Promise((resolve) => setTimeout(() => { agRunning = true; resolve(realFetch(...args)); }, 50)); try { await openExample('lunar-settlement'); } finally { window.fetch = realFetch; agRunning = false; } return nbId + cells.map((c) => c.id).join() === before`);
+assert.equal(midRun, true, 'a run that starts during the download also blocks the import');
+assert.equal(await kAsync(page, `const id = nbId; agRunning = true; let made; try { made = await newNotebook(); } finally { agRunning = false; } return made === false && nbId === id`), true, 'newNotebook reports when it refuses');
 const fresh = await newContext(browser);
 const linked = await openApp(fresh, file + '?example=lunar-settlement');
 await linked.waitForFunction(() => window.__k(`nbName === 'lunar-settlement' && cells.length > 3`));
