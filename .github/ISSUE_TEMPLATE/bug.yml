@@ -1,0 +1,31 @@
+name: Bug
+description: Something broke or behaved wrongly in KERNEL, the agent, or the phone build
+labels: [bug]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app
+      options:
+        - KERNEL (notebook)
+        - KERNEL·A (agent, desktop)
+        - KERNEL·M (agent, phone)
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Steps to reproduce if you have them. A screenshot helps for anything visual.
+    validations: { required: true }
+  - type: textarea
+    id: agent
+    attributes:
+      label: Agent details (if the agent was involved)
+      description: >-
+        Provider and model. More (⋯) → Export diagnostics saves a redacted file with versions and run
+        events, never prompts, code, file contents, or keys; attach it if you can.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 140 on macOS, Safari on iOS 19, …"

@@ -1,154 +1,86 @@
+<div align="center">
+
 # KERNEL
 
-A complete Python notebook that runs entirely in your browser, from **one self-contained HTML file**. Pyodide under the hood — no install, no build step, no server, and nothing leaves your machine.
+**A Python notebook in one HTML file, with an agent that writes, runs and checks the analysis with you.**
 
-**[→ Launch it / see it live](https://dogum.github.io/kernel/)**
+No install, no server, no account. Python runs in your browser through Pyodide, and your data stays there.
 
-This repo bundles a few things that belong together:
+<a href="https://dogum.github.io/kernel/kernel-agent.html"><img src="docs/media/agent-demo.gif" alt="KERNEL·A loads a sample sales dataset; asked which region and channel bring in the most revenue, the agent writes and runs a pivot table and a stacked bar chart, then summarizes what stands out." width="840"></a>
 
-1. **KERNEL** — the notebook itself (`docs/kernel.html`): a single HTML file you can open, host, or fork.
-2. **`kernel-notebooks`** — a Claude skill for authoring exceptional notebooks *for this runtime*.
-3. **KERNEL Agent v2.4** — a durable, multi-provider notebook agent that can plan, execute, recover, compare models, and carry a complete workspace between devices (`docs/kernel-agent.html`; architecture in [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md) on the [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md) foundation).
-4. **KERNEL·M** — a mobile / PWA build of the Agent (`docs/kernel-agent-mobile.html`): touch-friendly, installable to the home screen, and offline-capable.
-5. **Real agent runs** — four curated, reproducible examples spanning autonomous software construction, synthetic operations, uncertain systems modeling, and wide public-data analysis ([`examples/`](examples/)).
+[![verify](https://github.com/dogum/kernel/actions/workflows/verify.yml/badge.svg)](https://github.com/dogum/kernel/actions/workflows/verify.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-## What KERNEL is
+**[Open KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html)** · **[KERNEL without the agent](https://dogum.github.io/kernel/kernel.html)** · **[On your phone](https://dogum.github.io/kernel/kernel-agent-mobile.html)** · **[Real agent runs](#real-agent-runs)** · **[Changelog](CHANGELOG.md)**
 
-Open `kernel.html` and you have a working kernel: write Python and markdown cells, run them in execution order, and get back stdout, plots, interactive Plotly, rendered DataFrames, KaTeX math, and Mermaid diagrams. It includes a data workspace (drop in CSVs and files, preview them, insert a read snippet), a live variable inspector with click-to-expand detail, a composable panel layout that collapses back to a calm centered notebook, `.ipynb` round-trip, `.py` export, and local persistence.
+</div>
 
-It's client-only by design. The Python executes in your tab via Pyodide/WebAssembly; your data stays in the page. The only network it needs is the one-time Pyodide download (CDN, ~10 MB, cached after) and the CDN fonts.
+---
 
-## Install
+| | What it is |
+|---|---|
+| **KERNEL** · [`docs/kernel.html`](docs/kernel.html) | The notebook: Python and markdown cells, plots, interactive Plotly, DataFrames, KaTeX, Mermaid, a data workspace, a variable inspector, and `.ipynb` round-trip. |
+| **KERNEL·A** · [`docs/kernel-agent.html`](docs/kernel-agent.html) | The notebook with a bring-your-own-key agent (Anthropic, OpenAI, xAI) that plans, writes and runs cells, sees text and figures, and recovers safely after interruption. |
+| **KERNEL·M** · [`docs/kernel-agent-mobile.html`](docs/kernel-agent-mobile.html) | KERNEL·A for phones: bottom sheets and a tab bar, installable, and offline after the first load. |
+| **`kernel-notebooks`** · [`skill/`](skill/) | A Claude skill for writing notebooks that make the most of this runtime. |
 
-### The notebook
+## Real agent runs
 
-There's nothing to install — it's one file.
+Four unedited runs, with their prompts, decisions, corrections and rough edges kept. **Open in KERNEL·A** loads the notebook with the outputs the run produced; nothing runs until you ask.
 
-- **Use it now:** open the [live page](https://dogum.github.io/kernel/) and click *Launch KERNEL*.
-- **Run it locally:** download [`docs/kernel.html`](docs/kernel.html) and open it in a browser.
-- **Host it yourself:** drop the file on any static host (it's already served from `/docs` via GitHub Pages here).
+| Run | What the agent did | |
+|---|---|---|
+| [Fleet electrification](examples/fleet-dna/) | Real, wide public data on commercial-vehicle duty cycles: data-quality forensics, leakage-safe modeling, three duty-cycle archetypes | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=fleet-dna) |
+| [Regex engine](examples/regex-engine/) | A from-scratch NFA/DFA engine, three repaired semantic bugs, 20,000 consecutive agreements with Python `re.fullmatch` | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=regex-engine) |
+| [Lunar settlement launches](examples/lunar-settlement/) | A bottom-up launch model with explicit assumptions: baseline 121 launches, P10/P50/P90 of 112/134/161 | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=lunar-settlement) |
+| [Ares Station operations](examples/ares-station/) | A 4,320-hour colony twin, seven diagnosed incidents, a maintenance model and a stress-tested operating policy | [Open in KERNEL·A](https://dogum.github.io/kernel/kernel-agent.html?example=ares-station) |
 
-### The skill
+They were captured with KERNEL Agent 2.3.0. The published notebooks keep the visible cells and outputs, and drop the private chat and provider metadata, run identifiers and checkpoint duplicates. [`examples/`](examples/) has each run's prompt, usage and limitations.
 
-**Claude.ai** — download [`kernel-notebooks.skill`](kernel-notebooks.skill) (or grab it from the latest Release), then Settings → Capabilities → Skills → upload.
+## Use it
 
-**Claude Code** — copy the `skill/` folder into your skills directory:
+**The apps** are single HTML files. Open them from the [live page](https://dogum.github.io/kernel/), download one from [`docs/`](docs/) and open it locally, or put it on any static host. Pyodide downloads about 10 MB on first run and is cached after. Installing KERNEL·M to a home screen and using it offline need https, which GitHub Pages provides.
+
+**The agent** needs an API key from Anthropic, OpenAI, or xAI; add it in the agent's settings. Keys stay in your browser and requests go straight to the provider (or a compatible gateway you choose).
+
+**The skill:** in Claude.ai, download [`kernel-notebooks.skill`](https://dogum.github.io/kernel/kernel-notebooks.skill) and upload it under Settings → Capabilities → Skills. In Claude Code, copy the folder:
 
 ```bash
 git clone https://github.com/dogum/kernel.git
 cp -r kernel/skill ~/.claude/skills/kernel-notebooks
 ```
 
-The folder containing `SKILL.md` is what Claude Code loads.
+## What the agent does
 
-**Anthropic API** — skills can be deployed org-wide via the API; see the [Claude docs](https://docs.claude.com).
+- **Works in the notebook like you would.** It writes markdown and code cells, runs them, reads text, tables and figures, and fixes what breaks. You can paste or drop images into the chat, and every cell has an *ai* button that hands it to the agent.
+- **Runs you can trust.** Every run is durable: it has a visible plan, budgets, pause and resume, and recovery after a reload. A run that used tools finishes only when its plan is done and a `finish_run` check confirms the evidence. AUTO runs freely with a Stop button; STEP asks before each run.
+- **Checkpoints and forks.** Restore a notebook to any checkpoint, or fork a new notebook from it without touching the original.
+- **Cheap and resilient.** Prompts stay stable enough for provider caching, budgets count cache reads at their real cost, and rate limits, overloads and dropped streams retry automatically.
+- **Python that never freezes the page.** Pyodide runs in a worker. Interrupt a cell from the toolbar or with `i i`, and agent-run cells have a time limit.
+- **Knows what is stale.** KERNEL tracks dependencies between cells and files, marks outputs as fresh, stale or historical, and links tracebacks to the cell and line.
+- **Your files and context, under your control.** Uploads and results get stable IDs, previews and provenance. You can pin or exclude cells and files from the agent's context and see every token it uses.
+- **Portable.** A `.kernel.zip` carries the notebook, outputs, threads, files, runs and checkpoints to another browser. A share-safe export strips history and keeps only approved results.
+- **Several threads per notebook, and model comparison.** Send one question to up to six provider and model setups and compare the answers side by side.
+- **Built for exploring.** It includes a sample dataset and drop-anywhere file mounting. The variable inspector adds cells in one click: head, describe, missing values, correlations, value counts, histograms. You can copy or download tables and figures, and *Fix with agent* appears on errors. Destructive actions offer Undo.
 
-## How it's structured
-
-```
-kernel.html ............... lives in docs/ (served live on GitHub Pages)
-kernel-notebooks.skill .... packaged skill, ready to upload to Claude.ai
-AGENT-SPEC.md ............. original Anthropic-only agent specification
-AGENT-V2-SPEC.md .......... provider, thread, context and workspace architecture
-AGENT-V23-SPEC.md ......... durable runs, lineage, artifacts and handoff architecture
-AGENT-V24-SPEC.md ......... cache-stable prompts, interruptible worker, retries, blob storage
-skill/
-├── SKILL.md .............. runtime contract, the live-in-the-loop + multimodal sections,
-│                           narrative craft, output discipline
-├── references/
-│   ├── runtime.md ........ the hard runtime facts (display helpers, ordered output,
-│   │                       %pip vs import, the markdown feature matrix incl. KaTeX/Mermaid)
-│   └── chartsmanship.md .. matplotlib house style, static vs interactive
-└── scripts/
-    └── build_notebook.py . assembles a valid .ipynb from a JSON cell spec
-docs/
-├── index.html ................. the landing / launch page
-├── kernel.html ................ the notebook
-├── kernel-agent.html .......... the agentic notebook (bring your own key)
-├── kernel-agent-mobile.html ... the mobile / PWA build of the agent
-├── kernel-agent-sw.js ......... service worker (offline cache for the PWA)
-└── .nojekyll
-scripts/
-└── sync_agent_builds.mjs ..... syncs the shared desktop/mobile runtime
-tests/
-├── verify_agent_v2.mjs ....... provider compatibility and v2 regression checks
-├── verify_agent_v23.mjs ...... durability, lineage, safety and handoff checks
-├── verify_agent_v24.mjs ...... caching, Claude adapter, retries, worker and storage checks
-├── verify_examples.mjs ....... curated notebook shape, privacy and artifact checks
-└── e2e/ ...................... Playwright suites that drive both builds against a mock provider
-examples/
-├── ares-station/ ............. 180-sol colony operations intelligence system
-├── regex-engine/ ............. from-scratch engine with differential testing
-├── lunar-settlement/ ......... mass, transport and Monte Carlo launch model
-└── fleet-dna/ ................ real public-data duty-cycle analysis
-```
-
-`SKILL.md` is the entry point and is always in context when the skill triggers; the references are pulled in only when relevant.
-
-## KERNEL Agent v2.4
-
-KERNEL Agent turns the notebook into an exploratory-analysis workbench: you describe what you want, and an agent writes the markdown and code cells, runs them, **sees** the results (text *and* figures), and iterates with you in the loop. It is a client-only, bring-your-own-key design with first-class adapters for Anthropic, OpenAI, and xAI/Grok. Keys remain in browser storage and requests go directly to the API base you select.
-
-Launch it from the [live page](https://dogum.github.io/kernel/) or open [`docs/kernel-agent.html`](docs/kernel-agent.html). [`AGENT-V24-SPEC.md`](AGENT-V24-SPEC.md) is the current release contract, layered on [`AGENT-V23-SPEC.md`](AGENT-V23-SPEC.md). [`AGENT-V2-SPEC.md`](AGENT-V2-SPEC.md) records the provider/thread foundation, and [`AGENT-SPEC.md`](AGENT-SPEC.md) remains the historical v1 design and tool-contract background.
-
-What it does today, beyond the core loop:
-
-- **Cache-stable, cost-aware runs** — the system prompt and tools stay byte-identical for a thread; live notebook state rides on the newest message as an append-only `<kernel_state>` block, and older rich results compress in fixed epochs, so long runs keep hitting provider prompt caches. Budgets count effective tokens (cache reads at 10%).
-- **Add-and-run tools** — `add_cells` and `edit_cell` accept `run: true`, so writing or repairing a cell and seeing its outputs takes one tool call instead of two.
-- **Resilient provider calls** — rate limits, overloads, server errors, dropped streams, and stalls retry automatically with backoff that honors `retry-after`; a response cut off by the output limit retries with a larger cap.
-- **Claude Opus 5.5 by default** — adaptive thinking with explicit effort, summarized reasoning and progress updates in the transcript, thinking blocks replayed unchanged across tool steps, conversation-bound thinking that degrades safely, and server-side refusal fallbacks.
-- **Interruptible Python** — Pyodide runs in a Web Worker, so a slow or runaway cell never freezes the page. Interrupt from the toolbar or with `i i`; agent-run cells have a time limit. On cross-origin-isolated hosts interrupts keep your variables; elsewhere KERNEL restarts Python and remounts your files.
-- **Provider parity** — Anthropic uses the native Messages API; OpenAI and xAI use the Responses API with the same KERNEL tool loop, multimodal results, stop behavior, and token accounting. Responses calls set `store: false`, and encrypted reasoning continuation items are preserved locally when returned.
-- **Live Markdown transcript** — narration streams token-by-token and renders headings, tables, code, math, and Mermaid when complete. Reasoning summaries use a separate progressive-disclosure panel; tool calls remain compact, click-to-cell action chips.
-- **Multiple threads per notebook** — create, rename, switch, or delete independent threads without mixing notebooks. Full messages and transcripts live in IndexedDB rather than a size-capped localStorage string.
-- **Durable runs and recovery** — every request has a persisted run, phase, event timeline, visible plan, token/tool/time budgets, safe pause/resume, and recovery after reload. An ambiguous interrupted mutation is never silently repeated.
-- **Completion-safe autonomy** — a tool-using or planned run must complete its visible plan and pass the `finish_run` evidence contract. A provider merely stopping tool calls cannot create a false success; AUTO extends tool/time checkpoints only while durable progress continues, while the token budget remains a hard cost boundary.
-- **Notebook intelligence** — KERNEL tracks conservative Python dependencies, cell/file/environment provenance, and `fresh`, `stale`, or `historical` output state. Structured tracebacks navigate back to the exact cell and source line.
-- **Artifact workspace** — uploads, working files, and final results have stable IDs, safe folder paths, previews, lifecycle controls, provenance, and notebook isolation. Folder upload preserves relative paths and collisions never silently overwrite data. Payloads are stored once by content hash, so checkpoints and ZIP exports don't duplicate your files.
-- **Exact checkpoints and forks** — runs checkpoint notebook cells, rendered outputs, artifacts, environment, and thread state. Restore in place or fork a new notebook from that exact point without changing the source.
-- **Conversations that persist and travel** — one-click `.kernel.zip` export carries the notebook, outputs, all threads, artifacts, durable runs, usage, environment, and checkpoints; open it elsewhere to resume. A separate share-safe ZIP strips chat/run history and inputs, scans copied text, and includes approved final results only.
-- **Compact private run handoff** — a checkpoint-free `.kernel-run.zip` preserves the current notebook, outputs, artifacts, complete threads, and run ledgers for debugging or review without repeatedly embedding every historical checkpoint. It remains private and unredacted.
-- **Multimodal input** — paste or drag images into the chat (sketch a chart, screenshot a figure); the agent sees them.
-- **Explicit context control** — input, output, cache, and reasoning tokens are exposed. Pin or exclude cells and artifacts; large results use bounded handles; compaction changes only the active API payload, never the full local thread. When shared runtime state cannot be isolated safely, agent execution/inspection stops rather than bypass an exclusion; human cell controls remain available.
-- **Read-only model comparison** — send the same notebook-grounded prompt to up to six configured provider/model profiles and compare answers, latency, and reported token use without giving contenders mutation tools.
-- **Notebook-isolated workspaces** — stable cell IDs, outputs, user uploads, and agent results are restored only with their notebook. Switching notebooks snapshots state and resets the Python namespace so data cannot leak across workspaces.
-- **Faster output and variable surfaces** — inline/panel output changes move existing DOM nodes instead of rebuilding rich output; the variable panel adds deterministic name/type/memory sorting and explicit refresh.
-- **Built for exploring** — a first-run card loads a sample dataset or your own files, and files dropped anywhere on the page are mounted. The variable inspector turns a DataFrame or Series into head, describe, missing-value, correlation, value-count, or histogram cells in one click. Tables copy as TSV or download as CSV, figures download as PNG, and long outputs collapse. Errors offer *Fix with agent*, and tracebacks name the notebook cell instead of an internal path.
-- **Undo instead of dialogs** — deleting a cell, a variable, or a data file, or clearing outputs, shows a toast with Undo (`z` restores the last deleted cell).
-- **Autonomy modes** — AUTO runs free with a Stop button; STEP gates execution behind Approve/Skip. Every cell has an *ai* button that drops a stable cell reference into the composer.
-- **Redacted diagnostics** — export an allowlisted support bundle with versions, counters, and sanitized run events, never prompts, source, file contents, tool payloads, or provider credentials.
-
-Provider model discovery is available from settings. Custom API base URLs are supported for compatible gateways; if a provider blocks direct browser CORS, use a gateway you control and trust.
-
-Release checks:
-
-```bash
-node scripts/sync_agent_builds.mjs --check
-node tests/verify_agent_v2.mjs
-node tests/verify_agent_v23.mjs
-node tests/verify_agent_v24.mjs
-node tests/verify_examples.mjs
-# browser end-to-end (needs Playwright + Chromium)
-npm install --no-save playwright && npx playwright install chromium && node tests/e2e/run.mjs
-```
-
-GitHub Actions runs the same checks on every push and pull request.
-
-## Real-world examples
-
-[`examples/`](examples/) contains four captured KERNEL Agent 2.3.0 runs with their exact prompts, curated `.ipynb` results, representative figures, original final artifacts where recovered, provider-reported usage, and candid limitations. They include a 53-cell Mars-operations simulation, a self-repairing regex-engine build, a Monte Carlo lunar-settlement launch model, and a 61-cell Fleet DNA analysis over a 4,705 × 372 public dataset.
-
-The published notebooks retain visible cells and outputs while removing private chat/provider metadata, internal run identifiers, browser fingerprints, and checkpoint duplication. Full workspace ZIPs remain recovery artifacts rather than repository examples.
-
-## Mobile / PWA (KERNEL·M)
-
-`docs/kernel-agent-mobile.html` is a phone-friendly build of the Agent. The desktop layout is rebuilt as a single column: the notebook fills the screen and the Agent, Files and Variables panels become bottom sheets driven by a bottom navigation bar (swipe a sheet down to dismiss). It's also a Progressive Web App — installable to the home screen with its own icon, running standalone, and (served over https) caching the app shell and the Pyodide runtime through a service worker so it keeps working offline after the first load. It shares everything else with the Agent, including bring-your-own-key.
-
-Open it from the [live page](https://dogum.github.io/kernel/) or [`docs/kernel-agent-mobile.html`](docs/kernel-agent-mobile.html). Install and offline need https (GitHub Pages provides it); opening the raw file over `file://` gives the responsive layout but not the service worker.
+Claude Opus 5.5 is the default model, with adaptive thinking. The design and every contract are in [`specs/`](specs/).
 
 ## Privacy
 
-The notebook is fully client-side: Python runs in your browser, and your code and data never leave the page unless you use the agent. The agent sends the selected active context directly to the provider/API base you choose (Anthropic, OpenAI, xAI, or a compatible gateway) using a key stored in this browser. Responses requests explicitly disable provider-side response storage where the protocol supports it. Exports never serialize provider configuration or stored keys; because a full workspace is intentionally lossless, user-authored prompts/cells/files are preserved verbatim. Inspect a share-safe archive's redaction report before redistributing it.
+The notebook is client-side: Python runs in your browser, and your code and data leave the page only when you use the agent. The agent sends the context you allow straight to the provider or gateway you chose, with a key stored in this browser; OpenAI and xAI requests ask the provider not to store responses. Exports never include keys or provider settings. A full workspace export is lossless, so it keeps your prompts, cells and files as they are; check a share-safe export's redaction report before passing it on.
+
+## Repository
+
+| Folder | Holds |
+|---|---|
+| [`docs/`](docs/) | The GitHub Pages site: the three apps, the landing page, the service worker, and the packaged skill. |
+| [`src/`](src/README.md) | Source of the two agent pages, built into `docs/` by `scripts/build.mjs`. |
+| [`specs/`](specs/) | The agent's design and contracts. |
+| [`skill/`](skill/) | The `kernel-notebooks` Claude skill. |
+| [`examples/`](examples/) | The curated agent runs above. |
+| [`tests/`](tests/) | Static and fixture checks, and browser tests that drive both builds against a mock model. |
+
+[`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) has the commands to run before a PR and how releases work. Changes are in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## License
 

@@ -1,0 +1,40 @@
+/* ── USEFUL TOOLS · suite DNA (light default · dark via html[data-theme="dark"] · Alt+T) ── */
+:root{--dna-page:#E9E7E0;--dna-panel:#FBFAF6;--dna-ink:#1A1B18;--dna-mid:#83857B;--dna-line:rgba(26,27,24,.18);--dna-gmaj:rgba(26,27,24,.05);--dna-gmin:rgba(26,27,24,.028);--dna-accent:#4A33D6;--dna-accent-line:rgba(74,51,214,.45);--dna-sel:rgba(74,51,214,.25);--dna-thumb:#C4C3B7;--dna-thumb-h:#ABA89C}
+html[data-theme="dark"]{--dna-page:#0E0F0D;--dna-panel:#1C1C15;--dna-ink:#E8E6DE;--dna-mid:#6E6F65;--dna-line:rgba(232,230,222,.17);--dna-gmaj:rgba(232,230,222,.030);--dna-gmin:rgba(232,230,222,.016);--dna-accent:#7B68FF;--dna-accent-line:rgba(123,104,255,.40);--dna-sel:rgba(123,104,255,.30);--dna-thumb:#33312C;--dna-thumb-h:#4A4B43}
+html{color-scheme:light;scrollbar-color:var(--dna-thumb) var(--dna-page)}
+html[data-theme="dark"]{color-scheme:dark}
+#dna-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--dna-gmaj) 1px,transparent 1px),linear-gradient(90deg,var(--dna-gmaj) 1px,transparent 1px),linear-gradient(var(--dna-gmin) 1px,transparent 1px),linear-gradient(90deg,var(--dna-gmin) 1px,transparent 1px);background-size:140px 140px,140px 140px,28px 28px,28px 28px}
+::selection{background:var(--dna-sel)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--dna-thumb);border:2px solid var(--dna-page)}
+::-webkit-scrollbar-thumb:hover{background:var(--dna-thumb-h)}
+/* ── suite dock — persistent navigation ── */
+/* suite menu: the brand opens it (Alt+K); it lists the KERNEL apps, the project page, and the theme */
+.brand-btn{display:inline-flex;align-items:baseline;gap:0;font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;border-radius:3px;padding:4px 6px;margin:-4px -6px;cursor:pointer}
+.brand-btn .mark{margin-right:.6em}
+.brand-btn:hover,.brand-btn[aria-expanded="true"]{background:var(--surface-2)}
+.brand-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.brand-chev{width:11px;height:11px;margin-left:6px;align-self:center;color:var(--ink-3);flex:none}
+.brand-btn:hover .brand-chev,.brand-btn[aria-expanded="true"] .brand-chev{color:var(--accent)}
+#suiteMenu{position:fixed;z-index:2147482600;width:300px;max-width:calc(100vw - 16px);box-sizing:border-box;background:var(--surface);border:1px solid var(--line-2);border-radius:4px;box-shadow:0 16px 40px -22px rgba(20,22,30,.5);padding:5px;display:none;font-family:var(--sans)}
+#suiteMenu.open{display:block}
+.sm-label{font:600 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);padding:7px 9px 5px}
+.sm-item{display:flex;align-items:baseline;gap:10px;width:100%;box-sizing:border-box;text-align:left;padding:8px 9px;border:0;border-radius:3px;background:none;color:var(--ink-2);font:inherit;font-size:12.5px;text-decoration:none;cursor:pointer}
+.sm-item:hover,.sm-item:focus-visible{background:var(--surface-2);color:var(--ink);outline:none}
+.sm-item b{flex:0 0 74px;font:700 11px var(--mono);letter-spacing:.08em;color:var(--ink)}
+.sm-item span{flex:1;min-width:0;color:var(--ink-3)}
+.sm-item.sm-util span{color:var(--ink-2)}
+.sm-item i,.sm-item kbd{flex:none;font:10px var(--mono);font-style:normal;color:var(--ink-4);background:none;border:0;padding:0}
+.sm-item.cur b,.sm-item.cur i{color:var(--accent)}
+.sm-sep{height:1px;background:var(--line);margin:4px 6px}
+@media (pointer:coarse){.sm-item kbd{display:none}}
+/* per-instrument dark palette */
+html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(232,230,222,.045);--surface:#1C1C15;--surface-2:#181815;--surface-3:#1D1D19;--ink:#E8E6DE;--ink-2:#A6A79C;--ink-3:#6E6F65;--ink-4:#4A4B43;--line:#232320;--line-2:#2E2E27;--accent:#7B68FF;--accent-2:#9686FF;--accent-weak:#1C172E;--accent-ghost:rgba(123,104,255,.08);--err:#C8796C;--err-weak:#332420;--err-line:#54302C;--busy:#5E3FD9;--ok:#8CAE8A;--t-kw:#B3A0BD;--t-str:#8CAE8A;--t-num:#6D55CC;--t-com:#6E6F65;--t-bif:#7B68FF;--t-dec:#7FB0B0;--shadow:0 1px 2px rgba(0,0,0,.45);--shadow-sel:0 0 0 1px rgba(123,104,255,.40)}
+/* ===== KaTeX + Mermaid in markdown cells ===== */
+.md-rendered .katex-display{overflow-x:auto; overflow-y:hidden; padding:2px 0; margin:.6em 0}
+.md-rendered .katex{font-size:1.04em}
+.md-rendered .mermaid{margin:14px 0; text-align:center; line-height:initial}
+.md-rendered .mermaid svg{max-width:100%; height:auto}
+.md-rendered .mermaid:not([data-done]){font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:pre-wrap; background:var(--surface-2); border:1px dashed var(--line-2); border-radius:8px; padding:10px 12px; text-align:left}
+.md-rendered .mermaid.mermaid-err{color:var(--err); border-color:var(--err-line)}

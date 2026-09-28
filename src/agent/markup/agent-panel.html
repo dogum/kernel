@@ -1,0 +1,42 @@
+  <aside class="panel panel-agent" id="agentPanel" aria-hidden="true">
+    <div class="panel-inner ag-inner">
+      <div class="panel-h ag-head">
+        <span class="ag-word">AGENT</span>
+        <span class="ag-state" id="agState">OFFLINE</span>
+        <button class="panel-add" id="agExport" title="Export active thread as markdown">⇩</button>
+        <button class="panel-add" id="agContext" title="Context, token usage, and compaction">◫</button>
+        <button class="panel-add" id="agSettings" title="Provider, model, context, and autonomy settings">⋯</button>
+      </div>
+      <div class="ag-threadbar">
+        <select id="agThreadSelect" title="Active thread"></select>
+        <button class="ag-thread-act" id="agThreadNew" title="New thread">NEW</button>
+        <button class="ag-thread-act" id="agThreadRename" title="Rename active thread">EDIT</button>
+        <button class="ag-thread-act" id="agThreadDelete" title="Delete active thread">DEL</button>
+      </div>
+      <div class="ag-runbar" id="agRunBar">
+        <button class="ag-run-btn" id="agRuns" title="Plan, timeline, checkpoints, and comparison">RUNS</button>
+        <button class="ag-run-btn" id="agCheckpoint" title="Create a point-in-time checkpoint">CHECKPOINT</button>
+        <button class="ag-run-btn" id="agPause" title="Pause at the next safe boundary" hidden>PAUSE</button>
+        <span class="ag-run-metrics" id="agRunMetrics">NO ACTIVE RUN</span>
+      </div>
+      <div class="ag-planstrip" id="agPlanStrip"><b>PLAN</b><span id="agPlanCurrent"></span></div>
+      <div class="ag-recovery" id="agRecovery"><div class="ag-recovery-copy"><strong id="agRecoveryTitle">RUN PAUSED</strong><span id="agRecoveryText"></span><div class="ag-budget" id="agRecoveryBudget"><span></span></div></div><div class="ag-recovery-actions"><button class="ag-run-btn" id="agResume">RESUME</button><button class="ag-run-btn warn" id="agAbandon" title="End this run; the notebook and thread stay as they are">END RUN</button></div></div>
+      <div class="ag-body">
+        <div class="ag-tx" id="agTx"></div>
+        <div class="ag-composer">
+          <div class="ag-thumbs" id="agThumbs"></div>
+          <textarea id="agIn" rows="2" placeholder="Describe an analysis — or paste an image to show it something… (⌘J)"></textarea>
+          <div class="ag-row">
+            <button class="ag-mode" id="agMode" title="Autonomy — AUTO runs freely, STEP asks before each run">AUTO</button>
+              <button class="ag-mode" id="agModelChip" title="Open provider and model settings"></button>
+            <span class="ag-steps" id="agSteps"></span>
+              <span class="ag-usage" id="agUsage" title="Input and output tokens · click for context details"></span>
+            <button class="ag-stop" id="agStop" style="display:none">STOP</button>
+            <button class="ag-send" id="agSend">SEND</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-grip" data-side="agent" title="Drag to resize"></div>
+  </aside>
+

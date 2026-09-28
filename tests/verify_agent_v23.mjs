@@ -1,17 +1,13 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { codeIndex, declarations, functionSource, has, scripts } from "./lib/source.mjs";
 
 const desktopPath = "docs/kernel-agent.html";
 const mobilePath = "docs/kernel-agent-mobile.html";
 const desktop = fs.readFileSync(desktopPath, "utf8");
 const mobile = fs.readFileSync(mobilePath, "utf8");
 
-function scripts(text) {
-  return [...text.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-    .map((match) => match[1])
-    .filter((body) => body.trim());
-}
 
 function sharedRuntime(text) {
   const start = text.indexOf("const HARNESS = `");
@@ -20,14 +16,6 @@ function sharedRuntime(text) {
   return text.slice(start, end);
 }
 
-function functionSource(text, name) {
-  let start = text.indexOf(`function ${name}(`);
-  assert.ok(start >= 0, `${name} exists`);
-  if (text.slice(Math.max(0, start - 6), start) === "async ") start -= 6;
-  const tail = text.slice(start + 1);
-  const next = /\n(?:async )?function [A-Za-z_$]/.exec(tail);
-  return text.slice(start, next ? start + 1 + next.index : text.length).trimEnd();
-}
 
 for (const [file, text] of [[desktopPath, desktop], [mobilePath, mobile]]) {
   for (const [index, body] of scripts(text).entries()) {
@@ -37,23 +25,23 @@ for (const [file, text] of [[desktopPath, desktop], [mobilePath, mobile]]) {
   assert.equal(new Set(ids).size, ids.length, `${file} has unique DOM ids`);
 }
 assert.equal(sharedRuntime(desktop), sharedRuntime(mobile), "desktop and mobile have a byte-identical core");
-assert.ok(/function init\(\)\{[\s\S]*?initPanels\(\);\s*activateNotebookAgent\(nbId\);\s*bootKernel\(\);/.test(desktop), "desktop initializes the active notebook thread");
-assert.ok(/function init\(\)\{[\s\S]*?initPanels\(\);\s*activateNotebookAgent\(nbId\);\s*bootKernel\(\);/.test(mobile), "mobile initializes the active notebook thread");
-assert.ok(!functionSource(desktop,"cloneNotebookWorkspace").includes("id:artifactId()"), "notebook duplication preserves artifact IDs used by lineage and context policy");
-assert.ok(functionSource(desktop,"kdbOpen").includes("db.close();kdbPromise=null"), "a version-changed IndexedDB connection can reopen cleanly");
+assert.ok(has(desktop, "initPanels(); startupAgent = activateNotebookAgent(nbId); bootKernel();"), "desktop initializes the active notebook thread");
+assert.ok(has(mobile, "initPanels(); startupAgent = activateNotebookAgent(nbId); bootKernel();"), "mobile initializes the active notebook thread");
+assert.ok(!has(functionSource(desktop,"cloneNotebookWorkspace"), "id:artifactId()"), "notebook duplication preserves artifact IDs used by lineage and context policy");
+assert.ok(has(functionSource(desktop,"kdbOpen"), "db.close();kdbPromise=null"), "a version-changed IndexedDB connection can reopen cleanly");
 const deleteThread=functionSource(desktop,"deleteAgentThread");
-assert.ok(deleteThread.includes("kdbRuns(nbId,m.id)") && deleteThread.includes("kdbCheckpoints(nbId,m.id)"), "deleting a thread also deletes its private run and checkpoint history");
+assert.ok(has(deleteThread, "kdbRuns(nbId,m.id)") && has(deleteThread, "kdbCheckpoints(nbId,m.id)"), "deleting a thread also deletes its private run and checkpoint history");
 
 for (const id of [
   "agRunBar", "agRuns", "agCheckpoint", "agPause", "agRecovery", "agResume", "agAbandon",
   "runScrim", "runPlan", "runTimeline", "runCheckpoints", "runNotebook", "compareProfiles",
   "comparePrompt", "compareResults", "ctxSelection", "dataFolderUpload", "fileFolder",
   "agAutoExtensions", "runPrivateZip",
-]) assert.ok(desktop.includes(`id="${id}"`) && mobile.includes(`id="${id}"`), `${id} exists in both builds`);
-assert.ok(desktop.includes('data-mi="runZip"') && mobile.includes('data-mi="runZip"'), "private run ZIP is available in both More menus");
+]) assert.ok(has(desktop, `id="${id}"`) && has(mobile, `id="${id}"`), `${id} exists in both builds`);
+assert.ok(has(desktop, 'data-mi="runZip"') && has(mobile, 'data-mi="runZip"'), "private run ZIP is available in both More menus");
 
 for (const [label, needle] of [
-  ["v2.3 contract", "AGENT-V23-SPEC.md"],
+  ["v2.3 contract", "specs/agent-v2.3.md"],
   ["run store", 'createObjectStore("runs"'],
   ["checkpoint store", 'createObjectStore("checkpoints"'],
   ["run recovery", "repairInterruptedRun"],
@@ -73,7 +61,7 @@ for (const [label, needle] of [
   ["diagnostics allowlist", "kernel-diagnostics"],
   ["completion contract", "finish_run"],
   ["adaptive AUTO budgets", "budget_auto_extended"],
-]) assert.ok(desktop.includes(needle), `includes ${label}`);
+]) assert.ok(has(desktop, needle), `includes ${label}`);
 
 const discoveryFactory=new Function(`
   ${functionSource(desktop,"contextFromModel")}
@@ -284,14 +272,14 @@ for(const cell of [
 }
 evidenceFactory.set([freshCell],[finalArtifact],{cell_fresh:"excluded"},{artifact_final:"excluded"});
 assert.equal(evidenceFactory.validate([{kind:"cell",id:"cell_fresh",claim:"Hidden"},{kind:"artifact",id:"artifact_final",claim:"Hidden"}]).evidence.length,0,"excluded state cannot be cited as completion evidence");
-assert.ok(desktop.includes("enum:['cell','artifact']"),"finish_run exposes structured stable-ID evidence to providers");
-assert.ok(functionSource(desktop,"execTool").includes("validateCompletionEvidence(inp.evidence)") && functionSource(desktop,"execTool").includes("recordCompletionRejection(reason)") && functionSource(desktop,"execTool").includes("completionAccepted") && functionSource(desktop,"execTool").includes("Completion rejected"),"finish_run is application-validated and rejected calls enter the bounded completion guard");
-assert.ok(functionSource(desktop,"completionContractReason").includes("completionEvidenceSignature(checked.evidence)"),"accepted evidence is revalidated immediately before finalization");
-const agentTurnSource=functionSource(desktop,"agentTurn"),completionCandidateAt=agentTurnSource.indexOf("createCheckpoint('Completion candidate'"),postCheckpointValidationAt=agentTurnSource.indexOf("completionContractReason()",completionCandidateAt),terminalCompletionAt=agentTurnSource.indexOf("finalizeRun('completed'",postCheckpointValidationAt);
+assert.ok(has(desktop, "enum:['cell','artifact']"),"finish_run exposes structured stable-ID evidence to providers");
+assert.ok(has(functionSource(desktop,"execTool"), "validateCompletionEvidence(inp.evidence)") && has(functionSource(desktop,"execTool"), "recordCompletionRejection(reason)") && has(functionSource(desktop,"execTool"), "completionAccepted") && has(functionSource(desktop,"execTool"), "Completion rejected"),"finish_run is application-validated and rejected calls enter the bounded completion guard");
+assert.ok(has(functionSource(desktop,"completionContractReason"), "completionEvidenceSignature(checked.evidence)"),"accepted evidence is revalidated immediately before finalization");
+const agentTurnSource=functionSource(desktop,"agentTurn"),completionCandidateAt=codeIndex(agentTurnSource,"createCheckpoint('Completion candidate'"),postCheckpointValidationAt=codeIndex(agentTurnSource,"completionContractReason()",completionCandidateAt),terminalCompletionAt=codeIndex(agentTurnSource,"finalizeRun('completed'",postCheckpointValidationAt);
 assert.ok(completionCandidateAt>=0&&completionCandidateAt<postCheckpointValidationAt&&postCheckpointValidationAt<terminalCompletionAt,"completion evidence is revalidated after checkpoint persistence and immediately before the terminal transition");
-assert.ok(agentTurnSource.includes("discardCompletionCheckpoint") && agentTurnSource.includes("Run completed after completion contract"),"a failed post-checkpoint validation discards its candidate and cannot bypass the completion contract");
-assert.ok(functionSource(desktop,"agRunControlContext").includes("Only KERNEL may report"),"the model receives authoritative run-state and anti-hallucination guidance");
-assert.ok(!functionSource(desktop,"checkedStream").includes("runElapsed"),"a soft active-time checkpoint cannot masquerade as a connection timeout");
+assert.ok(has(agentTurnSource, "discardCompletionCheckpoint") && has(agentTurnSource, "Run completed after completion contract"),"a failed post-checkpoint validation discards its candidate and cannot bypass the completion contract");
+assert.ok(has(functionSource(desktop,"agRunControlContext"), "Only KERNEL may report"),"the model receives authoritative run-state and anti-hallucination guidance");
+assert.ok(!has(functionSource(desktop,"checkedStream"), "runElapsed"),"a soft active-time checkpoint cannot masquerade as a connection timeout");
 
 const recoveryFactory = new Function(`
   const clonePlain=(value)=>JSON.parse(JSON.stringify(value));let agMsgs=[],agRun=null,saves=0;
@@ -347,8 +335,8 @@ assert.equal(rejectedCompletionBatch.paused.phase,"completion","the rejected fin
 assert.deepEqual(rejectedCompletionBatch.executed,["finish_run"],"tools after a terminal finish_run rejection are never executed");
 assert.equal(rejectedCompletionBatch.messages.at(-1).content.length,2,"the rejected call and every skipped remainder receive canonical tool results");
 assert.match(rejectedCompletionBatch.messages.at(-1).content[1].content[0].text,/Not executed because KERNEL reached the terminal completion-retry guard/,"the skipped remainder explains the terminal batch boundary");
-assert.ok(functionSource(desktop,"createCheckpoint").includes("run.pendingTools&&run.pendingTools.length"),"manual checkpoints refuse an unmatched pending tool batch");
-assert.ok(functionSource(desktop,"agentTurn").includes("Resume or end the current run"),"a new prompt cannot orphan an unfinished run boundary");
+assert.ok(has(functionSource(desktop,"createCheckpoint"), "run.pendingTools&&run.pendingTools.length"),"manual checkpoints refuse an unmatched pending tool batch");
+assert.ok(has(functionSource(desktop,"agentTurn"), "Resume or end the current run"),"a new prompt cannot orphan an unfinished run boundary");
 
 const adapterFactory = new Function(`
   ${functionSource(desktop, "sseDataLines")}
@@ -358,11 +346,11 @@ const adapters = adapterFactory();
 assert.deepEqual(adapters.sseDataLines('data: {"last":true}', true).events, ['{"last":true}'], "a final unterminated SSE frame is processed");
 assert.equal(adapters.sseDataLines('data: partial', false).events.length, 0, "an incomplete live SSE frame remains buffered");
 const responseStream = functionSource(desktop, "streamResponses"),anthropicStream=functionSource(desktop, "streamAnthropic"),toolLoop=functionSource(desktop, "completePendingTools");
-assert.ok(responseStream.includes("finalResponse.status==='incomplete'"), "incomplete Responses output cannot execute tools");
-assert.ok(responseStream.includes("finalEvent==='response.completed'") && responseStream.includes("delete el.dataset.ephemeral"), "only authoritative Responses output becomes durable transcript content");
-assert.ok(anthropicStream.includes("ev.type==='message_stop'") && anthropicStream.includes("!messageComplete"), "Anthropic requires its authoritative message stop before committing output");
-assert.ok(toolLoop.includes("tool_'+outcome") && toolLoop.includes("outcome='failed'") && toolLoop.includes("inspect current notebook state before repeating"), "unexpected tool failures are committed as inspect-before-retry results");
-assert.ok(toolLoop.includes("beforeState!==durableStateSignature()") && toolLoop.includes("stateChanged:mutated"),"progress and mutation events use actual durable before/after state rather than the tool name");
+assert.ok(has(responseStream, "finalResponse.status==='incomplete'"), "incomplete Responses output cannot execute tools");
+assert.ok(has(responseStream, "finalEvent==='response.completed'") && has(responseStream, "delete el.dataset.ephemeral"), "only authoritative Responses output becomes durable transcript content");
+assert.ok(has(anthropicStream, "ev.type==='message_stop'") && has(anthropicStream, "!messageComplete"), "Anthropic requires its authoritative message stop before committing output");
+assert.ok(has(toolLoop, "'tool_'+outcome") && has(toolLoop, "outcome='failed'") && has(toolLoop, "inspect current notebook state before repeating"), "unexpected tool failures are committed as inspect-before-retry results");
+assert.ok(has(toolLoop, "beforeState!==durableStateSignature()") && has(toolLoop, "stateChanged:mutated"),"progress and mutation events use actual durable before/after state rather than the tool name");
 
 const securityFactory = new Function(`
   let agConfigs={openai:{key:"sk-proj-THIS_IS_A_FAKE_SECRET_123"}};
@@ -378,17 +366,17 @@ const secretText = 'sk-proj-THIS_IS_A_FAKE_SECRET_123\nAuthorization: Bearer tok
 const redacted = security.redactText(secretText);
 assert.ok(!redacted.includes("THIS_IS_A_FAKE_SECRET") && !redacted.includes("hunter2") && !redacted.includes("token.value") && !redacted.includes("abc"), "configured and patterned credentials are redacted");
 const sanitizer = functionSource(desktop, "sanitizeHtml");
-assert.ok(sanitizer.includes('n.startsWith("on")') && sanitizer.includes('n==="srcset"') && sanitizer.includes("script,style") && sanitizer.includes("iframe"), "rich HTML sanitizer blocks active content and URL side channels");
+assert.ok(has(sanitizer, 'n.startsWith("on")') && has(sanitizer, 'n==="srcset"') && has(sanitizer, "script,style") && has(sanitizer, "iframe"), "rich HTML sanitizer blocks active content and URL side channels");
 const transcriptChips=functionSource(desktop,"fillTranscriptChips"),transcriptDom=functionSource(desktop,"txDom");
-assert.ok(transcriptChips.includes("span.textContent") && transcriptDom.includes("fillTranscriptChips(el,content)"), "restored action chips are reconstructed as inert app-owned DOM");
-assert.ok(transcriptDom.includes("Stored image omitted: unsupported source"), "restored transcript images cannot trigger arbitrary remote loads");
-assert.ok(functionSource(desktop,"renderOutputs").includes("Figure omitted: invalid image payload"), "restored image outputs use a validated DOM path");
+assert.ok(has(transcriptChips, "span.textContent") && has(transcriptDom, "fillTranscriptChips(el,content)"), "restored action chips are reconstructed as inert app-owned DOM");
+assert.ok(has(transcriptDom, "Stored image omitted: unsupported source"), "restored transcript images cannot trigger arbitrary remote loads");
+assert.ok(has(functionSource(desktop,"renderOutputs"), "Figure omitted: invalid image payload"), "restored image outputs use a validated DOM path");
 
 const tracebackFormatter = desktop.slice(desktop.indexOf("def _fmt_exc():"), desktop.indexOf("def _install_mpl_hooks():"));
 assert.ok(tracebackFormatter.includes('startswith("kernel://")') && tracebackFormatter.includes('"notebookId":nbid') && tracebackFormatter.includes('"cellId":cellid') && tracebackFormatter.includes('"line":int(fr.lineno or 0)'), "structured Python tracebacks retain notebook, stable cell, and source-line routing metadata");
-assert.ok(desktop.includes('linecache.cache[str(filename)]') && desktop.includes('"kernel://"+nbId+"/"+cell.id'), "cell source and stable virtual filename are registered before execution");
+assert.ok(has(desktop, 'linecache.cache[str(filename)]') && has(desktop, '"kernel://"+nbId+"/"+cell.id'), "cell source and stable virtual filename are registered before execution");
 const tracebackRenderer = functionSource(desktop,"renderOutputs"),tracebackNavigator=functionSource(desktop,"focusCellLine");
-assert.ok(tracebackRenderer.includes('focusCellLine(fr.cellId,fr.line)') && tracebackNavigator.includes('setSelectionRange'), "traceback actions navigate to the exact cell and source line");
+assert.ok(has(tracebackRenderer, 'focusCellLine(fr.cellId,fr.line)') && has(tracebackNavigator, 'setSelectionRange'), "traceback actions navigate to the exact cell and source line");
 
 const exclusionFactory=new Function(`
   let cells=[],dataFiles=[],agContextPolicies={cells:{},artifacts:{}};
@@ -405,7 +393,7 @@ assert.equal(exclusions.reason("save_data_file",{content:"model-owned"}),"","mod
 exclusions.set([{id:"note",type:"markdown"}],[{id:"private"}],{cells:{note:"excluded"},artifacts:{private:"excluded"}});
 assert.match(exclusions.reason("inspect_namespace",{}),/excluded artifact/,"namespace inspection cannot bypass an excluded mounted artifact");
 const execToolSource=functionSource(desktop,"execTool");
-assert.ok(execToolSource.includes("agentStateExclusionReason(name,inp)") && execToolSource.includes("getCellContextPolicy(ce.id)==='excluded'") && execToolSource.includes("getArtifactContextPolicy(existing.id)==='excluded'"),"runtime and direct mutation tools enforce exclusion at execution time");
+assert.ok(has(execToolSource, "agentStateExclusionReason(name,inp)") && has(execToolSource, "getCellContextPolicy(ce.id)==='excluded'") && has(execToolSource, "getArtifactContextPolicy(existing.id)==='excluded'"),"runtime and direct mutation tools enforce exclusion at execution time");
 
 const contextFactory = new Function(`
   const clonePlain=(value)=>JSON.parse(JSON.stringify(value)),AG_OLD_TEXT=18000,agTrunc=(value,n)=>String(value||"").slice(0,n);
@@ -452,24 +440,24 @@ const fullExport = functionSource(desktop, "downloadWorkspaceZip");
 const privateRunExport = functionSource(desktop, "downloadPrivateRunZip");
 const shareExport = functionSource(desktop, "downloadShareSafeZip");
 const diagnostics = functionSource(desktop, "diagnosticSnapshot");
-assert.ok(fullExport.includes('version:3') && fullExport.includes('runs/') && fullExport.includes('checkpoints/'), "full export contains the v3 durable state");
-assert.ok(fullExport.includes('includeCheckpoints?await kdbCheckpoints(nbId):[]') && fullExport.includes('export_profile:includeCheckpoints?"full":"private-run"'), "private run export omits checkpoint reads while preserving notebook, thread, run, and artifact state");
-assert.ok(privateRunExport.includes('includeCheckpoints:false'), "private run ZIP requests the checkpoint-free review profile");
+assert.ok(has(fullExport, 'version:3') && has(fullExport, 'runs/') && has(fullExport, 'checkpoints/'), "full export contains the v3 durable state");
+assert.ok(has(fullExport, 'includeCheckpoints?await kdbCheckpoints(nbId):[]') && has(fullExport, 'export_profile:includeCheckpoints?"full":"private-run"'), "private run export omits checkpoint reads while preserving notebook, thread, run, and artifact state");
+assert.ok(has(privateRunExport, 'includeCheckpoints:false'), "private run ZIP requests the checkpoint-free review profile");
 const workspaceImport = functionSource(desktop, "importWorkspaceZip");
-assert.ok(workspaceImport.includes("![2,3].includes"), "workspace import remains compatible with v2 and v3");
-assert.ok(workspaceImport.includes("checkpointMap.get(r.checkpointId)"), "import remaps run/checkpoint links instead of severing them");
-assert.ok(shareExport.includes("includeConversation:false") && shareExport.includes("artifactStage(f)==='final'"), "share-safe export excludes conversation and selects only final artifacts");
-assert.ok(!shareExport.includes("kdbThreads(") && !shareExport.includes("kdbRuns(") && !shareExport.includes("kdbCheckpoints("), "share-safe export cannot serialize thread/run/checkpoint stores");
-assert.ok(!diagnostics.includes("cellPayload(") && !diagnostics.includes("collectWorkspaceFiles(") && !diagnostics.includes("clonePlain(agMsgs"), "diagnostics use counts rather than source, files, or message bodies");
+assert.ok(has(workspaceImport, "![2,3].includes"), "workspace import remains compatible with v2 and v3");
+assert.ok(has(workspaceImport, "checkpointMap.get(r.checkpointId)"), "import remaps run/checkpoint links instead of severing them");
+assert.ok(has(shareExport, "includeConversation:false") && has(shareExport, "artifactStage(f)==='final'"), "share-safe export excludes conversation and selects only final artifacts");
+assert.ok(!has(shareExport, "kdbThreads(") && !has(shareExport, "kdbRuns(") && !has(shareExport, "kdbCheckpoints("), "share-safe export cannot serialize thread/run/checkpoint stores");
+assert.ok(!has(diagnostics, "cellPayload(") && !has(diagnostics, "collectWorkspaceFiles(") && !has(diagnostics, "clonePlain(agMsgs"), "diagnostics use counts rather than source, files, or message bodies");
 for (const body of [fullExport, shareExport, diagnostics, functionSource(desktop, "agExportBundle")]) {
-  assert.ok(!body.includes("AG_CONFIG_KEY") && !body.includes("localStorage.getItem(AG_CONFIG_KEY"), "exports never read the credential store");
+  assert.ok(!has(body, "AG_CONFIG_KEY") && !has(body, "localStorage.getItem(AG_CONFIG_KEY"), "exports never read the credential store");
 }
 const compare = functionSource(desktop, "compareProfile");
-assert.ok(compare.includes("read-only comparison mode") && !/\btools\s*:/.test(compare), "comparison profiles receive no mutation tools");
+assert.ok(has(compare, "read-only comparison mode") && !/\btools\s*:/.test(compare), "comparison profiles receive no mutation tools");
 
 const sw = fs.readFileSync("docs/kernel-agent-sw.js", "utf8");
 assert.ok(sw.includes("kernel-a-mobile-v240-1"), "service-worker cache is versioned for v2.4.0");
 assert.ok(sw.includes("k.indexOf('kernel-a-mobile-')===0"), "activation deletes only KERNEL-owned caches");
-assert.ok(fs.readFileSync("AGENT-V23-SPEC.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
+assert.ok(fs.readFileSync("specs/agent-v2.3.md", "utf8").includes("## 13. Acceptance gates"), "the v2.3 acceptance contract is committed");
 
 console.log("KERNEL Agent v2.3.1 verification passed (completion integrity, adaptive budgets, durability, lineage, portability, security, and desktop/mobile parity).");

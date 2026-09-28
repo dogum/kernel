@@ -1,0 +1,59 @@
+<div class="scrim" id="agScrim">
+  <div class="modal" style="max-width:560px;max-height:min(720px,92vh);overflow:auto" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Agent settings</h2><button class="modal-x" id="agX">×</button></div>
+    <div class="modal-b">
+      <div class="ag-settings-grid">
+        <div class="ag-field"><label for="agProvider">PROVIDER</label><select id="agProvider" class="prompt-input"><option value="anthropic">Anthropic</option><option value="openai">OpenAI</option><option value="xai">xAI / Grok</option></select></div>
+        <div class="ag-field"><label for="agReasoning">REASONING EFFORT</label><select id="agReasoning" class="prompt-input"><option value="off">Provider default</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+        <div class="ag-field wide"><label for="agKey"><span id="agKeyLabel">ANTHROPIC API KEY</span><a class="ag-key-help" id="agKeyHelp" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get a key ↗</a></label><input id="agKey" class="prompt-input" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"><div class="ag-field-note">Stored only in this browser and sent only to the API base below. Never included in notebooks or ZIP exports.</div></div>
+        <div class="ag-field wide"><label for="agModel">MODEL ID</label><div class="ag-model-row"><input id="agModel" class="prompt-input" type="text" list="agModelList" autocomplete="off" spellcheck="false" placeholder="claude-opus-5-5"><datalist id="agModelList"></datalist><button class="btn" id="agDiscover" type="button" title="List the models this key can use">Discover</button></div><div class="ag-discovery" id="agDiscovery"></div></div>
+        <div class="ag-field wide"><label>AUTONOMY</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" id="agAutoBtn">AUTO</button><button class="btn" id="agStepBtn">STEP</button><span class="ag-field-note" style="margin:0">AUTO runs cells on its own · STEP asks before running code</span></div></div>
+      </div>
+      <details class="ag-adv">
+        <summary>Advanced · endpoint, output, context, and run limits</summary>
+        <div class="ag-settings-grid">
+          <div class="ag-field wide"><label for="agBase">API BASE URL</label><input id="agBase" class="prompt-input" type="url" autocomplete="off" spellcheck="false"><div class="ag-field-note">Change only for a compatible gateway you control.</div></div>
+          <div class="ag-field"><label for="agOut">MAX OUTPUT TOKENS</label><input id="agOut" class="prompt-input" type="number" min="512" max="128000" step="256"></div>
+          <div class="ag-field"><label for="agCtxOverride">CONTEXT LIMIT · OPTIONAL</label><input id="agCtxOverride" class="prompt-input" type="number" min="8192" max="4000000" step="1024" placeholder="auto"></div>
+          <div class="ag-field"><label for="agCompactAt">COMPACT ACTIVE PAYLOAD AT %</label><input id="agCompactAt" class="prompt-input" type="number" min="50" max="95"></div>
+          <div class="ag-field"><label for="agCellMinutes">AGENT CELL TIME LIMIT · MIN</label><input id="agCellMinutes" class="prompt-input" type="number" min="1" max="240" title="KERNEL interrupts an agent-run cell that runs longer than this"></div>
+          <div class="ag-field"><label for="agMax">TOOL CALL CHECKPOINT</label><input id="agMax" class="prompt-input" type="number" min="4" max="200"></div>
+          <div class="ag-field"><label for="agMinutes">ACTIVE TIME CHECKPOINT · MIN</label><input id="agMinutes" class="prompt-input" type="number" min="1" max="720"></div>
+          <div class="ag-field"><label for="agTokenBudget">EFFECTIVE TOKEN BUDGET / RUN</label><input id="agTokenBudget" class="prompt-input" type="number" min="1000" max="10000000" step="1000" title="Uncached input + output + 10% of cache reads"></div>
+          <div class="ag-field"><label for="agAutoExtensions">AUTO PROGRESS EXTENSIONS</label><input id="agAutoExtensions" class="prompt-input" type="number" min="0" max="20"></div>
+        </div>
+        <div class="ag-field-note" style="margin:0 12px 12px">AUTO can extend tool and time checkpoints while the notebook keeps making progress; the effective token budget (uncached input + output + 10% of cache reads) is a hard stop. Transient provider errors retry automatically. Full thread history stays local; only the payload sent to the model is compacted.</div>
+      </details>
+      <div class="prompt-acts"><button class="btn" id="agClear">Clear key</button><button class="btn primary" id="agSave">Save</button></div>
+    </div>
+  </div>
+</div>
+<div class="scrim" id="ctxScrim">
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Thread context</h2><button class="modal-x" id="ctxX">×</button></div>
+    <div class="modal-b">
+      <div class="ctx-grid"><div class="ctx-stat"><div class="ctx-k">Full history</div><div class="ctx-v" id="ctxFull">0</div></div><div class="ctx-stat"><div class="ctx-k">Active payload</div><div class="ctx-v" id="ctxActive">0</div></div><div class="ctx-stat"><div class="ctx-k">Input tokens</div><div class="ctx-v" id="ctxInput">0</div></div><div class="ctx-stat"><div class="ctx-k">Output tokens</div><div class="ctx-v" id="ctxOutput">0</div></div></div>
+      <div class="ctx-bar" id="ctxBar"><span></span></div><div class="ctx-note" id="ctxNote"></div><div class="ctx-note" id="ctxUsageDetail"></div>
+      <div class="ctx-selection"><h3>ACTIVE SELECTION</h3><div class="ctx-selection-list" id="ctxSelection"></div></div>
+      <div class="prompt-acts"><button class="btn" id="ctxReset">Reset usage</button><button class="btn" id="ctxExport">Export thread</button><button class="btn primary" id="ctxDone">Done</button></div>
+    </div>
+  </div>
+</div>
+<div class="scrim" id="runScrim">
+  <div class="modal" style="max-width:720px;max-height:min(760px,92vh);overflow:auto" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Run control</h2><button class="modal-x" id="runX">×</button></div>
+    <div class="modal-b">
+      <div class="run-tabs"><button class="run-tab active" data-run-tab="plan">PLAN</button><button class="run-tab" data-run-tab="timeline">TIMELINE</button><button class="run-tab" data-run-tab="checkpoints">CHECKPOINTS</button><button class="run-tab" data-run-tab="notebook">NOTEBOOK</button><button class="run-tab" data-run-tab="compare">COMPARE</button></div>
+      <section class="run-pane active" data-run-pane="plan"><div id="runPlan" class="run-list"></div></section>
+      <section class="run-pane" data-run-pane="timeline"><div id="runTimeline" class="run-list"></div></section>
+      <section class="run-pane" data-run-pane="checkpoints"><div class="prompt-acts" style="margin-top:0;margin-bottom:8px"><button class="btn" id="runNewCheckpoint">New checkpoint</button></div><div id="runCheckpoints" class="run-list"></div></section>
+      <section class="run-pane" data-run-pane="notebook"><div id="runNotebook" class="run-list"></div></section>
+      <section class="run-pane" data-run-pane="compare">
+        <div class="ag-field"><label for="compareProfiles">PROFILES · ONE provider:model PER LINE</label><textarea id="compareProfiles" class="prompt-input" rows="3" spellcheck="false"></textarea></div>
+        <div class="ag-field" style="margin-top:8px"><label for="comparePrompt">READ-ONLY COMPARISON PROMPT</label><textarea id="comparePrompt" class="prompt-input" rows="4" spellcheck="false" placeholder="Review the current notebook approach and identify the strongest next analytical step."></textarea></div>
+        <div class="prompt-acts"><button class="btn primary" id="compareRun">Run comparison</button></div><div id="compareResults" class="compare-grid"></div>
+      </section>
+      <div class="prompt-acts"><button class="btn" id="runDiagnostics">Export diagnostics</button><button class="btn" id="runPrivateZip">Private run ZIP</button><button class="btn" id="runShare">Share-safe ZIP</button><button class="btn primary" id="runDone">Done</button></div>
+    </div>
+  </div>
+</div>

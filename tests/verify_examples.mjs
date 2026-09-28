@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { declarations } from "./lib/source.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const examplesRoot = path.join(repo, "examples");
@@ -124,6 +125,12 @@ for (const [slug, spec] of Object.entries(specs)) {
   );
   assert.ok(!raw.includes("encrypted_content"), `${slug}: encrypted provider continuation state is present`);
 }
+
+// The app tells people which examples can't be rerun without outside data; keep that list in step with SOURCE.md files.
+const linksSource = fs.readFileSync(path.join(repo, "src/agent/js/app/015-example-links.js"), "utf8");
+const needingData = new Function(`${declarations(linksSource, "EXAMPLES_NEEDING_DATA")}; return EXAMPLES_NEEDING_DATA;`)();
+const withSource = fs.readdirSync(examplesRoot).filter((slug) => fs.existsSync(path.join(examplesRoot, slug, "SOURCE.md")));
+assert.deepEqual([...needingData].sort(), withSource.sort(), "EXAMPLES_NEEDING_DATA must list exactly the examples with a SOURCE.md");
 
 const allFiles = walk(examplesRoot).map((absolute) => path.relative(examplesRoot, absolute));
 assert.ok(!allFiles.some((name) => name.endsWith(".kernel.zip")), "full workspace archive was committed");

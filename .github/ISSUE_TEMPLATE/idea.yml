@@ -1,0 +1,14 @@
+name: Idea
+description: Something KERNEL should do, or do better
+labels: [idea]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you were trying to do
+      description: The analysis or task, and where KERNEL got in the way.
+    validations: { required: true }
+  - type: textarea
+    id: how
+    attributes:
+      label: What would help

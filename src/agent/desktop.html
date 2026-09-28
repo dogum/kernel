@@ -1,0 +1,225 @@
+<!doctype html>
+<!-- Built by scripts/build.mjs from src/agent/desktop.html. Edit the files in src/, then run: node scripts/build.mjs -->
+<html lang="en">
+<head>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KERNEL·A v%VERSION% — durable agentic notebook, in a single file</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+<!-- @include agent/css/base.css -->
+</style>
+
+<style id="v7-polish">
+<!-- @include agent/css/layout.css -->
+</style>
+<style id="kernel-agent-v2">
+<!-- @include agent/css/agent.css -->
+</style>
+<style id="dna-suite">
+<!-- @include suite/suite.css -->
+</style>
+<style id="kernel-desktop-ui">
+<!-- @include agent/css/desktop.css -->
+</style>
+</head>
+<body>
+<div id="progress" class="progress" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A v%VERSION%</span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
+    <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
+      <span id="nbTitleText">Untitled</span>
+      <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </button>
+  </div>
+  <div class="status" id="status" data-s="boot"><span class="dot"></span><span id="statusText">Booting…</span></div>
+  <div class="toolbar">
+    <button class="btn" id="btnNew" title="New notebook">New</button>
+    <button class="btn" id="btnOpen" title="Open .ipynb or .kernel.zip">Open</button>
+    <button class="btn" id="btnSave" title="Download .ipynb (⌘/Ctrl+S)">Save .ipynb</button>
+    <button class="btn" id="btnWorkspace" title="Save this notebook, every thread, inputs, results, and outputs as a portable ZIP">Save ZIP</button>
+    <button class="btn" id="btnData" title="Mount data files into the kernel">+ Data</button>
+    <span class="tb-sep"></span>
+    <button class="btn primary btn-chip" id="btnRunAll" title="Run every cell">Run all</button>
+    <button class="btn btn-chip" id="btnInterrupt" title="Interrupt the running cell (i i)" hidden>Interrupt</button>
+    <button class="btn btn-chip" id="btnRestart" title="Restart kernel (clear all variables)">Restart</button>
+    <button class="btn btn-chip" id="btnClear" title="Clear all outputs">Clear</button>
+    <span class="tb-sep"></span>
+    <button class="btn btn-chip" id="btnAgent" title="Toggle the agent panel (⌘J)">Agent</button>
+    <button class="btn btn-chip" id="btnVars" title="Toggle the variable inspector">Variables</button>
+    <div class="menu-wrap">
+      <button class="btn btn-chip btn-more" id="btnMore" title="More actions" aria-haspopup="true">⋯</button>
+      <div class="menu" id="moreMenu" aria-hidden="true">
+        <button class="menu-item narrow-only" data-mi="newNb">New notebook</button>
+        <button class="menu-item narrow-only" data-mi="openNb">Open .ipynb or .kernel.zip…</button>
+        <button class="menu-item narrow-only" data-mi="saveZip">Save workspace ZIP</button>
+        <div class="menu-sep narrow-only"></div>
+        <button class="menu-item" data-mi="restartRun">Restart &amp; run all</button>
+        <button class="menu-item" data-mi="splitOut" id="miSplit">Move outputs to panel</button>
+        <button class="menu-item" data-mi="collapseAll">Collapse all cells</button>
+        <button class="menu-item" data-mi="expandAll">Expand all cells</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-mi="clearOutputs">Clear all outputs</button>
+        <button class="menu-item" data-mi="downloadPy">Download as .py</button>
+        <button class="menu-item" data-mi="runZip">Private run ZIP · no checkpoints</button>
+        <button class="menu-item" data-mi="shareZip">Share-safe ZIP</button>
+        <button class="menu-item" data-mi="diagnostics">Export diagnostics</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="workspace" id="workspace">
+  <!-- @include agent/markup/agent-panel.html -->
+  <aside class="panel panel-left" id="leftPanel" aria-hidden="true">
+    <div class="panel-inner">
+      <section class="panel-section" id="secNotebooks">
+        <div class="panel-h">
+          <button class="panel-toggle" data-sec="nb"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Notebooks</span></button>
+          <button class="panel-add" id="libNew" title="New notebook">+</button>
+        </div>
+        <div class="panel-b" id="libList"></div>
+      </section>
+      <section class="panel-section" id="secData">
+        <div class="panel-h">
+          <button class="panel-toggle" data-sec="data"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Data</span></button>
+          <button class="panel-add" id="dataUpload" title="Upload files">+</button>
+          <button class="panel-add" id="dataFolderUpload" title="Upload a folder">⌑</button>
+        </div>
+        <div class="panel-b" id="dataList"></div>
+      </section>
+    </div>
+    <div class="panel-grip" data-side="left" title="Drag to resize"></div>
+  </aside>
+
+  <main class="sheet">
+    <div class="notebook" id="notebook"></div>
+    <div class="add-row">
+      <button class="add-btn" data-add="code"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"/></svg>Code cell</button>
+      <button class="add-btn" data-add="markdown"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"/></svg>Markdown cell</button>
+    </div>
+  </main>
+
+  <aside class="panel panel-right" id="rightPanel" aria-hidden="true">
+    <div class="panel-grip" data-side="right" title="Drag to resize"></div>
+    <div class="panel-inner">
+      <section class="panel-section" id="secVars">
+        <div class="panel-h">
+          <button class="panel-toggle" data-sec="vars"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Variables</span></button>
+          <span class="panel-count" id="varsCount">0 names</span>
+        </div>
+        <div class="panel-search"><input id="varsFilter" placeholder="Filter variables" autocomplete="off" spellcheck="false"></div>
+        <div class="var-tools"><select id="varsSort" aria-label="Sort variables"><option value="name">Name</option><option value="type">Type</option><option value="memory">Memory</option></select><button class="var-refresh" id="varsRefresh">REFRESH</button></div>
+        <div class="panel-b" id="varsList"></div>
+      </section>
+      <section class="panel-section" id="secOutputs">
+        <div class="panel-h">
+          <button class="panel-toggle" data-sec="out"><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Outputs</span></button>
+          <span class="panel-count" id="outCount"></span>
+        </div>
+        <div class="panel-b" id="outBody">
+          <div class="outputs-hint" id="outHint"><p>Push cell outputs into this panel, synced to each cell.</p><button id="outEnable">Move outputs here</button></div>
+          <div id="outList"></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+</div>
+
+<footer class="foot">
+  <span><b id="cellCount">0</b> cells</span>
+  <span class="data-chips" id="dataChips"></span>
+  <span class="sp"></span>
+  <span id="saveState" class="save-state"></span>
+  <span id="kernelInfo">Pyodide · loading</span>
+  <span class="lnk" id="btnHelp">⌘ shortcuts</span>
+</footer>
+
+<div class="toast-host" id="toastHost"></div>
+
+<div class="findbar" id="findbar" aria-hidden="true">
+  <input id="findInput" placeholder="Find across cells" autocomplete="off" spellcheck="false">
+  <input id="replaceInput" placeholder="Replace" autocomplete="off" spellcheck="false">
+  <button class="fb-case" id="findCase" title="Match case">Aa</button>
+  <span class="fb-count" id="findCount">0/0</span>
+  <button class="fb-btn" id="findPrev" title="Previous (⇧⏎)">↑</button>
+  <button class="fb-btn" id="findNext" title="Next (⏎)">↓</button>
+  <button class="fb-btn" id="findRepl" title="Replace current">Repl</button>
+  <button class="fb-btn" id="findAll" title="Replace all">All</button>
+  <button class="fb-x" id="findX" title="Close (Esc)">×</button>
+</div>
+
+<div class="cmp-pop" id="cmpPop" aria-hidden="true"></div>
+
+<div class="scrim" id="promptScrim">
+  <div class="modal" style="max-width:380px" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2 id="promptTitle">Rename</h2><button class="modal-x" id="promptX">×</button></div>
+    <div class="modal-b">
+      <input id="promptInput" class="prompt-input" type="text" autocomplete="off" spellcheck="false">
+      <div class="prompt-acts"><button class="btn" id="promptCancel">Cancel</button><button class="btn primary" id="promptOk">Rename</button></div>
+    </div>
+  </div>
+</div>
+<!-- @include agent/markup/modals.html -->
+<div class="scrim" id="helpScrim">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>Keyboard</h2><button class="modal-x" id="helpX">×</button></div>
+    <div class="modal-b">
+      <div class="kbd-grid">
+        <div>
+          <h3>Edit mode</h3>
+          <div class="kbd-row"><span>Run &amp; select next</span><kbd>⇧ Enter</kbd></div>
+          <div class="kbd-row"><span>Run, stay</span><kbd>⌘ Enter</kbd></div>
+          <div class="kbd-row"><span>Run &amp; insert below</span><kbd>⌥ Enter</kbd></div>
+          <div class="kbd-row"><span>Autocomplete</span><kbd>Ctrl Space</kbd></div>
+          <div class="kbd-row"><span>Indent / dedent</span><kbd>Tab</kbd></div>
+          <div class="kbd-row"><span>Leave cell</span><kbd>Esc</kbd></div>
+          <div class="kbd-row"><span>Agent panel</span><kbd>⌘ J</kbd></div>
+        </div>
+        <div>
+          <h3>Command mode</h3>
+          <div class="kbd-row"><span>Edit cell</span><kbd>Enter</kbd></div>
+          <div class="kbd-row"><span>Move selection</span><kbd>↑ ↓ / j k</kbd></div>
+          <div class="kbd-row"><span>Insert above / below</span><kbd>a</kbd> <kbd>b</kbd></div>
+          <div class="kbd-row"><span>Delete cell</span><kbd>d d</kbd></div>
+          <div class="kbd-row"><span>Undo cell delete</span><kbd>z</kbd></div>
+          <div class="kbd-row"><span>Interrupt running cell</span><kbd>i i</kbd></div>
+          <div class="kbd-row"><span>To markdown / code</span><kbd>m</kbd> <kbd>y</kbd></div>
+        </div>
+      </div>
+      <div class="kbd-row" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px"><span>Save notebook (.ipynb)</span><kbd>⌘ / Ctrl + S</kbd></div>
+      <div class="kbd-row"><span>Find &amp; replace across cells</span><kbd>⌘ / Ctrl + F</kbd></div>
+      <div class="kbd-row"><span>App menu · light/dark theme</span><kbd>⌥ / Alt + K</kbd> <kbd>⌥ / Alt + T</kbd></div>
+      <div class="kbd-row"><span>Install a PyPI package</span><kbd>%pip install <i>name</i></kbd></div>
+      <div class="kbd-row"><span>Interactive output (iframe)</span><kbd>display_html(html, height)</kbd></div>
+      <div class="kbd-row"><span>Interactive Plotly chart</span><kbd>display_plotly(fig)</kbd></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileIpynb" accept=".ipynb,.zip,.kernel.zip,application/json,application/zip" hidden>
+<input type="file" id="fileData" multiple hidden>
+<input type="file" id="fileFolder" webkitdirectory directory multiple hidden>
+
+<script>
+"use strict";
+(function(){
+<!-- @include agent/js/notebook/*.js -->
+<!-- @include agent/js/agent/*.js -->
+<!-- @include agent/js/app/*.js -->
+})();
+</script>
+
+
+
+<div id="dna-grid" aria-hidden="true"></div>
+<div id="suiteMenu" role="menu" aria-label="KERNEL apps"></div>
+<script>
+<!-- @include suite/suite-menu.js -->
+</script>
+</body>
+</html>

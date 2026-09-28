@@ -19,7 +19,7 @@ export function staticServer(port = 8765, extraHeaders = {}) {
     if (p.endsWith('.html')) {
       // Test-only: expose the app closure through a direct-eval hook injected at the end of the main IIFE.
       let html = fs.readFileSync(p, 'utf8');
-      const at = html.indexOf('(function init(){');
+      const at = html.search(/\(function init\(\)\s*\{/);
       const end = at < 0 ? -1 : html.indexOf('\n})();\n</script>', html.indexOf('})();', at) + 5);
       if (end > 0) html = html.slice(0, end) + '\nwindow.__k=function(s){return eval(s)};' + html.slice(end);
       return res.end(html);
@@ -50,13 +50,27 @@ async function passthrough(route) {
   }
 }
 
-export async function launch({ mocks = [] } = {}) {
-  const browser = await chromium.launch();
+// Example links fetch notebooks from this repository on GitHub; tests serve the checked-out examples/ instead.
+const EXAMPLES = new URL('../../examples/', import.meta.url).pathname;
+async function localExample(route) {
+  const rel = decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/dogum\/kernel\/main\/examples\//, ''));
+  const file = path.join(EXAMPLES, rel);
+  if (rel.includes('..') || !fs.existsSync(file)) return route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: '404: Not Found' });
+  return route.fulfill({ status: 200, headers: { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*' }, body: fs.readFileSync(file) });
+}
+
+export async function newContext(browser, mocks = []) {
   // The PWA service worker's own network fetches bypass Playwright routing (and this sandbox's TLS proxy), so tests block it.
   const context = await browser.newContext({ serviceWorkers: 'block' });
   for (const [pattern, handler] of mocks) await context.route(pattern, handler);
   await context.route(/^https:\/\/(cdn\.jsdelivr\.net|pypi\.org|files\.pythonhosted\.org|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, passthrough);
-  return { browser, context };
+  await context.route(/^https:\/\/raw\.githubusercontent\.com\/dogum\/kernel\/main\/examples\//, localExample);
+  return context;
+}
+
+export async function launch({ mocks = [] } = {}) {
+  const browser = await chromium.launch();
+  return { browser, context: await newContext(browser, mocks) };
 }
 
 export async function openApp(context, file = 'kernel-agent.html', { port = 8765, log = true, init = null } = {}) {
