@@ -18,7 +18,7 @@ assert.ok(await k(page, `document.scrollingElement.scrollWidth <= innerWidth`), 
 assert.equal(await k(page, `!!document.getElementById('dna-dock')`), false, 'no floating dock');
 await page.click('#suiteBtn');
 assert.equal(await k(page, `document.getElementById('suiteBtn').getAttribute('aria-expanded')`), 'true');
-assert.equal(await k(page, `document.querySelectorAll('#suiteMenu a.sm-item[href$=".html"]').length`), 3, 'two other apps and the project page are links');
+assert.equal(await k(page, `document.querySelectorAll('#suiteMenu a.sm-item[href*=".html"]').length`), 3, 'two other apps and the project page are links');
 assert.match(await k(page, `document.querySelector('#suiteMenu .sm-item.cur').textContent`), mobile ? /KERNEL·M/ : /KERNEL·A/);
 const theme0 = await k(page, `document.documentElement.dataset.theme||'light'`);
 await page.click('#suiteMenu [data-sm="theme"]');

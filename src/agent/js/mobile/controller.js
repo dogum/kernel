@@ -207,10 +207,11 @@
     if (!b) return;
     var k = b.dataset.k;
     if (k === "run") {
-      var r = el("#btnRunAll");
-      if (r) r.click();
+      // lit while the run lasts, then back to normal
       b.classList.add("active");
-      setTimeout(syncBar, 220);
+      Promise.resolve(runAll()).finally(function () {
+        b.classList.remove("active");
+      });
       return;
     }
     only(k);
@@ -254,6 +255,10 @@
   if (mq.addEventListener) mq.addEventListener("change", normalize);
   else if (mq.addListener) mq.addListener(normalize);
   normalize();
+
+  /* keyboard hints don't apply on a phone */
+  var agIn = el("#agIn");
+  if (agIn && mq.matches) agIn.placeholder = agIn.placeholder.replace(/\s*\(⌘J\)$/, "");
 
   window.__kaMobile = { normalize: normalize, only: only, closeAll: closeAll };
 })();

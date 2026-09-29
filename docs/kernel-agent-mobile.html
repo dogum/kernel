@@ -5,6 +5,14 @@
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+/* iOS Safari zooms into any focused field under 16px. maximum-scale stops that zoom there without blocking pinch zoom,
+   which iOS always allows, so code and chat can use compact type. Other browsers don't zoom on focus. */
+try {
+  if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
+    document.querySelector('meta[name="viewport"]').content += ", maximum-scale=1";
+} catch (e) {}
+</script>
 <meta name="description" content="KERNEL·A — the agentic Python notebook, in a single file. Mobile build: installable and offline-capable.">
 <meta name="theme-color" content="#E9E7E0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -555,7 +563,7 @@ body.resizing{cursor:col-resize; user-select:none}
 .out{position:relative}
 .out-acts{position:absolute;top:6px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .12s;z-index:2}
 .out:hover .out-acts,.out:focus-within .out-acts{opacity:1}
-@media (hover:none){.out-acts{opacity:.85}}
+@media (hover:none){.out-acts{position:static;opacity:1;justify-content:flex-end;margin-top:5px}}  /* no hover on touch: a row under the output, never over it */
 .out-acts button{font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:3px 7px;cursor:pointer}
 .out-acts button:hover{color:var(--accent);border-color:var(--accent)}
 .out.long{max-height:460px}
@@ -689,7 +697,7 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
 <header class="topbar">
-  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A v2.4.0</span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
+  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A<span class="brand-v"> v2.4.0</span></span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
     <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
       <span id="nbTitleText">Untitled</span>
@@ -714,6 +722,12 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
     <div class="menu-wrap">
       <button class="btn btn-chip btn-more" id="btnMore" title="More actions" aria-haspopup="true">⋯</button>
       <div class="menu" id="moreMenu" aria-hidden="true">
+        <button class="menu-item narrow-only" data-mi="newNb">New notebook</button>
+        <button class="menu-item narrow-only" data-mi="openNb">Open .ipynb or .kernel.zip…</button>
+        <button class="menu-item narrow-only" data-mi="saveIpynb">Save .ipynb</button>
+        <button class="menu-item narrow-only" data-mi="saveZip">Save workspace ZIP</button>
+        <div class="menu-sep narrow-only"></div>
+        <button class="menu-item narrow-only" data-mi="restart">Restart Python</button>
         <button class="menu-item" data-mi="restartRun">Restart &amp; run all</button>
         <button class="menu-item" data-mi="splitOut" id="miSplit">Move outputs to panel</button>
         <button class="menu-item" data-mi="collapseAll">Collapse all cells</button>
@@ -6352,6 +6366,8 @@ $("#moreMenu").addEventListener("click", (e) => {
   if (a === "newNb") newNotebook();
   else if (a === "openNb") $("#btnOpen").click();
   else if (a === "saveZip") downloadWorkspaceZip();
+  else if (a === "saveIpynb") downloadIpynb();
+  else if (a === "restart") restartKernel();
   else if (a === "restartRun") restartAndRunAll();
   else if (a === "splitOut") setSplitOutputs(!ui.splitOutputs);
   else if (a === "collapseAll") setAllCollapsed(true);
@@ -12939,10 +12955,11 @@ function openLinkedExample() {
     if (!b) return;
     var k = b.dataset.k;
     if (k === "run") {
-      var r = el("#btnRunAll");
-      if (r) r.click();
+      // lit while the run lasts, then back to normal
       b.classList.add("active");
-      setTimeout(syncBar, 220);
+      Promise.resolve(runAll()).finally(function () {
+        b.classList.remove("active");
+      });
       return;
     }
     only(k);
@@ -12987,6 +13004,10 @@ function openLinkedExample() {
   else if (mq.addListener) mq.addListener(normalize);
   normalize();
 
+  /* keyboard hints don't apply on a phone */
+  var agIn = el("#agIn");
+  if (agIn && mq.matches) agIn.placeholder = agIn.placeholder.replace(/\s*\(⌘J\)$/, "");
+
   window.__kaMobile = { normalize: normalize, only: only, closeAll: closeAll };
 })();
 })();
@@ -12998,9 +13019,10 @@ function openLinkedExample() {
 <div id="suiteMenu" role="menu" aria-label="KERNEL apps"></div>
 <script>
 (function () {
+  // [file, name, description, link when it isn't the file name]
   var SUITE = [
     ["kernel.html", "KERNEL", "The notebook, no agent"],
-    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent"],
+    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent", "kernel-agent.html?layout=desktop"],
     ["kernel-agent-mobile.html", "KERNEL·M", "The agent, built for phones"],
   ];
   var here = decodeURIComponent(location.pathname.split("/").pop() || "");
@@ -13038,7 +13060,13 @@ function openLinkedExample() {
               "</b><span>" +
               t[2] +
               '</span><i aria-hidden="true">✓</i></button>'
-          : '<a class="sm-item" role="menuitem" href="' + t[0] + '"><b>' + t[1] + "</b><span>" + t[2] + "</span></a>";
+          : '<a class="sm-item" role="menuitem" href="' +
+              (t[3] || t[0]) +
+              '"><b>' +
+              t[1] +
+              "</b><span>" +
+              t[2] +
+              "</span></a>";
       }).join("") +
       '<div class="sm-sep" role="separator"></div>' +
       '<a class="sm-item sm-util" role="menuitem" href="index.html"><span>Project page</span><kbd>' +
@@ -13082,7 +13110,7 @@ function openLinkedExample() {
   }
   function step(d) {
     var i = cur >= 0 ? (cur + d + SUITE.length) % SUITE.length : 0;
-    location.href = SUITE[i][0];
+    location.href = SUITE[i][3] || SUITE[i][0];
   }
   btn.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -13153,79 +13181,136 @@ function openLinkedExample() {
 /* ===== KERNEL·A — mobile + PWA layer (variant only) ===== */
 /* Affordances that only appear on phones; hidden by default. */
 #mob-bar,#mob-scrim,.ms-grab,#pwa-install{display:none}
+.menu-item.narrow-only,.menu-sep.narrow-only{display:none}
 
 @media (max-width:760px){
-  /* code/editor sized to avoid iOS focus-zoom and use the width */
-  :root{--gutter-w:40px; --code-fs:16px; --code-pad-x:12px; --code-pad-y:11px;}
+  /* Dense by default: compact code and prose, a narrow gutter, tight cards. iOS focus-zoom is stopped in the
+     viewport tag instead of with 16px fields, so fields can match the rest of the type. */
+  :root{--gutter-w:32px; --code-fs:12px; --code-lh:1.45; --code-pad-x:8px; --code-pad-y:6px;}
 
-  /* ---- top bar: compact, horizontally scrollable tools ---- */
-  .topbar{gap:8px; padding:8px 10px;}
-  .brand{gap:7px;}
-  .brand h1{font-size:15px; letter-spacing:.10em;}
-  .nb-pill{margin-left:4px; max-width:38vw; padding:4px 7px;}
-  .status{max-width:34vw; font-size:10px; padding:4px 8px;}
-  .toolbar{flex:1 1 auto; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
-           -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-left:6px; gap:5px; justify-content:flex-start;}
-  .toolbar::-webkit-scrollbar{display:none;}
-  .btn{padding:7px 10px;}
-  #btnAgent,#btnVars{display:none;}            /* covered by the bottom bar */
+  /* ---- top bar: one row. Brand, notebook, status, interrupt while busy, and every other action in ⋯ ---- */
+  .topbar{gap:5px; padding:4px 6px; padding-top:calc(4px + env(safe-area-inset-top));}
+  .brand{gap:4px; flex:1 1 auto; min-width:0; align-items:center;}
+  .brand h1{font-size:12.5px; letter-spacing:.07em; flex:0 0 auto;}
+  .brand .mark{width:10px; height:10px; box-shadow:0 0 0 2px var(--accent-ghost);}
+  .brand .brand-v{display:none;}
+  .brand-btn{align-items:center; padding:3px 4px; margin:-3px -4px;}
+  .brand-btn .mark{margin-right:.45em;}
+  .brand-chev{width:10px; height:10px; margin-left:4px;}
+  .nb-pill{flex:0 1 auto; min-width:0; max-width:none; margin-left:2px; padding:3px 6px; font-size:11.5px; gap:4px;}
+  .status{flex:0 0 auto; max-width:30vw; padding:3px 6px; gap:5px; font-size:10px;}
+  .status[data-s="ok"] #statusText{display:none;}   /* the dot says ready; words only while booting, busy or failed */
+  .toolbar{flex:0 0 auto; margin-left:0; gap:4px; flex-wrap:nowrap;}
+  .toolbar > .btn:not(#btnInterrupt),.toolbar > .tb-sep{display:none;}
+  .btn-more{padding:3px 9px; font-size:13px; line-height:1; align-self:stretch;}
+  .menu{min-width:224px; max-height:calc(100dvh - 120px); overflow:auto;}
+  .menu-item{font-size:13.5px; padding:9px 10px;}
+  .menu-item.narrow-only,.menu-sep.narrow-only{display:block;}
 
   /* ---- notebook canvas ---- */
-  .sheet{padding:14px 10px 112px; background-size:24px 24px;}
-  .notebook{gap:12px;}
-  .add-row{opacity:1; margin:12px auto 8px;}
-  .add-btn{padding:9px 16px;}
+  .sheet{padding:6px 4px 72px; background-size:22px 22px;}
+  .notebook{gap:6px;}
+  .gutter{padding-right:4px; font-size:10px;}
+  .gutter .exec-time{font-size:7.5px; letter-spacing:-.02em; word-spacing:-.3em; white-space:nowrap; margin:0 -7px 0 0;}  /* "12.43 s" borrows the code's left padding rather than leaving the cell */
+  /* markdown needs no gutter: its text takes the width */
+  .cell.md{grid-template-columns:10px 1fr;}
+  .cell.md .gutter .exec{display:none;}
+  .md-rendered{font-size:13.5px; line-height:1.45; padding:2px 8px 4px 2px;}
+  .md-rendered h1{font-size:1.4em;} .md-rendered h2{font-size:1.2em;} .md-rendered h3{font-size:1.06em;}
+  .md-rendered h1,.md-rendered h2,.md-rendered h3,.md-rendered h4{margin:.8em 0 .35em;} .md-rendered p{margin:.45em 0;}
+  .md-rendered pre{padding:9px 10px;} .md-rendered pre code{font-size:12px;}
+  .md-rendered table{font-size:12.5px;} .md-rendered th,.md-rendered td{padding:4px 7px;}
+  .outputs{padding:1px 0 3px;}
+  .out{padding:5px 8px;}
+  .out-stream pre,.out-text pre,.out-err pre{font-size:11px; line-height:1.4;}
+  .out-html{font-size:12.5px;}
+  .out-html table.dataframe{font-size:10.5px; line-height:1.3;}
+  .out-html table.dataframe th,.out-html table.dataframe td{padding:2px 5px;}
+  .out-acts{margin-top:3px;} .out-acts button{font-size:8.5px; padding:2px 6px;}
+  .collapsed-peek{padding:8px 10px !important;}
+  .add-row{opacity:1; margin:6px auto 2px; gap:6px;}
+  .add-btn{padding:5px 11px; font-size:11.5px;}
   /* the selected cell's tools sit in a row beneath it (no hover on touch), so they never cover code */
   .cell-tools{position:static; display:none; width:max-content; max-width:100%; flex-wrap:wrap; align-self:flex-end;
-              margin:6px 4px 4px auto; opacity:1; transform:none; box-shadow:none;}
+              margin:0 3px 3px auto; padding:1px; gap:0; opacity:1; transform:none; box-shadow:none;}
   .cell.selected .cell-tools{display:flex; pointer-events:auto;}
+  .ct{width:30px; height:25px;}
+  .ct.type,.ct.ai{height:25px; padding:0 7px;}
   .lib-acts{opacity:1;}                          /* no hover on touch: row actions stay visible */
-  .toast-host{bottom:calc(66px + env(safe-area-inset-bottom)); width:calc(100vw - 24px);}  /* above the tab bar */
-  .toast{max-width:100%;}
-  .ct{width:32px; height:32px;}
-  .ct.type,.ct.ai{height:32px;}
-  .md-rendered{font-size:15.5px;}
   .foot{display:none;}                           /* replaced by the bottom bar */
 
-  /* prevent iOS zoom on focus for every text entry */
-  textarea,input[type=text],input[type=password],input[type=number],input[type=search],input:not([type]){font-size:16px;}
+  /* first-run card: the same choices in half the height; keyboard tips don't apply on a phone */
+  .welcome{padding:10px 10px 10px; margin-bottom:6px;}
+  .welcome h2{font-size:15px; margin-bottom:2px;}
+  .welcome p{font-size:12px; line-height:1.4; margin-bottom:8px;}
+  .welcome-acts{gap:6px; margin-bottom:0;}
+  .welcome-acts .btn{padding:5px 9px; font-size:11.5px;}
+  .welcome .welcome-tip{display:none;}
+
+  /* toasts sit above the tab bar, and above the install hint while it shows */
+  .toast-host{bottom:calc(54px + env(safe-area-inset-bottom)); width:calc(100vw - 24px);}
+  body:has(#pwa-install.on) .toast-host{bottom:calc(104px + env(safe-area-inset-bottom));}
+  .toast{max-width:100%; font-size:12px; padding:7px 11px;}
+
+  /* fields: 14px reads well and, with the viewport fix, doesn't trigger iOS zoom */
+  textarea:not(.ta),input[type=text],input[type=password],input[type=number],input[type=search],input:not([type]),select{font-size:14px;}
+  .panel-search input,.var-tools select,.ag-threadbar select{font-size:12px; padding-top:4px; padding-bottom:4px;}
 
   /* ---- side panels become bottom sheets ---- */
   .panel{
     position:fixed !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
     width:auto !important; max-width:none !important; min-width:0 !important;
-    height:86dvh; max-height:90dvh;
+    height:auto; min-height:38dvh; max-height:86dvh;   /* Files and Variables fit their contents */
     border:1px solid var(--line-2) !important; border-bottom:0 !important;
-    border-radius:16px 16px 0 0;
+    border-radius:14px 14px 0 0;
     box-shadow:0 -20px 60px -24px rgba(0,0,0,.55);
     transform:translateY(112%); visibility:hidden; pointer-events:none;
     transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s linear .32s;
     z-index:120; overscroll-behavior:contain;
-    box-sizing:border-box; padding-bottom:calc(56px + env(safe-area-inset-bottom)); /* clear the bottom bar */
+    box-sizing:border-box; padding-bottom:calc(46px + env(safe-area-inset-bottom)); /* clear the bottom bar */
   }
   .panel.open{transform:none; visibility:visible; pointer-events:auto;
     transition:transform .32s cubic-bezier(.32,.72,0,1), visibility 0s;}
-  .panel-agent{height:90dvh;}
+  .panel-agent{height:90dvh; max-height:90dvh;}
   .panel-grip{display:none !important;}          /* no edge-resize on touch */
+  .panel-h{padding:6px 10px 5px;}
+  .panel-b{padding:0 6px 8px;}
+  .panel-search{padding:0 10px 5px;}
+  /* Files and Variables: tighter rows */
+  .lib-row{padding:6px 8px; gap:8px;} .lib-name{font-size:13px;} .lib-sub{font-size:10px;} .lib-map{margin-top:4px; height:8px;}
+  .lib-tick.code{height:8px;} .lib-tick.md{height:5px;} .lib-act,.data-act{font-size:10px; padding:2px 6px;}
+  .data-row{padding:6px 8px;} .data-name{font-size:12px;} .data-sub{font-size:10px;} .data-preview{font-size:10.5px;}
+  .var-tools{padding-bottom:4px;} .var-row{padding:4px 10px; gap:7px;} .var-name{font-size:12px;} .var-info{font-size:10.5px;}
+  .outputs-hint p{margin-bottom:6px;}
 
   /* grab handle at the top of each sheet (injected) */
-  .ms-grab{display:flex; align-items:center; justify-content:center; height:22px; flex:0 0 auto; touch-action:none; cursor:grab;}
-  .ms-grab::before{content:""; width:38px; height:4px; border-radius:3px; background:var(--line-2);}
+  .ms-grab{display:flex; align-items:center; justify-content:center; height:14px; flex:0 0 auto; touch-action:none; cursor:grab;}
+  .ms-grab::before{content:""; width:36px; height:4px; border-radius:3px; background:var(--line-2);}
 
   /* sheet internals fit the sheet height */
   .panel-agent .panel-inner{overflow:hidden;}
-  .ag-body{padding:8px 10px 10px;}
-  .ag-composer textarea{min-height:54px;}
-  .ag-row{flex-wrap:nowrap; gap:6px;}             /* one line: the model chip shrinks, SEND stays reachable */
-  .ag-mode,.ag-send,.ag-stop,.ag-model,#agModelChip{padding:9px 12px; font-size:11px;}
+    /* agent: one-line header, thread and run bars; the transcript runs edge to edge */
+  .ag-head{padding:3px 10px 5px; gap:6px;} .ag-head .panel-add{width:26px; height:24px;} .ag-state{padding:3px 6px; font-size:8.5px;}
+  .ag-threadbar{padding:4px 8px; gap:4px;} .ag-thread-act{padding:4px 6px;}
+  .ag-runbar{padding:3px 8px; min-height:0; gap:4px;} .ag-run-btn{padding:4px 6px;}
+  .ag-body{padding:0 0 6px;}
+  .ag-tx{padding:8px 10px; gap:6px; border:0; border-radius:0;}
+  .ag-u{font-size:12.5px; line-height:1.4;} .ag-a{font-size:12.5px; line-height:1.42;} .ag-progress{font-size:11px;}
+  .ag-chip{font-size:9px; padding:2px 6px;}
+  .ag-composer{margin-top:0; padding:6px 8px 0; border-top:1px solid var(--line);}
+  .ag-composer textarea{min-height:40px; padding:7px 8px; font-size:13.5px;}
+  .ag-row{flex-wrap:nowrap; gap:5px; margin-top:5px;}             /* one line: the model chip shrinks, SEND stays reachable */
+  .ag-mode,.ag-send,.ag-stop,.ag-model,#agModelChip{padding:7px 9px; font-size:10px;}
   .ag-mode,.ag-send,.ag-stop{flex:0 0 auto;}
   #agModelChip{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .ag-steps{flex:0 1 auto; min-width:0; overflow:hidden; white-space:nowrap;}
   .ag-usage{flex:1 1 0; min-width:0;}
 
   /* modals: rise from the bottom, full small-screen friendly */
-  .scrim{padding:10px; align-items:flex-end;}
-  .modal{max-height:88dvh; border-radius:14px;}
+  .scrim{padding:8px; align-items:flex-end;}
+  .modal{max-height:88dvh; border-radius:12px;}
+  .modal-h{padding:12px 14px 10px;}
+  .modal-b{padding:12px 14px 16px;}
 
   /* ---- backdrop behind an open sheet ---- */
   #mob-scrim{display:block; position:fixed; inset:0; z-index:110;
@@ -13235,50 +13320,47 @@ function openLinkedExample() {
 
   /* ---- bottom navigation bar ---- */
   #mob-bar{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:130;
-    height:calc(56px + env(safe-area-inset-bottom));
+    height:calc(46px + env(safe-area-inset-bottom));
     padding:0 6px env(safe-area-inset-bottom);
     background:color-mix(in srgb,var(--paper) 90%,white);
     border-top:1px solid var(--line-2); backdrop-filter:saturate(1.3) blur(10px);
     align-items:stretch; justify-content:space-around;}
-  .mb-btn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  .mb-btn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     background:none; border:0; cursor:pointer; color:var(--ink-3);
-    font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.10em; text-transform:uppercase;}
+    font-family:var(--mono); font-size:8px; font-weight:600; letter-spacing:.10em; text-transform:uppercase;}
   .mb-btn .mb-ic{display:flex; align-items:center; justify-content:center;}
-  .mb-btn svg{width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .mb-btn svg{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
   .mb-btn[data-k="run"] svg{fill:currentColor; stroke:none;}
   .mb-btn[data-k="agent"] svg{fill:currentColor; stroke:none;}
   .mb-btn.active{color:var(--accent);}
-  .mb-btn.prime .mb-ic{width:42px; height:28px; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line-2));
-    border-radius:9px; background:var(--accent-ghost); color:var(--accent);}
+  .mb-btn.prime .mb-ic{width:38px; height:22px; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line-2));
+    border-radius:8px; background:var(--accent-ghost); color:var(--accent);}
   .mb-btn.prime.active .mb-ic{background:var(--accent); color:var(--on-accent);}
   .mb-btn.prime{color:var(--accent);}
 
-  /* nudge the suite dock above the bar so it stays reachable */
-  /* an open sheet owns the bottom of the screen; the dock would cover its composer */
-
-  /* install pill */
+  /* install hint: above the bar, compact */
   #pwa-install{position:fixed; left:50%; transform:translateX(-50%);
-    bottom:calc(68px + env(safe-area-inset-bottom)); z-index:136; display:none;
-    align-items:center; gap:10px; padding:9px 10px 9px 14px;
-    background:var(--surface); border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2)); border-radius:11px;
-    box-shadow:0 14px 36px -16px rgba(0,0,0,.55); font-family:var(--sans); font-size:12.5px; color:var(--ink); max-width:92vw;}
+    bottom:calc(54px + env(safe-area-inset-bottom)); z-index:136; display:none;
+    align-items:center; gap:8px; padding:7px 8px 7px 12px;
+    background:var(--surface); border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line-2)); border-radius:10px;
+    box-shadow:0 14px 36px -16px rgba(0,0,0,.55); font-family:var(--sans); font-size:12px; color:var(--ink); max-width:92vw;}
   #pwa-install.on{display:flex;}
   #pwa-install b{color:var(--accent); font-weight:700;}
   #pwa-install .pi-go{font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--on-accent); background:var(--accent); border:0; border-radius:7px; padding:8px 12px; cursor:pointer;}
+    color:var(--on-accent); background:var(--accent); border:0; border-radius:7px; padding:7px 11px; cursor:pointer;}
   #pwa-install .pi-x{background:none; border:0; color:var(--ink-3); font-size:18px; line-height:1; cursor:pointer; padding:0 4px;}
 }
 
 /* very small phones */
 @media (max-width:380px){
-  .nb-pill{max-width:30vw;}
-  .status{max-width:28vw;}
-  .mb-btn{font-size:8px;}
+  .status{max-width:24vw;}
+  .mb-btn{font-size:7.5px;}
+  :root{--code-fs:11.5px;}
 }
 
 /* short landscape phones: taller sheets */
 @media (max-width:900px) and (orientation:landscape) and (max-height:540px){
-  .panel,.panel-agent{height:94dvh;}
+  .panel,.panel-agent{max-height:94dvh;} .panel-agent{height:94dvh;}
 }
 </style>
 <script id="pwa-layer">
@@ -13408,6 +13490,10 @@ function openLinkedExample() {
         '<button class="pi-x" aria-label="Dismiss">×</button>';
       pill.classList.add("on");
       pill.querySelector(".pi-x").onclick = dismiss;
+      // a hint, not a banner: it leaves on its own so it never sits over the notebook
+      setTimeout(function () {
+        pill.classList.remove("on");
+      }, 9000);
     }, 1500);
   }
 })();

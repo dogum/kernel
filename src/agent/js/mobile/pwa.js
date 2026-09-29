@@ -124,6 +124,10 @@
         '<button class="pi-x" aria-label="Dismiss">×</button>';
       pill.classList.add("on");
       pill.querySelector(".pi-x").onclick = dismiss;
+      // a hint, not a banner: it leaves on its own so it never sits over the notebook
+      setTimeout(function () {
+        pill.classList.remove("on");
+      }, 9000);
     }, 1500);
   }
 })();

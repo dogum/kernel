@@ -1,7 +1,8 @@
 (function () {
+  // [file, name, description, link when it isn't the file name]
   var SUITE = [
     ["kernel.html", "KERNEL", "The notebook, no agent"],
-    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent"],
+    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent", "kernel-agent.html?layout=desktop"],
     ["kernel-agent-mobile.html", "KERNEL·M", "The agent, built for phones"],
   ];
   var here = decodeURIComponent(location.pathname.split("/").pop() || "");
@@ -39,7 +40,13 @@
               "</b><span>" +
               t[2] +
               '</span><i aria-hidden="true">✓</i></button>'
-          : '<a class="sm-item" role="menuitem" href="' + t[0] + '"><b>' + t[1] + "</b><span>" + t[2] + "</span></a>";
+          : '<a class="sm-item" role="menuitem" href="' +
+              (t[3] || t[0]) +
+              '"><b>' +
+              t[1] +
+              "</b><span>" +
+              t[2] +
+              "</span></a>";
       }).join("") +
       '<div class="sm-sep" role="separator"></div>' +
       '<a class="sm-item sm-util" role="menuitem" href="index.html"><span>Project page</span><kbd>' +
@@ -83,7 +90,7 @@
   }
   function step(d) {
     var i = cur >= 0 ? (cur + d + SUITE.length) % SUITE.length : 0;
-    location.href = SUITE[i][0];
+    location.href = SUITE[i][3] || SUITE[i][0];
   }
   btn.addEventListener("click", function (e) {
     e.stopPropagation();

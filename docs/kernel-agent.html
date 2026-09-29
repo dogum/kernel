@@ -3,6 +3,24 @@
 <html lang="en">
 <head>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("ut-theme")||"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
+<script>
+/* Phones get KERNEL·M, the same app laid out for touch (tab bar, bottom sheets), with the same notebooks and the same
+   link parameters. ?layout=desktop keeps this layout for the rest of the tab's session. */
+try {
+  (function () {
+    var q = new URLSearchParams(location.search), key = "kernel.layout";
+    if (q.get("layout") === "desktop") {
+      sessionStorage.setItem(key, "desktop");
+      q.delete("layout");
+      history.replaceState(null, "", location.pathname + (String(q) ? "?" + q : "") + location.hash);
+      return;
+    }
+    if (sessionStorage.getItem(key) === "desktop") return;
+    if (matchMedia("(pointer:coarse)").matches && Math.min(screen.width, screen.height) <= 600)
+      location.replace("kernel-agent-mobile.html" + location.search + location.hash);
+  })();
+} catch (e) {}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KERNEL·A v2.4.0 — durable agentic notebook, in a single file</title>
@@ -549,7 +567,7 @@ body.resizing{cursor:col-resize; user-select:none}
 .out{position:relative}
 .out-acts{position:absolute;top:6px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .12s;z-index:2}
 .out:hover .out-acts,.out:focus-within .out-acts{opacity:1}
-@media (hover:none){.out-acts{opacity:.85}}
+@media (hover:none){.out-acts{position:static;opacity:1;justify-content:flex-end;margin-top:5px}}  /* no hover on touch: a row under the output, never over it */
 .out-acts button{font:600 9.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);background:var(--surface);border:1px solid var(--line-2);border-radius:3px;padding:3px 7px;cursor:pointer}
 .out-acts button:hover{color:var(--accent);border-color:var(--accent)}
 .out.long{max-height:460px}
@@ -687,12 +705,26 @@ html[data-theme="dark"]{--on-accent:#141008;--paper:#0E0F0D;--sheet-line:rgba(23
   .toolbar #btnNew,.toolbar #btnOpen,.toolbar #btnWorkspace,.toolbar #btnClear{display:none}
   .menu-item.narrow-only{display:block}.menu-sep.narrow-only{display:block}
 }
+/* Narrow windows (and ?layout=desktop on a phone): the header takes two rows, with the toolbar scrolling sideways
+   instead of stacking into a column, and the footer wraps. Phones normally get KERNEL·M instead. */
+@media (max-width:760px){
+  .topbar{flex-wrap:wrap; gap:6px 8px; padding:7px 10px}
+  .brand{min-width:0; flex:1 1 auto}
+  .brand .brand-v{display:none}
+  .nb-pill{min-width:0; max-width:none}
+  .toolbar{flex:1 1 100%; flex-wrap:nowrap; justify-content:flex-start; margin-left:0; overflow-x:auto; scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .menu-wrap{position:static}
+  .toolbar .menu{top:100%; right:8px; margin-top:2px}  /* anchored to the header, so the scrolling toolbar can't clip it */
+  .sheet{padding:12px 8px 96px}
+  .foot{flex-wrap:wrap; gap:3px 12px; padding:5px 10px}
+}
 </style>
 </head>
 <body>
 <div id="progress" class="progress" aria-hidden="true"></div>
 <header class="topbar">
-  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A v2.4.0</span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
+  <div class="brand"><h1><button class="brand-btn" id="suiteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="suiteMenu" title="Switch app, project page, theme (Alt+K)"><span class="mark"></span><span class="brand-name">KERNEL<span class="brand-a">·A<span class="brand-v"> v2.4.0</span></span></span><svg class="brand-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h1>
     <button class="nb-pill" id="nbTitle" title="Notebooks (switch / rename / new)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.8 4.2c0-.6.5-1.1 1.1-1.1h3l1.3 1.4h5c.6 0 1.1.5 1.1 1.1v6.1c0 .6-.5 1.1-1.1 1.1H2.9c-.6 0-1.1-.5-1.1-1.1z"/></svg>
       <span id="nbTitleText">Untitled</span>
@@ -6359,6 +6391,8 @@ $("#moreMenu").addEventListener("click", (e) => {
   if (a === "newNb") newNotebook();
   else if (a === "openNb") $("#btnOpen").click();
   else if (a === "saveZip") downloadWorkspaceZip();
+  else if (a === "saveIpynb") downloadIpynb();
+  else if (a === "restart") restartKernel();
   else if (a === "restartRun") restartAndRunAll();
   else if (a === "splitOut") setSplitOutputs(!ui.splitOutputs);
   else if (a === "collapseAll") setAllCollapsed(true);
@@ -12746,9 +12780,10 @@ function openLinkedExample() {
 <div id="suiteMenu" role="menu" aria-label="KERNEL apps"></div>
 <script>
 (function () {
+  // [file, name, description, link when it isn't the file name]
   var SUITE = [
     ["kernel.html", "KERNEL", "The notebook, no agent"],
-    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent"],
+    ["kernel-agent.html", "KERNEL·A", "Notebook with an AI agent", "kernel-agent.html?layout=desktop"],
     ["kernel-agent-mobile.html", "KERNEL·M", "The agent, built for phones"],
   ];
   var here = decodeURIComponent(location.pathname.split("/").pop() || "");
@@ -12786,7 +12821,13 @@ function openLinkedExample() {
               "</b><span>" +
               t[2] +
               '</span><i aria-hidden="true">✓</i></button>'
-          : '<a class="sm-item" role="menuitem" href="' + t[0] + '"><b>' + t[1] + "</b><span>" + t[2] + "</span></a>";
+          : '<a class="sm-item" role="menuitem" href="' +
+              (t[3] || t[0]) +
+              '"><b>' +
+              t[1] +
+              "</b><span>" +
+              t[2] +
+              "</span></a>";
       }).join("") +
       '<div class="sm-sep" role="separator"></div>' +
       '<a class="sm-item sm-util" role="menuitem" href="index.html"><span>Project page</span><kbd>' +
@@ -12830,7 +12871,7 @@ function openLinkedExample() {
   }
   function step(d) {
     var i = cur >= 0 ? (cur + d + SUITE.length) % SUITE.length : 0;
-    location.href = SUITE[i][0];
+    location.href = SUITE[i][3] || SUITE[i][0];
   }
   btn.addEventListener("click", function (e) {
     e.stopPropagation();

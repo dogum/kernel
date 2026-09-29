@@ -39,7 +39,7 @@ They were captured with KERNEL Agent 2.3.0. The published notebooks keep the vis
 
 ## Use it
 
-**The apps** are single HTML files. Open them from the [live page](https://dogum.github.io/kernel/), download one from [`docs/`](docs/) and open it locally, or put it on any static host. Pyodide downloads about 10 MB on first run and is cached after. Installing KERNEL·M to a home screen and using it offline need https, which GitHub Pages provides.
+**The apps** are single HTML files. Open them from the [live page](https://dogum.github.io/kernel/), download one from [`docs/`](docs/) and open it locally, or put it on any static host. Pyodide downloads about 10 MB on first run and is cached after. Installing KERNEL·M to a home screen and using it offline need https, which GitHub Pages provides. On a phone, KERNEL·A opens as KERNEL·M; add `?layout=desktop` to keep the desktop layout.
 
 **The agent** needs an API key from Anthropic, OpenAI, or xAI; add it in the agent's settings. Keys stay in your browser and requests go straight to the provider (or a compatible gateway you choose).
 

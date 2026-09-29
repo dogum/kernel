@@ -59,9 +59,15 @@ async function localExample(route) {
   return route.fulfill({ status: 200, headers: { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*' }, body: fs.readFileSync(file) });
 }
 
-export async function newContext(browser, mocks = []) {
+// A phone as the layout tests see it: iPhone 14 size, touch, and a mobile Safari user agent.
+export const PHONE = {
+  viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+};
+
+export async function newContext(browser, mocks = [], options = {}) {
   // The PWA service worker's own network fetches bypass Playwright routing (and this sandbox's TLS proxy), so tests block it.
-  const context = await browser.newContext({ serviceWorkers: 'block' });
+  const context = await browser.newContext({ serviceWorkers: 'block', ...options });
   for (const [pattern, handler] of mocks) await context.route(pattern, handler);
   await context.route(/^https:\/\/(cdn\.jsdelivr\.net|pypi\.org|files\.pythonhosted\.org|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, passthrough);
   await context.route(/^https:\/\/raw\.githubusercontent\.com\/dogum\/kernel\/main\/examples\//, localExample);

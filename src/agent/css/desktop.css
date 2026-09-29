@@ -5,3 +5,17 @@
   .toolbar #btnNew,.toolbar #btnOpen,.toolbar #btnWorkspace,.toolbar #btnClear{display:none}
   .menu-item.narrow-only{display:block}.menu-sep.narrow-only{display:block}
 }
+/* Narrow windows (and ?layout=desktop on a phone): the header takes two rows, with the toolbar scrolling sideways
+   instead of stacking into a column, and the footer wraps. Phones normally get KERNEL·M instead. */
+@media (max-width:760px){
+  .topbar{flex-wrap:wrap; gap:6px 8px; padding:7px 10px}
+  .brand{min-width:0; flex:1 1 auto}
+  .brand .brand-v{display:none}
+  .nb-pill{min-width:0; max-width:none}
+  .toolbar{flex:1 1 100%; flex-wrap:nowrap; justify-content:flex-start; margin-left:0; overflow-x:auto; scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .menu-wrap{position:static}
+  .toolbar .menu{top:100%; right:8px; margin-top:2px}  /* anchored to the header, so the scrolling toolbar can't clip it */
+  .sheet{padding:12px 8px 96px}
+  .foot{flex-wrap:wrap; gap:3px 12px; padding:5px 10px}
+}
